@@ -24,6 +24,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import users
 
 from framework.subsystems import permission
+import settings
 
 class Section(db.Model):
     path = db.StringProperty()
@@ -31,26 +32,32 @@ class Section(db.Model):
     title = db.StringProperty()
     keywords = db.StringProperty()
     description = db.StringProperty()
+    rank = db.IntegerProperty()
+    is_private = db.BooleanProperty(default=False)
+    
+    rest_path = None
     
     def __str__(self):
+        if not permission.view_section(self): raise Exception('AccessDenied', self.path)
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'theme/templates/Default.html')
+        loginout_url = self.path if self.path != settings.DEFAULT_SECTION else '/'
         return template.render(path, {
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(path),
-            'logout_url': users.create_logout_url(self.path),
-            'login_url': users.create_login_url(self.path),
-            'title': self.title,
-            'keywords': self.keywords,
-            'description': self.description,
+            'logout_url': users.create_logout_url(loginout_url),
+            'login_url': users.create_login_url(loginout_url),
+            'self': self,
             'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
-            'body': '<h2>Under Construction</h2>',
+            'body': '<h2>Under Construction</h2>' + (self.rest_path if self.rest_path else ''),
         })
 
 def section_key(path):
     return db.Key.from_path('Section', path)
 
-def get_section(path):
-    return Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path))[0]
+def get_section(base_path, rest_path=None):
+    section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(base_path))[0]
+    section.rest_path = rest_path
+    return section
 
 def create_section(path, parent_path, title):
     section = Section(parent=section_key(path), path=path, parent_path=parent_path, title=title)

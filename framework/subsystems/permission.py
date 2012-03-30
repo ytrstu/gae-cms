@@ -21,3 +21,8 @@ from google.appengine.api import users
 
 def is_admin(path):
     return users.is_current_user_admin() # TODO: currently only super admins can do page management
+
+def view_section(section):
+    if not section.is_private or (section.is_private and users.is_current_user_admin()):
+        return True
+    return False # TODO: currently only super admins can view private page

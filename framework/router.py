@@ -25,15 +25,25 @@ import settings
 
 class Router(webapp.RequestHandler):
     def get(self, path):
-        path += '/' if path[-1:] != '/' else ''
+        path = path.strip('/')
+        if path == settings.DEFAULT_SECTION:
+            self.error(404) # Only want to access DEFAULT_SECTION through the root
+            return False
+        elif not path:
+            path = settings.DEFAULT_SECTION
+        base_path = path.split('/')[0]
+        rest_path = path.lstrip(base_path).strip('/')
         try:
-            self.response.out.write(section.get_section(path))
+            self.response.out.write(section.get_section(base_path, rest_path))
         except IndexError:
-            if(path == '/'):
-                self.response.out.write(section.create_section(path='/', parent_path=None, title='GAE-Python-CMS'))
-                section.create_section(path='/test/', parent_path=None, title='Test Page')
-            else:
+            try:
+                section.get_section(settings.DEFAULT_SECTION)
                 self.error(404)
+            except IndexError:
+                self.response.out.write(section.create_section(path=settings.DEFAULT_SECTION, parent_path=None, title='GAE-Python-CMS'))
+                section.create_section(path='test', parent_path='home', title='Test Page')
+        except:
+            self.error(403) # Access Denied
 
 application = webapp.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)
 
