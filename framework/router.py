@@ -44,6 +44,9 @@ class Router(webapp.RequestHandler):
                 section.create_section(path='test', parent_path='home', title='Test Page')
         except:
             self.error(403) # Access Denied
+            
+    def post(self, path):
+        self.get(path)
 
 application = webapp.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)
 

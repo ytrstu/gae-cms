@@ -24,9 +24,6 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import users
 
 from framework.subsystems import permission
-from framework.modules.base import import_class
-
-from framework.modules.navigation import navigation
 
 import settings
 
