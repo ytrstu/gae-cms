@@ -42,7 +42,7 @@ class Section(db.Model):
             'title': self.title,
             'keywords': self.keywords,
             'description': self.description,
-            'classes': self.path.replace('/', ' ').strip(),
+            'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
             'body': '<h2>Under Construction</h2>',
         })
 
