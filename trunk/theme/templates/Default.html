@@ -13,9 +13,18 @@
 		</div>
 		{{ body }}
 		{% if user %}
-			<div class="slingbar user">Welcome {{ user.email }}</div>
-			{% if is_admin %}<div class="admin">You are an administrator</div>{% endif %}
-			<a href="{{ logout_url }}">Logout</a>
+			<div class="slingbar user">
+				Welcome {{ user.email }}
+				{% if is_admin %}
+					<div class="admin">
+						<h2>Navigation Administration</h2>
+						<ul>
+							<li><a href="{{ self.path }}/navigation/edit">Edit this page</a></li>
+						</ul>
+					</div>
+				{% endif %}
+				<a href="{{ logout_url }}">Logout</a>
+			</div>
 		{% else %}
 			<a href="{{ login_url }}">Login</a>
 		{% endif %}
