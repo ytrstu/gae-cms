@@ -24,6 +24,10 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import users
 
 from framework.subsystems import permission
+from framework.modules.base import import_class
+
+from framework.modules.navigation import navigation
+
 import settings
 
 class Section(db.Model):
@@ -41,6 +45,7 @@ class Section(db.Model):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'theme/templates/Default.html')
         loginout_url = self.path if self.path != settings.DEFAULT_SECTION else '/'
+        
         return template.render(path, {
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(path),
@@ -48,8 +53,16 @@ class Section(db.Model):
             'login_url': users.create_login_url(loginout_url),
             'self': self,
             'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
-            'body': '<h2>Under Construction</h2>' + (self.rest_path if self.rest_path else ''),
+            'action': self.module() if self.rest_path else None,
+            'body': self.module() if self.rest_path else '<h2>Under Construction</h2>',
         })
+        
+    def module(self):
+        package = "framework.modules." + self.rest_path.split('/')[0]
+        class_name = package.split('.')[-1]
+        m = __import__(package, globals(), locals(), [class_name])
+        klass = getattr(m, class_name)
+        return klass(self.path, self.rest_path).__str__()
 
 def section_key(path):
     return db.Key.from_path('Section', path)

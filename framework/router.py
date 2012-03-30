@@ -25,7 +25,7 @@ import settings
 
 class Router(webapp.RequestHandler):
     def get(self, path):
-        path = path.strip('/')
+        path = path.strip('/').lower()
         if path == settings.DEFAULT_SECTION:
             self.error(404) # Only want to access DEFAULT_SECTION through the root
             return False

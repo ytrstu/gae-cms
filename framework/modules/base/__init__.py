@@ -23,3 +23,19 @@ class base:
     path = db.StringProperty()
     rank = db.IntegerProperty()
     section_path = db.StringProperty()
+    
+    base_path = None
+    rest_path = None
+    action = None
+    
+    def __init__(self, base_path, rest_path):
+        self.base_path = base_path
+        self.rest_path = rest_path
+        self.action = rest_path.lstrip(self.__class__.__name__).strip('/').split('/')[0]
+        
+    def __str__(self):
+        return self.action
+    
+def import_class(name):
+    mod = __import__(name, fromlist=[name.split('.')[-1]])
+    return mod()
