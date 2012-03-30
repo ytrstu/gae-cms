@@ -20,4 +20,8 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from .. import base
 
 class navigation(base.base):
-    pass
+    def str_edit(self):
+        form = '<form method="POST" action="/' + self.full_path() + '"><label for="path">Path</label>'
+        form += '<input type="text" class="selected" name="path" id="path" value="' + self.base_path + '">'
+        form += '<input type="submit"></form>'
+        return form
