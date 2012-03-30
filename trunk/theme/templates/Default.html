@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>{{ title }}</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if keywords %}
+		<meta name="Keywords" content="{{ keywords }}">{% endif %}{% if description %}
+		<meta name="Description" content="{{ description }}">{% endif %}
+		<link rel="stylesheet" type="text/css" href="/theme/css/style.css">
+	</head>
+	<body class="yui3-skin-sam yui-skin-sam{{ classes }}">
+		<div class="hd">
+			<h1 class="site-title">{{ title }}</h1>
+		</div>
+		{{ body }}
+		{% if user %}
+			<div class="slingbar user">Welcome {{ user.email }}</div>
+			{% if is_admin %}<div class="admin">You are an administrator</div>{% endif %}
+			<a href="{{ logout_url }}">Logout</a>
+		{% else %}
+			<a href="{{ login_url }}">Login</a>
+		{% endif %}
+	</body>
+</html>
