@@ -23,7 +23,7 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.api import users
 
-from framework.subsystems import permissions
+from framework.subsystems import permission
 
 class Section(db.Model):
     path = db.StringProperty()
@@ -36,7 +36,7 @@ class Section(db.Model):
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'theme/templates/Default.html')
         return template.render(path, {
             'user': users.get_current_user(),
-            'is_admin': permissions.is_admin(path),
+            'is_admin': permission.is_admin(path),
             'logout_url': users.create_logout_url(self.path),
             'login_url': users.create_login_url(self.path),
             'title': self.title,
