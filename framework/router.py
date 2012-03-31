@@ -31,22 +31,33 @@ class Router(webapp.RequestHandler):
             return False
         elif not path:
             path = settings.DEFAULT_SECTION
-        base_path = path.split('/')[0]
-        rest_path = path.lstrip(base_path).strip('/')
         try:
-            self.response.out.write(section.get_section(base_path, rest_path))
+            self.response.out.write(section.get_section(self, self.path_parts(path)))
         except IndexError:
             try:
-                section.get_section(settings.DEFAULT_SECTION)
+                section.get_section(self, [settings.DEFAULT_SECTION])
                 self.error(404)
             except IndexError:
-                self.response.out.write(section.create_section(path=settings.DEFAULT_SECTION, parent_path=None, title='GAE-Python-CMS'))
                 section.create_section(path='test', parent_path='home', title='Test Page')
+                self.response.out.write(section.create_section(path=settings.DEFAULT_SECTION, parent_path=None, title='GAE-Python-CMS'))
+        except AttributeError:
+            self.error(404)
         except:
             self.error(403) # Access Denied
             
     def post(self, path):
         self.get(path)
+        
+    def path_parts(self, path):
+        base_path = path.split('/')[0]
+        path = path.lstrip(base_path).strip('/')
+        module_path = path.split('/')[0]
+        path = path.lstrip(module_path).strip('/')
+        action_path = path.split('/')[0]
+        path = path.lstrip(action_path).strip('/')
+        parameter_path = path.split('/')[0]
+        return base_path, module_path, action_path, parameter_path
+        
 
 application = webapp.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)
 

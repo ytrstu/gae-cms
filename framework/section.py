@@ -36,13 +36,13 @@ class Section(db.Model):
     rank = db.IntegerProperty()
     is_private = db.BooleanProperty(default=False)
     
-    rest_path = None
+    path_parts = None
+    handler = None
     
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'theme/templates/Default.html')
         loginout_url = self.path if self.path != settings.DEFAULT_SECTION else '/'
-        
         return template.render(path, {
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(path),
@@ -50,23 +50,22 @@ class Section(db.Model):
             'login_url': users.create_login_url(loginout_url),
             'self': self,
             'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
-            'action': self.module() if self.rest_path else None,
-            'body': self.module() if self.rest_path else '<h2>Under Construction</h2>',
+            'body': self.module() if self.path_parts[1] else '<h2>Under Construction</h2>',
         })
         
     def module(self):
-        package = "framework.modules." + self.rest_path.split('/')[0]
-        class_name = package.split('.')[-1]
-        m = __import__(package, globals(), locals(), [class_name])
-        klass = getattr(m, class_name)
-        return klass(self.path, self.rest_path).__str__()
+        package = "framework.modules." + self.path_parts[1]
+        m = __import__(package, globals(), locals(), [self.path_parts[1]])
+        klass = getattr(m, self.path_parts[1])
+        return klass(self, self.handler, self.path_parts)
 
 def section_key(path):
     return db.Key.from_path('Section', path)
 
-def get_section(base_path, rest_path=None):
-    section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(base_path))[0]
-    section.rest_path = rest_path
+def get_section(handler, path_parts):
+    section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path_parts[0]))[0]
+    section.handler = handler
+    section.path_parts = path_parts
     return section
 
 def create_section(path, parent_path, title):

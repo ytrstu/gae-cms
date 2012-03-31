@@ -18,10 +18,17 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from .. import base
+import settings
 
 class navigation(base.base):
     def str_edit(self):
-        form = '<form method="POST" action="/' + self.full_path() + '"><label for="path">Path</label>'
-        form += '<input type="text" class="selected" name="path" id="path" value="' + self.base_path + '">'
+        if self.handler.request.get('path'):
+            new_path = self.handler.request.get('path').replace(' ', '').replace('/', '')
+            if self.section.path != new_path:
+                self.section.path = new_path
+                self.section.put()
+            self.handler.redirect('/' + (new_path if new_path != settings.DEFAULT_SECTION else ''))
+        form = '<form method="POST" action="/' + '/'.join(self.path_parts).strip('/') + '">'
+        form += '<label for="path">Path</label><input type="text" class="selected" name="path" id="path" value="' + self.section.path + '">'
         form += '<input type="submit"></form>'
         return form
