@@ -18,17 +18,24 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from .. import base
+from ... import section
 import settings
 
 class navigation(base.base):
     def str_edit(self):
         if self.handler.request.get('path'):
-            new_path = self.handler.request.get('path').replace(' ', '').replace('/', '')
-            if self.section.path != new_path:
-                self.section.path = new_path
-                self.section.put()
-            self.handler.redirect('/' + (new_path if new_path != settings.DEFAULT_SECTION else ''))
+            path = self.handler.request.get('path').replace(' ', '').replace('/', '').lower()
+            parent_path = self.handler.request.get('parent_path').replace(' ', '').replace('/', '').lower()
+            title = self.handler.request.get('title')
+            new = section.Section(parent=section.section_key(path), path=path, parent_path=parent_path, title=title, rank=self.section.rank)
+            section.update_section(self.section, new)
+            self.handler.redirect('/' + (new.path if self.section.path != section.HOME_SECTION else ''))
         form = '<form method="POST" action="/' + '/'.join(self.path_parts).strip('/') + '">'
-        form += '<label for="path">Path</label><input type="text" class="selected" name="path" id="path" value="' + self.section.path + '">'
+        if self.section.path == section.HOME_SECTION:
+            form += '<input type="hidden" name="path" id="path" value="' + self.section.path + '">'
+        else:
+            form += '<label for="path">Path</label><input type="text" name="path" id="path" value="' + self.section.path + '">'
+        form += '<label for="title">Title</label><input type="text" size="60" name="title" id="title" value="' + (self.section.title if self.section.title else '') + '">'
+        form += '<label for="parent_path">Parent Path</label><input type="text" name="parent_path" id="parent_path" value="' + (self.section.parent_path if self.section.parent_path else '') + '">'
         form += '<input type="submit"></form>'
         return form
