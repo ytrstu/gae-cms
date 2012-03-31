@@ -26,20 +26,20 @@ import settings
 class Router(webapp.RequestHandler):
     def get(self, path):
         path = path.strip('/').lower()
-        if path == settings.DEFAULT_SECTION:
+        if path == section.HOME_SECTION:
             self.error(404) # Only want to access DEFAULT_SECTION through the root
             return False
         elif not path:
-            path = settings.DEFAULT_SECTION
+            path = section.HOME_SECTION
         try:
             self.response.out.write(section.get_section(self, self.path_parts(path)))
         except IndexError:
             try:
-                section.get_section(self, [settings.DEFAULT_SECTION])
+                section.get_section(self, [section.HOME_SECTION])
                 self.error(404)
             except IndexError:
                 section.create_section(path='test', parent_path='home', title='Test Page')
-                self.response.out.write(section.create_section(path=settings.DEFAULT_SECTION, parent_path=None, title='GAE-Python-CMS'))
+                self.response.out.write(section.create_section(path=section.HOME_SECTION, parent_path=None, title='GAE-Python-CMS'))
         except AttributeError:
             self.error(404)
         except:

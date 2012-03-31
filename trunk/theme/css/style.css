@@ -15,6 +15,8 @@ h1, h2, h3, h4, h5, h6 {
 	border: none;
 	padding: 0;
 }
-input, label {
+input {
 	padding: 0.5em;
+	margin: 0.5em 0;
+	display: block;
 }

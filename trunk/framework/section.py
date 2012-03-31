@@ -27,6 +27,8 @@ from framework.subsystems import permission
 
 import settings
 
+HOME_SECTION = 'home'
+
 class Section(db.Model):
     path = db.StringProperty()
     parent_path = db.StringProperty()
@@ -42,7 +44,7 @@ class Section(db.Model):
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'theme/templates/Default.html')
-        loginout_url = self.path if self.path != settings.DEFAULT_SECTION else '/'
+        loginout_url = self.path if self.path != HOME_SECTION else '/'
         return template.render(path, {
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(path),
@@ -69,6 +71,19 @@ def get_section(handler, path_parts):
     return section
 
 def create_section(path, parent_path, title):
+    # TODO: check that path does not already exist
     section = Section(parent=section_key(path), path=path, parent_path=parent_path, title=title)
     section.put()
     return section
+
+def update_section(old, new):
+    if old.path != new.path and old.path != HOME_SECTION:
+        # TODO: check that new path does not already exist
+        new.parent = section_key(new.path)
+        old.delete()
+        new.put()
+    else:
+        # TODO: check that parent path exists
+        old.parent_path = new.parent_path
+        old.title = new.title
+        old.put()
