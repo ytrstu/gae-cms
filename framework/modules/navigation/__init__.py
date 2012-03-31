@@ -24,18 +24,31 @@ import settings
 class navigation(base.base):
     def str_edit(self):
         if self.handler.request.get('path'):
-            path = self.handler.request.get('path').replace(' ', '').replace('/', '').lower()
-            parent_path = self.handler.request.get('parent_path').replace(' ', '').replace('/', '').lower()
-            title = self.handler.request.get('title')
-            new = section.Section(parent=section.section_key(path), path=path, parent_path=parent_path, title=title, rank=self.section.rank)
-            section.update_section(self.section, new)
-            self.handler.redirect('/' + (new.path if self.section.path != section.HOME_SECTION else ''))
-        form = '<form method="POST" action="/' + '/'.join(self.path_parts).strip('/') + '">'
-        if self.section.path == section.HOME_SECTION:
-            form += '<input type="hidden" name="path" id="path" value="' + self.section.path + '">'
-        else:
-            form += '<label for="path">Path</label><input type="text" name="path" id="path" value="' + self.section.path + '">'
-        form += '<label for="title">Title</label><input type="text" size="60" name="title" id="title" value="' + (self.section.title if self.section.title else '') + '">'
-        form += '<label for="parent_path">Parent Path</label><input type="text" name="parent_path" id="parent_path" value="' + (self.section.parent_path if self.section.parent_path else '') + '">'
-        form += '<input type="submit"></form>'
-        return form
+            path, parent_path, title = get_values(self.handler.request)
+            section.update_section(self.section, path, parent_path, title)
+            self.handler.redirect('/' + (path if self.section.path != section.HOME_SECTION else ''))
+        return get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.title)
+    
+    def str_create(self):
+        if self.handler.request.get('path'):
+            path, parent_path, title = get_values(self.handler.request)
+            section.create_section(path, parent_path, title)
+            self.handler.redirect('/' + (path if path != section.HOME_SECTION else ''))
+        return get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '')
+
+def get_values(request):
+        path = request.get('path').replace(' ', '').replace('/', '').lower()
+        parent_path = request.get('parent_path').replace(' ', '').replace('/', '').lower()
+        title = request.get('title')
+        return path, parent_path, title
+            
+def get_form(action, path, parent_path, title):
+    form = '<form method="POST" action="/' + action + '">'
+    if path == section.HOME_SECTION:
+        form += '<input type="hidden" name="path" id="path" value="' + path + '">'
+    else:
+        form += '<label for="path">Path</label><input type="text" name="path" id="path" value="' + path + '">'
+    form += '<label for="parent_path">Parent Path</label><input type="text" name="parent_path" id="parent_path" value="' + (parent_path if parent_path else '') + '">'
+    form += '<label for="title">Title</label><input type="text" size="60" name="title" id="title" value="' + (title if title else '') + '">'
+    form += '<input type="submit"></form>'
+    return form
