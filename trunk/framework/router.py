@@ -38,7 +38,6 @@ class Router(webapp.RequestHandler):
                 section.get_section(self, [section.HOME_SECTION])
                 self.error(404)
             except IndexError:
-                section.create_section(path='test', parent_path='home', title='Test Page')
                 self.response.out.write(section.create_section(path=section.HOME_SECTION, parent_path=None, title='GAE-Python-CMS'))
         except AttributeError:
             self.error(404)

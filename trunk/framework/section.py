@@ -72,18 +72,18 @@ def get_section(handler, path_parts):
 
 def create_section(path, parent_path, title):
     # TODO: check that path does not already exist
-    section = Section(parent=section_key(path), path=path, parent_path=parent_path, title=title)
+    section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)
     section.put()
     return section
 
-def update_section(old, new):
-    if old.path != new.path and old.path != HOME_SECTION:
+def update_section(old, path, parent_path, title):
+    if old.path != path and path != HOME_SECTION:
         # TODO: check that new path does not already exist
-        new.parent = section_key(new.path)
+        new = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)
         old.delete()
         new.put()
     else:
         # TODO: check that parent path exists
-        old.parent_path = new.parent_path
-        old.title = new.title
+        old.parent_path = parent_path.lower()
+        old.title = title
         old.put()
