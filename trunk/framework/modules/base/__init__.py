@@ -24,24 +24,17 @@ class base:
     rank = db.IntegerProperty()
     section_path = db.StringProperty()
     
-    base_path = None
-    module_path = None
-    action_path = None
-    parameter_path = None
+    permissions = {'administrate': 'Administer Permissions'}
     
-    def __init__(self, base_path, rest_path):
-        self.base_path = base_path
-        self.module_path = self.__class__.__name__
-        rest_path = rest_path.lstrip(self.module_path).strip('/').split('/')
-        self.action_path = rest_path[0]
-        self.parameter_path = '/'.join(rest_path[1:]).strip('/')
+    handler = None
+    path_parts = None
+    section = None
+    
+    def __init__(self, section, handler, path_parts):
+        self.section = section
+        self.handler = handler
+        self.path_parts = path_parts
         
     def __str__(self):
-        return getattr(self, 'str_%s' % self.action_path)()
-    
-    def full_path(self):
-        full_path = self.base_path if self.base_path else None
-        full_path += ('/' + self.module_path) if self.module_path else ''
-        full_path += ('/' + self.action_path) if self.action_path else ''
-        full_path += ('/' + self.parameter_path) if self.parameter_path else ''
-        return full_path
+        # If the action doesn't exist, the AttributeError will lead to a 404
+        return getattr(self, 'str_%s' % self.path_parts[2])()
