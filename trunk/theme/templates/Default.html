@@ -9,9 +9,11 @@
 	</head>
 	<body class="yui3-skin-sam yui-skin-sam {{ classes }}">
 		<div class="hd">
-			<h1 class="site-title">{{ self.title }}</h1>
+			<h1 class="site-title"><a href="/">Home</a></h1>
 		</div>
-		{{ body }}
+		{{ self.path|view:"navigation, top"|safe }}
+		{{ self.path|view:"navigation, children"|safe }}
+		{{ body|safe }}
 		{% if user %}
 			<div class="slingbar user">
 				Welcome {{ user.email }}

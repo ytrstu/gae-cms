@@ -17,24 +17,24 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from google.appengine.ext import db
+import os
 
-class base:
-    path = db.StringProperty()
-    rank = db.IntegerProperty()
-    section_path = db.StringProperty()
-    
-    permissions = {'administrate': 'Administer Permissions'}
-    
-    handler = None
-    path_parts = None
-    section = None
-    
-    def __init__(self, section, handler, path_parts):
-        self.section = section
-        self.handler = handler
-        self.path_parts = path_parts
-        
-    def __str__(self):
-        # If the action doesn't exist, the AttributeError will lead to a 404
-        return getattr(self, 'action_%s' % self.path_parts[2])()
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
+import importlib
+
+register = webapp.template.create_template_register()
+
+@register.filter
+def view(path, param_string):
+    mod, view = [x.strip() for x in param_string.split(',')]
+    try:
+        m = importlib.import_module('framework.modules.' + mod)
+        view = getattr(m, 'view_' + view)
+        return view(path)
+    except Exception as inst:
+        return 'Error: View does not exist: ' + str(inst)
+
+def html(params):
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '../../theme/templates/Default.html')
+    return template.render(path, params)
