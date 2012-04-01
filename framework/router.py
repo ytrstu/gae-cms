@@ -17,28 +17,37 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os
+
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from framework import section
 import settings
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+from google.appengine.dist import use_library
+use_library('django', '1.2')
+
+webapp.template.register_template_library('framework.subsystems.template')
+
 class Router(webapp.RequestHandler):
     def get(self, path):
         path = path.strip('/').lower()
-        if path == section.HOME_SECTION:
+        if path == section.UNALTERABLE_HOME_PATH:
             self.error(404) # Only want to access DEFAULT_SECTION through the root
             return False
         elif not path:
-            path = section.HOME_SECTION
+            path = section.UNALTERABLE_HOME_PATH
         try:
             self.response.out.write(section.get_section(self, self.path_parts(path)))
         except IndexError:
             try:
-                section.get_section(self, [section.HOME_SECTION])
+                section.get_section(self, [section.UNALTERABLE_HOME_PATH])
                 self.error(404)
             except IndexError:
-                self.response.out.write(section.create_section(path=section.HOME_SECTION, parent_path=None, title='GAE-Python-CMS'))
+                self.response.out.write(section.create_section(path=section.UNALTERABLE_HOME_PATH, parent_path=None, title='GAE-Python-CMS'))
         except AttributeError:
             self.error(404)
         except:

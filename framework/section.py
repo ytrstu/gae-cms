@@ -17,17 +17,13 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
-
 from google.appengine.ext import db
-from google.appengine.ext.webapp import template
 from google.appengine.api import users
 
+from framework.subsystems import template
 from framework.subsystems import permission
 
-import settings
-
-HOME_SECTION = 'home'
+UNALTERABLE_HOME_PATH = 'home'
 
 class Section(db.Model):
     path = db.StringProperty()
@@ -43,23 +39,30 @@ class Section(db.Model):
     
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
-        path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'theme/templates/Default.html')
-        loginout_url = self.path if self.path != HOME_SECTION else '/'
-        return template.render(path, {
+        loginout_url = self.path if self.path != UNALTERABLE_HOME_PATH else '/'
+        params = {
             'user': users.get_current_user(),
-            'is_admin': permission.is_admin(path),
+            'is_admin': permission.is_admin(self.path),
             'logout_url': users.create_logout_url(loginout_url),
             'login_url': users.create_login_url(loginout_url),
             'self': self,
             'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
+            'primary_ancestor': self.get_primary_ancestor(),
             'body': self.module() if self.path_parts[1] else '<h2>Under Construction</h2>',
-        })
+        }
+        return template.html(params)
         
     def module(self):
         package = "framework.modules." + self.path_parts[1]
         m = __import__(package, globals(), locals(), [self.path_parts[1]])
         klass = getattr(m, self.path_parts[1])
         return klass(self, self.handler, self.path_parts)
+    
+    def get_primary_ancestor(self):
+        ancestor = self
+        while ancestor.parent_path:
+            ancestor = get_section(self.handler, [ancestor.parent_path])
+        return ancestor
 
 def section_key(path):
     return db.Key.from_path('Section', path)
@@ -70,14 +73,20 @@ def get_section(handler, path_parts):
     section.path_parts = path_parts
     return section
 
+def get_top_levels(path):
+    return Section.gql("WHERE parent_path=:1", '')
+
+def get_children(path):
+    return Section.gql("WHERE parent_path=:1", path)
+
 def create_section(path, parent_path, title):
     # TODO: check that path does not already exist
-    section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)
+    section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower() if parent_path else None, title=title)
     section.put()
     return section
 
 def update_section(old, path, parent_path, title):
-    if old.path != path and path != HOME_SECTION:
+    if old.path != path and path != UNALTERABLE_HOME_PATH:
         # TODO: check that new path does not already exist
         new = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)
         old.delete()
