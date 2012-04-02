@@ -28,7 +28,6 @@ def view_section(section):
     return False # TODO: currently only super admins can view private page
 
 def perform_action(content, path_parts):
-    print content.permissions()
     if path_parts[2] not in content.permissions():
         return True
     return is_admin(path_parts[0])
