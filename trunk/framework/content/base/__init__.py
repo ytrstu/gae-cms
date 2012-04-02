@@ -28,12 +28,14 @@ class base:
     path_parts = None
     section = None
     
-    required_permissions = {
-        'administrate': 'Administer Permissions'
+    base_permissions = {
+                        'administrate': 'Administer Permissions'
     }
+    content_permissions = {}
     
     def permissions(self):
-        return self.permissions
+        self.base_permissions.update(self.content_permissions)
+        return self.base_permissions
     
     def __init__(self, section, handler, path_parts):
         self.section = section

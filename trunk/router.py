@@ -37,7 +37,6 @@ class Router(webapp2.RequestHandler):
         if path_parts[1] and not path_parts[2]: # Content is defined but no action
                 webapp2.abort(404)
         try:
-            #print str(section.get_section(self, path_parts))
             return webapp2.Response(str(section.get_section(self, path_parts)))
         except IndexError:
             try:
@@ -57,8 +56,8 @@ class Router(webapp2.RequestHandler):
                 return self.redirect(inst[1])
             elif inst[0] == 'UndefinedContent':
                 webapp2.abort(404)
-            return webapp2.Response('RouterError: ' + str(inst))
-            #webapp2.abort(403)
+            #return webapp2.Response('RouterError: ' + str(inst))
+            webapp2.abort(403)
             
     def post(self, path):
         return self.get(path)
@@ -66,11 +65,11 @@ class Router(webapp2.RequestHandler):
 def get_path_parts(path):
     base_path = path.split('/')[0]
     path = path.lstrip(base_path).strip('/')
-    module_path = path.split('/')[0]
-    path = path.lstrip(module_path).strip('/')
+    content_path = path.split('/')[0]
+    path = path.lstrip(content_path).strip('/')
     action_path = path.split('/')[0]
     path = path.lstrip(action_path).strip('/')
     parameter_path = path.split('/')[0]
-    return base_path, module_path, action_path, parameter_path
+    return base_path, content_path, action_path, parameter_path
         
 app = webapp2.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)
