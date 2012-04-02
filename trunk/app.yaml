@@ -17,11 +17,16 @@
 
 application: gae-python-cms
 version: 1
-runtime: python
+runtime: python27
+threadsafe: false
 api_version: 1
 
 inbound_services:
 - warmup
+
+libraries:
+- name: django
+  version: "1.2"
 
 handlers:
 - url: /theme/css
@@ -34,7 +39,7 @@ handlers:
   static_dir: theme/images
 
 - url: /.*
-  script: framework/router.py
+  script: router.app
 
 admin_console:
   pages:
