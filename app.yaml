@@ -29,15 +29,15 @@ libraries:
   version: "1.2"
 
 handlers:
-- url: /theme/css
-  static_dir: theme/css
-  
 - url: /theme/js
   static_dir: theme/js
   
 - url: /theme/images
   static_dir: theme/images
 
+- url: /(.*).css
+  script: style.app
+  
 - url: /.*
   script: router.app
 
