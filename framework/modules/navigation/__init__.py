@@ -31,7 +31,7 @@ class navigation(base.base):
     def action_create(self):
         if self.handler.request.get('path'):
             path, parent_path, title = get_values(self.handler.request)
-            section.create_section(path, parent_path, title)
+            section.create_section(self.handler, path, parent_path, title)
             self.handler.redirect('/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
         return get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '')
 

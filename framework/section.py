@@ -74,15 +74,16 @@ def get_section(handler, path_parts):
     return section
 
 def get_top_levels(path):
-    return Section.gql("WHERE parent_path=:1", '')
+    return Section.gql("WHERE parent_path IN :1", ['', None])
 
 def get_children(path):
     return Section.gql("WHERE parent_path=:1", path)
 
-def create_section(path, parent_path, title):
+def create_section(handler, path, parent_path, title):
     # TODO: check that path does not already exist
     section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower() if parent_path else None, title=title)
     section.put()
+    section.handler = handler
     return section
 
 def update_section(old, path, parent_path, title):

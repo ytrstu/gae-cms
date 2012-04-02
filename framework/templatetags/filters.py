@@ -17,11 +17,17 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
+from django.template import Library
+import importlib
 
-DEBUG = True
+register = Library()
 
-INSTALLED_APPS = ('framework',)
-
-PROJECT_ROOT = os.path.dirname(__file__)
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "theme/templates"),)
+@register.filter
+def view(path, param_string):
+    mod, view = [x.strip() for x in param_string.split(',')]
+    try:
+        m = importlib.import_module('framework.modules.' + mod)
+        view = getattr(m, 'view_' + view)
+        return view(path)
+    except Exception as inst:
+        return 'Error: View does not exist: ' + str(inst)
