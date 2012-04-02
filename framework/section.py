@@ -26,7 +26,7 @@ from framework.subsystems import permission
 UNALTERABLE_HOME_PATH = 'home'
 
 class Section(db.Model):
-    path = db.StringProperty()
+    path = db.StringProperty(required=True)
     parent_path = db.StringProperty()
     title = db.StringProperty()
     keywords = db.StringProperty()
@@ -54,7 +54,10 @@ class Section(db.Model):
         
     def content(self):
         package = "framework.content." + self.path_parts[1]
-        m = __import__(package, globals(), locals(), [self.path_parts[1]])
+        try:
+            m = __import__(package, globals(), locals(), [self.path_parts[1]])
+        except:
+            raise Exception('UndefinedContent', self.path_parts[1])
         klass = getattr(m, self.path_parts[1])
         content = klass(self, self.handler, self.path_parts)
         if not permission.perform_action(content, self.path_parts):
@@ -84,6 +87,7 @@ def get_children(path):
 
 def create_section(handler, path, parent_path, title):
     # TODO: check that path does not already exist
+    if not path: raise Exception('Path is required')
     section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower() if parent_path else None, title=title)
     section.put()
     section.handler = handler
@@ -91,6 +95,7 @@ def create_section(handler, path, parent_path, title):
     return section
 
 def update_section(old, path, parent_path, title):
+    if not path: raise Exception('Path is required')
     if old.path != path and path != UNALTERABLE_HOME_PATH:
         # TODO: check that new path does not already exist
         new = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)

@@ -28,18 +28,30 @@ class navigation(base.base):
         })
         return self.required_permissions
     def action_edit(self):
-        if self.handler.request.get('path'):
+        ret = ''
+        if self.handler.request.get('submit'):
             path, parent_path, title = get_values(self.handler.request)
-            section.update_section(self.section, path, parent_path, title)
-            raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
-        return get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.title)
+            try:
+                section.update_section(self.section, path, parent_path, title)
+            except Exception as inst:
+                ret += '<div class="status error">' + inst[0] + '</div>'
+            else:
+                raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
+        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.title)
+        return ret
     
     def action_create(self):
+        ret = ''
         if self.handler.request.get('path'):
             path, parent_path, title = get_values(self.handler.request)
-            section.create_section(self.handler, path, parent_path, title)
-            raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
-        return get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '')
+            try:
+                section.create_section(self.handler, path, parent_path, title)
+            except Exception as inst:
+                ret += '<div class="status error">' + inst[0] + '</div>'
+            else:
+                raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
+        ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '')
+        return ret
 
 def get_values(request):
         path = request.get('path').replace(' ', '').replace('/', '').lower()
@@ -55,7 +67,7 @@ def get_form(action, path, parent_path, title):
         form += '<label for="path">Path</label><input type="text" name="path" id="path" value="' + path + '">'
     form += '<label for="parent_path">Parent Path</label><input type="text" name="parent_path" id="parent_path" value="' + (parent_path if parent_path else '') + '">'
     form += '<label for="title">Title</label><input type="text" size="60" name="title" id="title" value="' + (title if title else '') + '">'
-    form += '<input type="submit"></form>'
+    form += '<input type="submit" name="submit" id="submit"></form>'
     return form
 
 def view_top(path):

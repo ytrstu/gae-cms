@@ -6,8 +6,8 @@ h1, h2, h3, h4, h5, h6 {
 .slingbar {
 	font-size: 80%;
 	background-color: #FFFADB;
-	padding: 1em;
 	margin-top: 1em;
+	padding: 1em;
 	border: 1px solid black;
 }
 .slingbar h2 {
@@ -16,12 +16,12 @@ h1, h2, h3, h4, h5, h6 {
 	padding: 0;
 }
 input {
-	padding: 0.5em;
 	margin: 0.5em 0;
+	padding: 0.5em;
 	display: block;
 }
 .status {
-	margin: 1em;
+	margin: 1em 0;
 	padding: 1em;
 	text-align: center;
 }
