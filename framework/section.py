@@ -86,8 +86,14 @@ def get_children(path):
     return Section.gql("WHERE parent_path=:1", path)
 
 def create_section(handler, path, parent_path, title):
-    # TODO: check that path does not already exist
-    if not path: raise Exception('Path is required')
+    if not path:
+        raise Exception('Path is required')
+    elif False:
+        # TODO: check that path does not already exist
+        pass
+    elif False:
+        # TODO: check that parent_path exists
+        pass
     section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower() if parent_path else None, title=title)
     section.put()
     section.handler = handler
@@ -95,14 +101,19 @@ def create_section(handler, path, parent_path, title):
     return section
 
 def update_section(old, path, parent_path, title):
-    if not path: raise Exception('Path is required')
-    if old.path != path and path != UNALTERABLE_HOME_PATH:
+    if not path:
+        raise Exception('Path is required')
+    elif old.path != path and path == UNALTERABLE_HOME_PATH:
+        raise Exception('This path name is reserved')
+    elif False:
+        # TODO: check that parent path exists
+        pass
+    elif old.path != path and path != UNALTERABLE_HOME_PATH:
         # TODO: check that new path does not already exist
         new = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)
         old.delete()
         new.put()
     else:
-        # TODO: check that parent path exists
         old.parent_path = parent_path.lower()
         old.title = title
         old.put()
