@@ -30,7 +30,7 @@ class Router(webapp2.RequestHandler):
     def get(self, path):
         path = path.strip('/').lower()
         if path == section.UNALTERABLE_HOME_PATH:
-            webapp2.abort(404) # Only want to access DEFAULT_SECTION through the root
+            webapp2.abort(404) # Only want to access UNALTERABLE_HOME_PATH through the root
         elif not path:
             path = section.UNALTERABLE_HOME_PATH
         try:
@@ -41,11 +41,14 @@ class Router(webapp2.RequestHandler):
                 webapp2.abort(404)
             except (IndexError, TypeError):
                 return webapp2.Response(str(section.create_section(self, path=section.UNALTERABLE_HOME_PATH, parent_path=None, title='GAE-Python-CMS')))
-        except AttributeError:
+        except AttributeError as inst:
+            #return webapp2.Response('RouterError: ' + str(inst))
             webapp2.abort(404)
         except Exception as inst:
-            return webapp2.Response('RouterError: ' + str(inst))
-            #webapp2.abort(403) # Access Denied (NOT SURE WHY THIS DOESN'T WORK)
+            if inst[0] == 'Redirect':
+                return self.redirect(inst[1])
+            #return webapp2.Response('RouterError: ' + str(inst))
+            webapp2.abort(403)
             
     def post(self, path):
         self.get(path)

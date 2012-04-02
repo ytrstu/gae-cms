@@ -21,18 +21,24 @@ from .. import base
 from ... import section
 
 class navigation(base.base):
+    def permissions(self):
+        self.required_permissions.update({
+                'edit': 'Edit section',
+                'create': 'Create section',
+        })
+        return self.required_permissions
     def action_edit(self):
         if self.handler.request.get('path'):
             path, parent_path, title = get_values(self.handler.request)
             section.update_section(self.section, path, parent_path, title)
-            self.handler.redirect('/' + (path if self.section.path != section.UNALTERABLE_HOME_PATH else ''))
+            raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
         return get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.title)
     
     def action_create(self):
         if self.handler.request.get('path'):
             path, parent_path, title = get_values(self.handler.request)
             section.create_section(self.handler, path, parent_path, title)
-            self.handler.redirect('/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
+            raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
         return get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '')
 
 def get_values(request):
@@ -55,17 +61,17 @@ def get_form(action, path, parent_path, title):
 def view_top(path):
     top = section.get_top_levels(path)
     if not top: return ''
-    list = '<ul class="module navigation view top">'
+    ul = '<ul class="module navigation view top">'
     for t in top:
-        list += '<li><a href="/' + (t.path if t.path != section.UNALTERABLE_HOME_PATH else '') + '">' + t.title + '</a></li>'
-    list += '</ul>' 
-    return list
+        ul += '<li><a href="/' + (t.path if t.path != section.UNALTERABLE_HOME_PATH else '') + '">' + t.title + '</a></li>'
+    ul += '</ul>' 
+    return ul
 
 def view_children(path):
     children = section.get_children(path)
     if not children: return ''
-    list = '<ul class="module navigation view children">'
+    ul = '<ul class="module navigation view children">'
     for c in children:
-        list += '<li><a href="/' + (c.path if c.path != section.UNALTERABLE_HOME_PATH else '') + '">' + c.title + '</a></li>'
-    list += '</ul>' 
-    return list
+        ul += '<li><a href="/' + (c.path if c.path != section.UNALTERABLE_HOME_PATH else '') + '">' + c.title + '</a></li>'
+    ul += '</ul>' 
+    return ul
