@@ -21,12 +21,10 @@ from .. import base
 from ... import section
 
 class navigation(base.base):
-    def permissions(self):
-        self.required_permissions.update({
-                'edit': 'Edit section',
-                'create': 'Create section',
-        })
-        return self.required_permissions
+    content_permissions = {
+                           'edit': 'Edit section',
+                           'create': 'Create section',
+                           }
     def action_edit(self):
         ret = ''
         if self.handler.request.get('submit'):
@@ -42,7 +40,7 @@ class navigation(base.base):
     
     def action_create(self):
         ret = ''
-        if self.handler.request.get('path'):
+        if self.handler.request.get('submit'):
             path, parent_path, title = get_values(self.handler.request)
             try:
                 section.create_section(self.handler, path, parent_path, title)
@@ -73,7 +71,7 @@ def get_form(action, path, parent_path, title):
 def view_top(path):
     top = section.get_top_levels(path)
     if not top: return ''
-    ul = '<ul class="module navigation view top">'
+    ul = '<ul class="content navigation view top">'
     for t in top:
         ul += '<li><a href="/' + (t.path if t.path != section.UNALTERABLE_HOME_PATH else '') + '">' + t.title + '</a></li>'
     ul += '</ul>' 
@@ -82,7 +80,7 @@ def view_top(path):
 def view_children(path):
     children = section.get_children(path)
     if not children: return ''
-    ul = '<ul class="module navigation view children">'
+    ul = '<ul class="content navigation view children">'
     for c in children:
         ul += '<li><a href="/' + (c.path if c.path != section.UNALTERABLE_HOME_PATH else '') + '">' + c.title + '</a></li>'
     ul += '</ul>' 
