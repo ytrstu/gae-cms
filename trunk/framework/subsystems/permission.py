@@ -26,3 +26,8 @@ def view_section(section):
     if not section.is_private or (section.is_private and users.is_current_user_admin()):
         return True
     return False # TODO: currently only super admins can view private page
+
+def perform_action(content, path_parts):
+    if path_parts[2] not in content.permissions():
+        return True
+    return is_admin(path_parts[0])

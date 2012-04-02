@@ -24,11 +24,16 @@ class base:
     rank = db.IntegerProperty()
     section_path = db.StringProperty()
     
-    permissions = {'administrate': 'Administer Permissions'}
-    
     handler = None
     path_parts = None
     section = None
+    
+    required_permissions = {
+        'administrate': 'Administer Permissions'
+    }
+    
+    def permissions(self):
+        return self.permissions
     
     def __init__(self, section, handler, path_parts):
         self.section = section

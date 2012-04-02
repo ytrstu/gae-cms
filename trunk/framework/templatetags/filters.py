@@ -26,8 +26,8 @@ register = Library()
 def view(path, param_string):
     mod, view = [x.strip() for x in param_string.split(',')]
     try:
-        m = importlib.import_module('framework.modules.' + mod)
+        m = importlib.import_module('framework.content.' + mod)
         view = getattr(m, 'view_' + view)
         return view(path)
     except Exception as inst:
-        return 'Error: View does not exist: ' + str(inst)
+        return '<div class="status error">Error: View does not exist: ' + str(inst) + '</div>'

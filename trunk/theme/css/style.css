@@ -20,3 +20,18 @@ input {
 	margin: 0.5em 0;
 	display: block;
 }
+.status {
+	margin: 1em;
+	padding: 1em;
+	text-align: center;
+}
+.error {
+	color: #B51800;
+	border: 2px solid #B51800;
+	background-color: #FFA496;
+}
+.progress {
+	color: #216600;
+	border: 2px solid #216600;
+	background-color: #D6FFC1;
+}

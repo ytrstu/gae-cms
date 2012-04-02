@@ -48,15 +48,18 @@ class Section(db.Model):
             'self': self,
             'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
             'primary_ancestor': self.get_primary_ancestor(),
-            'body': self.module() if self.path_parts[1] else '<h2>Under Construction</h2>',
+            'body': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>',
         }
         return template.html(params)
         
-    def module(self):
-        package = "framework.modules." + self.path_parts[1]
+    def content(self):
+        package = "framework.content." + self.path_parts[1]
         m = __import__(package, globals(), locals(), [self.path_parts[1]])
         klass = getattr(m, self.path_parts[1])
-        return klass(self, self.handler, self.path_parts)
+        content = klass(self, self.handler, self.path_parts)
+        if not permission.perform_action(content, self.path_parts):
+            raise Exception('PermissionDenied', self.path_parts[0], self.path_parts[1])
+        return content
     
     def get_primary_ancestor(self):
         ancestor = self
@@ -84,6 +87,7 @@ def create_section(handler, path, parent_path, title):
     section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower() if parent_path else None, title=title)
     section.put()
     section.handler = handler
+    section.path_parts = [path, parent_path, None, None]
     return section
 
 def update_section(old, path, parent_path, title):
