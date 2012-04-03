@@ -100,21 +100,28 @@ def is_ancestor(path, another_path):
             return False
     return False
 
+# TODO: If a child of an ancestor is changed to another child of an ancestor, that should be allowed
 def can_path_exist(path, parent_path, old_path=None):
     if not path:
         raise Exception('Path is required')
     elif is_ancestor(path, parent_path):
-        raise Exception('Path recursion detected')
-    elif old_path != path:
+        raise Exception('Path recursion detected: Path cannot be its own descendant')
+    elif is_ancestor(parent_path, path):
+        raise Exception('Path recursion detected: Path cannot be its own ancestor')
+    if old_path != path:
         try:
             get_section(None, [path])
         except:
-            try:
-                get_section(None, [parent_path])
-            except:
-                raise Exception('Parent path does not exist')
+            pass
         else:
             raise Exception('Path already exists')
+    else:
+        try:
+            get_section(None, [parent_path])
+        except:
+            pass
+        else:
+            raise Exception('Parent path does not exist')
     return True
 
 def create_section(handler, path, parent_path, title, force=False):
