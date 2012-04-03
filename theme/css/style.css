@@ -1,10 +1,43 @@
+body {
+	margin: 0 0.8em;
+}
 h1, h2, h3, h4, h5, h6 {
-	background-color: #EBEFF9;
 	padding: 0.2em;
+	background-color: #EBEFF9;
 	border-top: 1px solid #6B90DA;
 }
+a {
+	color: #0000FF;
+}
+.site-header {
+	background: none;
+	border: none;
+}
+.site-header.main {
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+.site-header.sub {
+	margin-top: 0;
+	padding-top: 0;
+}
+.site-header a {
+	color: #666;
+	text-decoration: none;
+	font-size: 220%;
+	font-weight: normal;
+}
+.site-header.sub a {
+	font-size: 90%;
+}
+.bd {
+	margin: 0.8em 0;
+}
+.ft {
+	text-align: center;
+}
 .slingbar {
-	font-size: 80%;
+	font-size: 90%;
 	background-color: #FFFADB;
 	margin-top: 1em;
 	padding: 1em;
@@ -34,4 +67,31 @@ input {
 	color: #216600;
 	border: 2px solid #216600;
 	background-color: #D6FFC1;
+}
+
+/* Top Nav */
+
+.navigation.first-level {
+	background-color: #EBEFF9;
+	border-bottom: 1px solid #6B90DA;
+	padding: 1em 0.5em 0.6em 0.5em;
+	margin: 0;
+}
+.navigation.first-level li {
+	display: inline;
+	margin: 0 0.5em;
+	padding: 0.6em 0.6em 0.7em 0.6em;
+}
+.navigation.first-level li.first {
+	margin-left: 0;
+}
+.navigation.first-level li.current {
+	background-color: white;
+	border: 1px solid #6B90DA;
+	border-bottom: none;
+}
+.navigation.first-level li.current a {
+	color: black;
+	font-weight: bold;
+	text-decoration: none;
 }
