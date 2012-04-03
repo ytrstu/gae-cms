@@ -71,19 +71,20 @@ def get_form(action, path, parent_path, name, title):
     return form
 
 def view_first_level(path):
-    return list_ul(path, section.get_first_level(path), "first-level")
+    top = section.get_primary_ancestor(path)
+    return list_ul(path, section.get_first_level(path), "first-level", top[0]['path'])
 
 def view_second_level(path):
     return list_ul(path, section.get_second_level(path), "second-level")
 
-def list_ul(path, items, style):
-    if not items.count(): return ''
+def list_ul(path, items, style, top_path=None):
+    if not items: return ''
     ul = '<ul class="content navigation view ' + style + '">'
     i = 0
-    for item in items:
-        classes = 'current ' if item.path == path else ''
+    for item, _ in items:
+        classes = 'current ' if item['path'] == path or item['path'] == top_path else ''
         if not i: classes += 'first '
-        ul += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item.path if item.path != section.UNALTERABLE_HOME_PATH else '') + '">' + (item.name if item.name else '-') + '</a></li>'
+        ul += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item['path'] if item['path'] != section.UNALTERABLE_HOME_PATH else '') + '">' + (item['name'] if item['name'] else '-') + '</a></li>'
         i += 1
     ul += '</ul>' 
     return ul
