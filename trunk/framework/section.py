@@ -80,8 +80,8 @@ def get_section(handler, path_parts):
         return section
     except:
         if path_parts[0] == UNALTERABLE_HOME_PATH:
-            section = create_section(handler, path=path_parts[0], title='GAE-Python-CMS', force=True)
-            section.path_parts = [path_parts[0], 'navigation', 'edit']
+            section = create_section(handler, path=path_parts[0], name='Home', title='GAE-Python-CMS', force=True)
+            section.path_parts = [path_parts[0], None, None, None]
             return section
         raise Exception('Page not found', path_parts)
 
@@ -156,7 +156,7 @@ def create_section(handler, path, parent_path=None, name='', title='', force=Fal
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
-    section = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower() if parent_path else None, name=name, title=title)
+    section = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title)
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
@@ -174,9 +174,10 @@ def update_section(old, path, parent_path, name, title):
         new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title)
         old.delete()
         new.put()
-    elif old.parent_path != parent_path:
-        can_path_exist(path, parent_path, old.path)
-    old.parent_path = parent_path # TODO: This seems wrong, check it
+        return
+    elif old.parent_path != parent_path and can_path_exist(path, parent_path, old.path):
+        pass # Otherwise it will raise an exception
+    old.parent_path = parent_path
     old.name = name
     old.title = title
     old.put()
