@@ -25,3 +25,8 @@ INSTALLED_APPS = ('framework',)
 
 PROJECT_ROOT = os.path.dirname(__file__)
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "theme/templates"),)
+
+CONSTANTS = {
+             'SITE_HEADER': 'gae-python-cms',
+             'SITE_SUB_HEADER': 'Python Google AppEngine CMS',
+             }
