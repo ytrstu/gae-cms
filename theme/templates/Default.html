@@ -13,7 +13,7 @@
 		</div>
 		{{ self.path|view:"navigation, top"|safe }}
 		{{ self.path|view:"navigation, children"|safe }}
-		{{ body|safe }}
+		{{ main|safe }}
 		{% if user %}
 			<div class="slingbar user">
 				Welcome {{ user.email }}

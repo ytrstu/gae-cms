@@ -48,7 +48,7 @@ class Section(db.Model):
             'self': self,
             'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
             'primary_ancestor': self.get_primary_ancestor(),
-            'body': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>',
+            'main': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>Main content goes here',
         }
         return template.html(params)
         
@@ -81,7 +81,9 @@ def get_section(handler, path_parts):
         return section
     except:
         if path_parts[0] == UNALTERABLE_HOME_PATH:
-            return create_section(handler, path_parts[0], None, 'GAE-Python-CMS', force=True)
+            section = create_section(handler, path_parts[0], None, 'GAE-Python-CMS', force=True)
+            section.path_parts = [path_parts[0], 'navigation', 'edit']
+            return section
         raise Exception('Page not found', path_parts)
 
 def get_top_levels(path):
@@ -91,23 +93,20 @@ def get_children(path):
     return Section.gql("WHERE parent_path=:1", path)
 
 def is_ancestor(path, another_path):
-    # TODO: This is not working
-    while path:
-        if path == another_path: return True
+    while path != another_path:
         try:
             path = get_section(None, [path]).parent_path
         except:
             return False
-    return False
+    return True
 
-# TODO: If a child of an ancestor is changed to another child of an ancestor, that should be allowed
 def can_path_exist(path, parent_path, old_path=None):
     if not path:
         raise Exception('Path is required')
     elif is_ancestor(path, parent_path):
-        raise Exception('Path recursion detected: Path cannot be its own descendant')
+        raise Exception('Path recursion detected: Path is a descendant')
     elif is_ancestor(parent_path, path):
-        raise Exception('Path recursion detected: Path cannot be its own ancestor')
+        raise Exception('Path recursion detected: Path is an ancestor')
     if old_path != path:
         try:
             get_section(None, [path])
@@ -115,12 +114,10 @@ def can_path_exist(path, parent_path, old_path=None):
             pass
         else:
             raise Exception('Path already exists')
-    else:
+    if parent_path:
         try:
             get_section(None, [parent_path])
         except:
-            pass
-        else:
             raise Exception('Parent path does not exist')
     return True
 
@@ -133,15 +130,17 @@ def create_section(handler, path, parent_path, title, force=False):
     return section
 
 def update_section(old, path, parent_path, title):
-    if not can_path_exist(path, parent_path, old.path):
-        return None
-    elif old.path != path and path == UNALTERABLE_HOME_PATH:
-        raise Exception('This path name is reserved')
-    elif old.path != path and path != UNALTERABLE_HOME_PATH:
+    path = path.replace('/', '').replace(' ', '').strip().lower()
+    parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower()
+    if old.path != path:
+        can_path_exist(path, parent_path, old.path)
+        for child in get_children(old.path):
+            child.parent_path = path
+            child.put()
         new = Section(parent=section_key(path), path=path.lower(), parent_path=parent_path.lower(), title=title)
         old.delete()
         new.put()
     else:
-        old.parent_path = parent_path.lower()
+        old.parent_path = parent_path
         old.title = title
         old.put()
