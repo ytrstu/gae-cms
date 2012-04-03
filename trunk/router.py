@@ -48,10 +48,10 @@ class Router(webapp2.RequestHandler):
             elif inst[0] == 'Permission denied':
                 webapp2.abort(403)
             return webapp2.Response('RouterError: ' + str(inst))
-            
+
     def post(self, path):
         return self.get(path)
-        
+
 def get_path_parts(path):
     base_path = path.split('/')[0]
     path = path.lstrip(base_path).strip('/')
@@ -61,5 +61,5 @@ def get_path_parts(path):
     path = path.lstrip(action_path).strip('/')
     parameter_path = path.split('/')[0]
     return base_path, content_path, action_path, parameter_path
-        
+
 app = webapp2.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)
