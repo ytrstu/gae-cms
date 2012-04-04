@@ -49,7 +49,10 @@ class Router(webapp2.RequestHandler):
                 webapp2.abort(400)
             elif inst[0] == 'Forbidden':
                 webapp2.abort(403)
-            return webapp2.Response('RouterError: ' + str(inst) + '<br>' + traceback.format_exc())
+            elif settings.DEBUG:
+                return webapp2.Response('RouterError: ' + str(inst) + '\n\n' + traceback.format_exc())
+            else:
+                webapp2.abort(400)
 
     def post(self, path):
         return self.get(path)

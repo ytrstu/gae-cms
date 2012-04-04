@@ -49,6 +49,7 @@ class Section(db.Model):
             'CONSTANTS': settings.CONSTANTS,
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(self.path),
+            'section_has_siblings': len(get_siblings(self.path)) > 1,
             'logout_url': users.create_logout_url(loginout_url),
             'login_url': users.create_login_url(loginout_url),
             'self': self,
@@ -95,7 +96,7 @@ def get_helper(path, hierarchy):
 
 # TODO: This should replace the get_section function to make it more efficient
 def get(path):
-    return get_helper(path, cache_get_full_hierarchy())
+    return get_helper(path, get_top_level())
 
 def get_primary_ancestor_helper(path, hierarchy):
     for item, children in hierarchy:
@@ -104,21 +105,27 @@ def get_primary_ancestor_helper(path, hierarchy):
     return None
 
 def get_primary_ancestor(path):
-    return get_primary_ancestor_helper(path, cache_get_full_hierarchy())
-
-def get_first_level(path):
-    return cache_get_full_hierarchy()
+    return get_primary_ancestor_helper(path, get_top_level())
 
 def get_second_level(path):
     return get_primary_ancestor(path)[1]
 
-def db_get_hierarchy(path=None):
-    ret = []
-    for s in Section.gql("WHERE parent_path=:1", path):
-        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'title': s.title, 'name': s.name, 'keywords': s.keywords, 'description': s.description, 'rank': s.rank, 'is_private': s.is_private}, db_get_hierarchy(s.path)])
-    return ret
+def get_children_helper(path, hierarchy):
+    for item, children in hierarchy:
+        if path == item['path']: return children
+        val = get_children_helper(path, children)
+        if val: return val
+    return []
 
-def cache_get_full_hierarchy():
+def get_children(path):
+    if not path: return get_top_level()
+    return get_children_helper(path, get_top_level())
+
+def get_siblings(path):
+    section = get(path)
+    return get_children(section['parent_path']) if section else []
+
+def get_top_level():
     hierarchy = memcache.Client().get(MEMCACHE_KEY)
     if hierarchy is not None:
         return hierarchy
@@ -126,6 +133,12 @@ def cache_get_full_hierarchy():
         hierarchy = db_get_hierarchy()
         memcache.Client().set(MEMCACHE_KEY, hierarchy)
         return hierarchy
+
+def db_get_hierarchy(path=None):
+    ret = []
+    for s in Section.gql("WHERE parent_path=:1 ORDER BY rank", path):
+        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'rank': s.rank, 'is_private': s.is_private, 'name': s.name, 'title': s.title, 'keywords': s.keywords, 'description': s.description}, db_get_hierarchy(s.path)])
+    return ret
 
 def is_ancestor(path, another_path):
     while path != another_path:
@@ -153,7 +166,10 @@ def create_section(handler, path, parent_path=None, name='', title='', force=Fal
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
-    section = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title)
+    max_rank = 0
+    for item, _ in get_children(parent_path):
+        if item['rank'] <= max_rank: max_rank = item['rank'] + 1
+    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title)
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
@@ -173,7 +189,10 @@ def update_section(old, path, parent_path, name, title):
         new.put()
         return
     elif old.parent_path != parent_path and can_path_exist(path, parent_path, old.path):
-        pass # If not can_path_exist it will raise an exception
+        max_rank = 0
+        for item, _ in get_children(parent_path):
+            if item['rank'] <= max_rank: max_rank = item['rank'] + 1
+        old.rank = max_rank
     old.parent_path = parent_path
     old.name = name
     old.title = title
