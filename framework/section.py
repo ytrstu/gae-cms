@@ -87,43 +87,35 @@ def get_section(handler, path_parts):
         raise Exception('NotFound', path_parts)
 
 def get_helper(path, hierarchy):
-    for p in hierarchy:
-        if path == p: return hierarchy[p][0]
-        val = get_helper(path, hierarchy[p][1])
+    for item, children in hierarchy:
+        if path == item.path: return item
+        val = get_helper(path, children)
         if val: return val
     return None
 
-# TODO: This should replace the get_section function, more efficient
+# TODO: This should replace the get_section function to make it more efficient
 def get(path):
     return get_helper(path, cache_get_full_hierarchy())
 
 def get_primary_ancestor_helper(path, hierarchy):
-    for p in hierarchy:
-        if path == p or get_primary_ancestor_helper(path, hierarchy[p][1]):
-            return hierarchy[p]
+    for item, children in hierarchy:
+        if path == item['path'] or get_primary_ancestor_helper(path, children):
+            return [item, children]
     return None
 
 def get_primary_ancestor(path):
     return get_primary_ancestor_helper(path, cache_get_full_hierarchy())
 
 def get_first_level(path):
-    hierarchy = cache_get_full_hierarchy()
-    sections = []
-    for k in hierarchy:
-        sections.append(hierarchy[k])
-    return sections
+    return cache_get_full_hierarchy()
 
 def get_second_level(path):
-    top = get_primary_ancestor(path)
-    children = []
-    for k in top[1]:
-        children.append(top[1][k])
-    return children
+    return get_primary_ancestor(path)[1]
 
 def db_get_hierarchy(path=None):
-    ret = {}
+    ret = []
     for s in Section.gql("WHERE parent_path=:1", path):
-        ret[s.path] = {'path': s.path, 'parent_path': s.parent_path, 'title': s.title, 'name': s.name, 'keywords': s.keywords, 'description': s.description, 'rank': s.rank, 'is_private': s.is_private}, db_get_hierarchy(s.path)
+        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'title': s.title, 'name': s.name, 'keywords': s.keywords, 'description': s.description, 'rank': s.rank, 'is_private': s.is_private}, db_get_hierarchy(s.path)])
     return ret
 
 def cache_get_full_hierarchy():
