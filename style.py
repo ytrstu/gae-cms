@@ -27,7 +27,9 @@ class Style(webapp2.RequestHandler):
             css = ''
             for p in path:
                 css += open(p, 'r').read()
-            return webapp2.Response(css, content_type='text/css')
+            response = webapp2.Response(css, content_type='text/css')
+            response.headers['Connection'] = 'Keep-Alive'
+            return response
         except:
             webapp2.abort(404)
             

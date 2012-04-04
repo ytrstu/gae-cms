@@ -41,11 +41,11 @@ class Router(webapp2.RequestHandler):
         except Exception as inst:
             if inst[0] == 'Redirect':
                 return self.redirect(inst[1])
-            elif inst[0] == 'Page not found':
+            elif inst[0] == 'NotFound':
                 webapp2.abort(404)
-            elif inst[0] == 'Undefined content':
-                webapp2.abort(404)
-            elif inst[0] == 'Permission denied':
+            elif inst[0] == 'BadRequest':
+                webapp2.abort(400)
+            elif inst[0] == 'Forbidden':
                 webapp2.abort(403)
             return webapp2.Response('RouterError: ' + str(inst))
 
