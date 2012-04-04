@@ -22,21 +22,10 @@ from ... import section
 
 class navigation(base.base):
     content_permissions = {
-                           'edit': 'Edit section',
                            'create': 'Create section',
+                           'edit': 'Edit section',
+                           'reorder': 'Reorder section',
                            }
-    def action_edit(self):
-        ret = ''
-        if self.handler.request.get('submit'):
-            path, parent_path, name, title = get_values(self.handler.request)
-            try:
-                section.update_section(self.section, path, parent_path, name, title)
-            except Exception as inst:
-                ret += '<div class="status error">' + inst[0] + '</div>'
-            else:
-                raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title)
-        return ret
     
     def action_create(self):
         ret = ''
@@ -45,11 +34,40 @@ class navigation(base.base):
             try:
                 section.create_section(self.handler, path, parent_path, name, title)
             except Exception as inst:
-                ret += '<div class="status error">' + inst[0] + '</div>'
+                ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
                 raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
         ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '', '')
         return ret
+
+    def action_edit(self):
+        ret = ''
+        if self.handler.request.get('submit'):
+            path, parent_path, name, title = get_values(self.handler.request)
+            try:
+                section.update_section(self.section, path, parent_path, name, title)
+            except Exception as inst:
+                ret += '<div class="status error">' + str(inst[0]) + '</div>'
+            else:
+                raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
+        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title)
+        return ret
+
+    def action_reorder(self):
+        siblings = section.get_siblings(self.section.path)
+        if not len(siblings) > 1: raise Exception('BadRequest')
+        # TODO: Handle saving form
+        form = '<form method="POST" action="/' + '/'.join(self.path_parts).strip('/') + '"><select>'
+        select_next = False
+        for item, _ in siblings:
+            if item['path'] != self.section.path:
+                form += '<option value="' + str(item['rank']) + '"' + (' selected' if select_next else '') + '>Before ' + item['path'] + '</option>'
+                select_next = False
+            else:
+                select_next = True
+        form += '<option value="' + str(self.section.rank) + '"' + (' selected' if self.section.rank == (len(siblings) - 1) else '') + '>At the bottom</option>'
+        form += '</select><input type="submit" name="submit" id="submit"></form>'
+        return form
 
 def get_values(request):
         path = request.get('path').replace(' ', '').replace('/', '').lower()
@@ -72,7 +90,7 @@ def get_form(action, path, parent_path, name, title):
 
 def view_first_level(path):
     ancestor = section.get_primary_ancestor(path)[0]
-    first_level = section.get_first_level(path)
+    first_level = section.get_top_level()
     first_only = []
     for item, _ in first_level:
         item['is_ancestor'] = item['path'] == ancestor['path']

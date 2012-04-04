@@ -30,6 +30,7 @@
 						<ul>
 							<li><a href="/{{ self.path }}/navigation/edit">Edit this page</a></li>
 							<li><a href="/{{ self.path }}/navigation/create">Create new page</a></li>
+							{% if section_has_siblings %}<li><a href="/{{ self.path }}/navigation/reorder">Reorder page</a></li>{% endif %} 
 						</ul>
 					</div>
 				{% endif %}
