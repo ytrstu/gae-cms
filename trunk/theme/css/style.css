@@ -85,13 +85,13 @@ input {
 .navigation.first-level li.first {
 	margin-left: 0;
 }
-.navigation.first-level li.current {
+.navigation.first-level li.current, .navigation.first-level li.ancestor {
+	font-weight: bold;
 	background-color: white;
 	border: 1px solid #6B90DA;
 	border-bottom: none;
 }
-.navigation.first-level li.current a {
+.navigation.first-level li.current a, .navigation.first-level li.ancestor a {
 	color: black;
-	font-weight: bold;
 	text-decoration: none;
 }

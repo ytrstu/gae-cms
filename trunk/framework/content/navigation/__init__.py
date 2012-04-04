@@ -71,20 +71,49 @@ def get_form(action, path, parent_path, name, title):
     return form
 
 def view_first_level(path):
-    top = section.get_primary_ancestor(path)
-    return list_ul(path, section.get_first_level(path), "first-level", top[0]['path'])
+    ancestor = section.get_primary_ancestor(path)[0]
+    first_level = section.get_first_level(path)
+    first_only = []
+    for item, _ in first_level:
+        item['is_ancestor'] = item['path'] == ancestor['path']
+        first_only.append([item, []])
+    return list_ul(path, first_only, "first-level")
 
 def view_second_level(path):
-    return list_ul(path, section.get_second_level(path), "second-level")
+    second_level = section.get_second_level(path)
+    for item in second_level:
+        item[0]['is_ancestor'] = False
+        item[1] = None
+    return list_ul(path, second_level, "second-level")
 
-def list_ul(path, items, style, top_path=None):
+# TODO: Mark ancestors and remove rest for expanding hierarchy
+def set_ancestry(path, items):
+    for item in items:
+        item[0]['is_ancestor'] = False
+        item[1] = set_ancestry(path, item[1])
+    return items
+
+def view_second_level_expanding_hierarchy(path):
+    second_level = set_ancestry(path, section.get_second_level(path))
+    return list_ul(path, second_level, "second-level-expanding-hierarchy")
+
+def list_ul(path, items, style):
     if not items: return ''
     ul = '<ul class="content navigation view ' + style + '">'
-    i = 0
-    for item, _ in items:
-        classes = 'current ' if item['path'] == path or item['path'] == top_path else ''
-        if not i: classes += 'first '
-        ul += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item['path'] if item['path'] != section.UNALTERABLE_HOME_PATH else '') + '">' + (item['name'] if item['name'] else '-') + '</a></li>'
-        i += 1
+    ul += list_li(path, items)
     ul += '</ul>' 
     return ul
+
+def list_li(path, items):
+    li = ''
+    i = 0
+    for item, children in items:
+        classes = 'current' if item['path'] == path else ''
+        if item['is_ancestor']: classes += ' ancestor'
+        if not i: classes += ' first '
+        li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item['path'] if item['path'] != section.UNALTERABLE_HOME_PATH else '') + '">' + (item['name'] if item['name'] else '-') + '</a>'
+        if children:
+            li += '<ul>' + list_li(path, children) + '</ul>'
+        li += '</li>'
+        i += 1
+    return li

@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
+import os, traceback
 
 import webapp2
 
@@ -47,7 +47,7 @@ class Router(webapp2.RequestHandler):
                 webapp2.abort(400)
             elif inst[0] == 'Forbidden':
                 webapp2.abort(403)
-            return webapp2.Response('RouterError: ' + str(inst))
+            return webapp2.Response('RouterError: ' + str(inst) + '<br>' + traceback.format_exc())
 
     def post(self, path):
         return self.get(path)
