@@ -27,6 +27,7 @@ from framework.subsystems import permission
 import settings
 
 UNALTERABLE_HOME_PATH = 'home'
+MEMCACHE_KEY = 'section_hierarchy'
 
 class Section(db.Model):
     path = db.StringProperty(required=True)
@@ -62,11 +63,11 @@ class Section(db.Model):
         try:
             m = __import__(package, globals(), locals(), [self.path_parts[1]])
         except:
-            raise Exception('Undefined content', self.path_parts[1])
+            raise Exception('BadRequest', self.path_parts[1])
         klass = getattr(m, self.path_parts[1])
         content = klass(self, self.handler, self.path_parts)
         if not permission.perform_action(content, self.path_parts):
-            raise Exception('Permission denied', self.path_parts[0], self.path_parts[1])
+            raise Exception('Forbidden', self.path_parts[0], self.path_parts[1])
         return content
 
 def section_key(path):
@@ -83,7 +84,18 @@ def get_section(handler, path_parts):
             section = create_section(handler, path=path_parts[0], name='Home', title='GAE-Python-CMS', force=True)
             section.path_parts = [path_parts[0], None, None, None]
             return section
-        raise Exception('Page not found', path_parts)
+        raise Exception('NotFound', path_parts)
+
+def get_helper(path, hierarchy):
+    for p in hierarchy:
+        if path == p: return hierarchy[p][0]
+        val = get_helper(path, hierarchy[p][1])
+        if val: return val
+    return None
+
+# TODO: This should replace the get_section function, more efficient
+def get(path):
+    return get_helper(path, cache_get_full_hierarchy())
 
 def get_primary_ancestor_helper(path, hierarchy):
     for p in hierarchy:
@@ -115,18 +127,19 @@ def db_get_hierarchy(path=None):
     return ret
 
 def cache_get_full_hierarchy():
-    hierarchy = memcache.Client().get('section_hierarchy')
+    hierarchy = memcache.Client().get(MEMCACHE_KEY)
     if hierarchy is not None:
         return hierarchy
     else:
         hierarchy = db_get_hierarchy()
-        memcache.Client().set('section_hierarchy', hierarchy)
+        memcache.Client().set(MEMCACHE_KEY, hierarchy)
         return hierarchy
 
 def is_ancestor(path, another_path):
     while path != another_path:
+        section = get(path)
         try:
-            path = get_section(None, [path]).parent_path
+            path = section['parent_path']
         except:
             return False
     return True
@@ -138,18 +151,10 @@ def can_path_exist(path, parent_path, old_path=None):
         raise Exception('Path recursion detected: Path is a descendant')
     elif is_ancestor(parent_path, path):
         raise Exception('Path recursion detected: Path is an ancestor')
-    if old_path != path:
-        try:
-            get_section(None, [path])
-        except:
-            pass
-        else:
-            raise Exception('Path already exists')
-    if parent_path:
-        try:
-            get_section(None, [parent_path])
-        except:
-            raise Exception('Parent path does not exist')
+    elif old_path != path and get(path):
+        raise Exception('Path already exists')
+    elif parent_path and not get(parent_path):
+        raise Exception('Parent path does not exist')
     return True
 
 def create_section(handler, path, parent_path=None, name='', title='', force=False):
@@ -160,7 +165,7 @@ def create_section(handler, path, parent_path=None, name='', title='', force=Fal
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
-    memcache.Client().delete('section_hierarchy')
+    memcache.Client().delete(MEMCACHE_KEY)
     return section
 
 def update_section(old, path, parent_path, name, title):
@@ -181,4 +186,4 @@ def update_section(old, path, parent_path, name, title):
     old.name = name
     old.title = title
     old.put()
-    memcache.Client().delete('section_hierarchy')
+    memcache.Client().delete(MEMCACHE_KEY)
