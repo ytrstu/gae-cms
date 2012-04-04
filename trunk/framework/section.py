@@ -79,7 +79,7 @@ def get_section(handler, path_parts):
         section.path_parts = path_parts
         return section
     except:
-        if path_parts[0] == UNALTERABLE_HOME_PATH:
+        if path_parts[0] == UNALTERABLE_HOME_PATH and not path_parts[1]:
             section = create_section(handler, path=path_parts[0], name='Home', title='GAE-Python-CMS', force=True)
             section.path_parts = [path_parts[0], None, None, None]
             return section
