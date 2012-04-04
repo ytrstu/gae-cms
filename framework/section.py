@@ -176,7 +176,7 @@ def update_section(old, path, parent_path, name, title):
         new.put()
         return
     elif old.parent_path != parent_path and can_path_exist(path, parent_path, old.path):
-        pass # Otherwise it will raise an exception
+        pass # If not can_path_exist it will raise an exception
     old.parent_path = parent_path
     old.name = name
     old.title = title
