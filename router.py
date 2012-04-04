@@ -37,7 +37,9 @@ class Router(webapp2.RequestHandler):
         if path_parts[1] and not path_parts[2]: # Content is defined but no action
                 webapp2.abort(404)
         try:
-            return webapp2.Response(str(section.get_section(self, path_parts)))
+            response = webapp2.Response(str(section.get_section(self, path_parts)))
+            response.headers['Connection'] = 'Keep-Alive'
+            return response
         except Exception as inst:
             if inst[0] == 'Redirect':
                 return self.redirect(inst[1])

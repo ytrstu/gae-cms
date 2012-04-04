@@ -18,7 +18,9 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from django.template import Library
-import importlib
+import importlib, traceback
+
+import settings
 
 register = Library()
 
@@ -30,4 +32,5 @@ def view(path, param_string):
         view = getattr(m, 'view_' + view)
         return view(path)
     except Exception as inst:
-        return '<div class="status error">Error: View does not exist: ' + str(inst) + '</div>'
+        error = str(inst) + (('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else '')
+        return '<div class="status error">Error: View does not exist: ' + error + '</div>'

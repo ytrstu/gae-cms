@@ -77,25 +77,35 @@ def view_first_level(path):
     for item, _ in first_level:
         item['is_ancestor'] = item['path'] == ancestor['path']
         first_only.append([item, []])
-    return list_ul(path, first_only, "first-level")
+    return list_ul(path, first_only, 'first-level')
 
 def view_second_level(path):
     second_level = section.get_second_level(path)
     for item in second_level:
         item[0]['is_ancestor'] = False
         item[1] = None
-    return list_ul(path, second_level, "second-level")
+    return list_ul(path, second_level, 'second-level')
 
-# TODO: Mark ancestors and remove rest for expanding hierarchy
 def set_ancestry(path, items):
     for item in items:
-        item[0]['is_ancestor'] = False
-        item[1] = set_ancestry(path, item[1])
+        if section.is_ancestor(path, item[0]['path']):
+            item[0]['is_ancestor'] = True 
+            item[1] = set_ancestry(path, item[1])
+        else:
+            item[0]['is_ancestor'] = False
+            item[1] = None
     return items
 
 def view_second_level_expanding_hierarchy(path):
-    second_level = set_ancestry(path, section.get_second_level(path))
-    return list_ul(path, second_level, "second-level-expanding-hierarchy")
+    second_level = section.get_second_level(path)
+    for item in second_level:
+        if(section.is_ancestor(path, item[0]['path'])):
+            item[0]['is_ancestor'] = True
+            item[1] = set_ancestry(path, item[1])
+        else:
+            item[0]['is_ancestor'] = False
+            item[1] = None
+    return list_ul(path, second_level, 'second-level-expanding-hierarchy')
 
 def list_ul(path, items, style):
     if not items: return ''
