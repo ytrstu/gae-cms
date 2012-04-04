@@ -88,7 +88,7 @@ def get_section(handler, path_parts):
 
 def get_helper(path, hierarchy):
     for item, children in hierarchy:
-        if path == item.path: return item
+        if path == item['path']: return item
         val = get_helper(path, children)
         if val: return val
     return None
