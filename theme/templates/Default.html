@@ -2,8 +2,8 @@
 <html>
 	<head>
 		<title>{{ self.title }}</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if keywords %}
-		<meta name="Keywords" content="{{ self.keywords }}">{% endif %}{% if description %}
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if self.keywords %}
+		<meta name="Keywords" content="{{ self.keywords }}">{% endif %}{% if self.description %}
 		<meta name="Description" content="{{ self.description }}">{% endif %}
 		<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?3.4.1/build/cssfonts/cssfonts-min.css&3.4.1/build/cssreset/cssreset-min.css&3.4.1/build/cssbase/cssbase-min.css&3.4.1/build/cssgrids/grids-min.css">
 		<link rel="stylesheet" type="text/css" href="/framework+content+navigation+assets+css+nth-level|framework+content+navigation+assets+css+expanding-hierarchy|theme+css+style.css">
