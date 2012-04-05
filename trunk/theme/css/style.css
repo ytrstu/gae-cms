@@ -27,6 +27,7 @@ a {
 	font-size: 220%;
 	font-weight: normal;
 	padding-left: 55px;
+	outline: none;
 }
 .site-header.sub a {
 	font-size: 90%;

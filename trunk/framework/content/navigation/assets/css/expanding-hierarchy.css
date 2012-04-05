@@ -10,8 +10,6 @@ ul.navigation.vertical {
 	margin-right: 0;
 }
 .navigation.vertical a {
-}
-.navigation.vertical a {
 	display: block;
 	width: 100%;
 	padding: 0.3em 0 0.3em 0.3em;

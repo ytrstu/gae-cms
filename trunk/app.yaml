@@ -27,7 +27,7 @@ inbound_services:
 
 libraries:
 - name: django
-  version: "1.2"
+  version: 1.2
 
 handlers:
 - url: /theme/js
@@ -35,14 +35,10 @@ handlers:
   
 - url: /theme/images
   static_dir: theme/images
+  expiration: 30d
 
 - url: /(.*).css
-  script: style.app
+  script: compressor.app
   
 - url: /.*
   script: router.app
-
-admin_console:
-  pages:
-  - name: Administrate GAE-Python-CMS
-    url: /admin/

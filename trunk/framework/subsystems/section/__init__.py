@@ -19,16 +19,16 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from google.appengine.ext import db
-from google.appengine.api import memcache
 from google.appengine.api import users
 
+from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems import permission
 
 import settings
 
 UNALTERABLE_HOME_PATH = 'home'
-MEMCACHE_KEY = 'section_hierarchy'
+CACHE_KEY = 'section_hierarchy'
 
 class Section(db.Model):
     path = db.StringProperty(required=True)
@@ -127,13 +127,11 @@ def get_siblings(path):
     return get_children(section['parent_path']) if section else []
 
 def get_top_level():
-    hierarchy = memcache.Client().get(MEMCACHE_KEY)
-    if hierarchy is not None:
-        return hierarchy
-    else:
-        hierarchy = db_get_hierarchy()
-        memcache.Client().set(MEMCACHE_KEY, hierarchy)
-        return hierarchy
+    hierarchy = cache.get(CACHE_KEY)
+    if hierarchy: return hierarchy
+    hierarchy = db_get_hierarchy()
+    cache.set(CACHE_KEY, hierarchy)
+    return hierarchy
 
 def db_get_hierarchy(path=None):
     ret = []
@@ -174,7 +172,7 @@ def create_section(handler, path, parent_path=None, name='', title='', force=Fal
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
-    memcache.Client().delete(MEMCACHE_KEY)
+    cache.delete(CACHE_KEY)
     return section
 
 def update_section(old, path, parent_path, name, title):
@@ -198,7 +196,7 @@ def update_section(old, path, parent_path, name, title):
     old.name = name
     old.title = title
     old.put()
-    memcache.Client().delete(MEMCACHE_KEY)
+    cache.delete(CACHE_KEY)
 
 def update_section_rank(section, new_rank):
     larger, smaller = max(section.rank, new_rank), min(section.rank, new_rank)
@@ -210,4 +208,4 @@ def update_section_rank(section, new_rank):
         else:
             sibling.rank = new_rank
         sibling.put()
-    memcache.Client().delete(MEMCACHE_KEY)
+    cache.delete(CACHE_KEY)
