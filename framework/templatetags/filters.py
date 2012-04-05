@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -26,11 +27,13 @@ register = Library()
 
 @register.filter
 def view(path, param_string):
-    mod, view = [x.strip() for x in param_string.split(',')]
+    params = [x.strip() for x in param_string.split(',')]
+    mod, view = params[0:2]
+    params = params[2:] if len(params) > 2 else None
     try:
         m = importlib.import_module('framework.content.' + mod)
         view = getattr(m, 'view_' + view)
-        return view(path)
+        return view(path, params) if params else view(path)
     except Exception as inst:
-        error = str(inst) + (('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else '')
+        error = str(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
         return '<div class="status error">Error: View does not exist: ' + error + '</div>'

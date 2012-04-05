@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,6 +19,8 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import os
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
