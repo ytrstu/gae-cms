@@ -1,6 +1,3 @@
-body {
-	margin: 0 0.8em;
-}
 h1, h2, h3, h4, h5, h6 {
 	padding: 0.2em;
 	background-color: #EBEFF9;
@@ -34,12 +31,10 @@ a {
 }
 .hd {
 	background: url(/theme/images/sprite.png) 0 16px no-repeat;
+	margin: 0 0.8em;
 }
 .bd {
-	margin: 0.8em 0;
-}
-.sd .content {
-	margin-right: 0.8em;
+	margin: 0.8em;
 }
 .ft {
 	text-align: center;
