@@ -20,7 +20,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from .. import base
 from framework.subsystems import section
-from framework.subsystems.forms import form, control, selectcontrol
+from framework.subsystems.forms import form, control, selectcontrol, textareacontrol
 
 class navigation(base.base):
     
@@ -33,27 +33,27 @@ class navigation(base.base):
     def action_create(self):
         ret = '<h2>Create new section</h2>'
         if self.handler.request.get('submit'):
-            path, parent_path, name, title = get_values(self.handler.request)
+            path, parent_path, name, title, keywords, description = get_values(self.handler.request)
             try:
-                section.create_section(self.handler, path, parent_path, name, title)
+                section.create_section(self.handler, path, parent_path, name, title, keywords, description)
             except Exception as inst:
                 ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
                 raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path, '', '')
+        ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path)
         return ret
 
     def action_edit(self):
         ret = '<h2>Edit section "' + self.section.path + '"</h2>'
         if self.handler.request.get('submit'):
-            path, parent_path, name, title = get_values(self.handler.request)
+            path, parent_path, name, title, keywords, description = get_values(self.handler.request)
             try:
-                section.update_section(self.section, path, parent_path, name, title)
+                section.update_section(self.section, path, parent_path, name, title, keywords, description)
             except Exception as inst:
                 ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
                 raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title)
+        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description)
         return ret
 
     def action_reorder(self):
@@ -81,9 +81,11 @@ def get_values(request):
         parent_path = request.get('parent_path').replace(' ', '').replace('/', '').lower()
         name = request.get('name')
         title = request.get('title')
-        return path, parent_path, name, title
+        keywords = request.get('keywords')
+        description = request.get('description')
+        return path, parent_path, name, title, keywords, description
             
-def get_form(action, path, parent_path, name, title):
+def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None):
     f = form(action)
     if path == section.UNALTERABLE_HOME_PATH:
         f.add_control(control('hidden', 'path', path))
@@ -92,6 +94,8 @@ def get_form(action, path, parent_path, name, title):
     f.add_control(control('text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
     f.add_control(control('text', 'name', name if name else '', 'Name', 30))
     f.add_control(control('text', 'title', title if title else '', 'Title', 60))
+    f.add_control(textareacontrol('keywords', keywords if keywords else '', 'Keywords', 60, 5))
+    f.add_control(textareacontrol('description', description if description else '', 'Description', 60, 5))
     f.add_control(control('submit', 'submit'))
     return str(f)
 

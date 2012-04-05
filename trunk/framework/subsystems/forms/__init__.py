@@ -74,3 +74,22 @@ class selectcontrol(control):
             out += '>' + i[1] + '</option>'
         out += '</select>'
         return out
+        
+class textareacontrol(control):
+    
+    def __init__(self, name, value=None, label=None, width=None, rows=None):
+        self.name = name
+        self.value = value
+        self.label = label
+        self.width = width
+        self.rows = rows
+        
+    def __str__(self):
+        out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
+        out += '<textarea name="' + self.name + '" id="' + self.name + '"'
+        if self.width: out += ' style="width:' + str(self.width) + '%"'
+        if self.rows: out += ' rows="' + str(self.rows) + '"'
+        out += '>'
+        if self.value: out += self.value
+        out += '</textarea>'
+        return out

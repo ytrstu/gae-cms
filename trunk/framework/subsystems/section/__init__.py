@@ -161,21 +161,21 @@ def can_path_exist(path, parent_path, old_path=None):
         raise Exception('Parent path does not exist')
     return True
 
-def create_section(handler, path, parent_path=None, name='', title='', force=False):
+def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', force=False):
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
     max_rank = 0
     for item, _ in get_children(parent_path):
         if item['rank'] <= max_rank: max_rank = item['rank'] + 1
-    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title)
+    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description)
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
     cache.delete(CACHE_KEY)
     return section
 
-def update_section(old, path, parent_path, name, title):
+def update_section(old, path, parent_path, name, title, keywords, description):
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
     if old.path != path:
@@ -183,7 +183,7 @@ def update_section(old, path, parent_path, name, title):
         for child in Section.gql("WHERE parent_path=:1", old.path):
             child.parent_path = path
             child.put()
-        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title)
+        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description)
         old.delete()
         new.put()
         return
@@ -195,6 +195,8 @@ def update_section(old, path, parent_path, name, title):
     old.parent_path = parent_path
     old.name = name
     old.title = title
+    old.keywords = keywords
+    old.description = description
     old.put()
     cache.delete(CACHE_KEY)
 
