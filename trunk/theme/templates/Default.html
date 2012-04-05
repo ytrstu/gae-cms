@@ -12,8 +12,8 @@
 		<div class="hd">
 			<h1 class="site-header main"><a href="/">{{ CONSTANTS.SITE_HEADER }}</a></h1>
 			<h2 class="site-header sub"><a href="/">{{ CONSTANTS.SITE_SUB_HEADER }}</a></h2>
-			{{ self.path|view:"navigation, nth_level, 0, horizontal"|safe }}
 		</div>
+		{{ self.path|view:"navigation, nth_level, 0, horizontal"|safe }}
 		<div class="bd yui3-g">
 			<div class="sd yui3-u-1-6">{{ self.path|view:"navigation, expanding_hierarchy, 1, vertical"|safe }}</div>
 			<div class="mn yui3-u-5-6">{{ main|safe }}</div>
