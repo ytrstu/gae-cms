@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,7 +19,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from .. import base
-from ... import section
+from framework.subsystems import section
 
 class navigation(base.base):
     content_permissions = {
@@ -88,21 +89,21 @@ def get_form(action, path, parent_path, name, title):
     form += '<input type="submit" name="submit" id="submit"></form>'
     return form
 
-def view_first_level(path):
-    ancestor = section.get_primary_ancestor(path)[0]
-    first_level = section.get_top_level()
-    first_only = []
-    for item, _ in first_level:
-        item['is_ancestor'] = item['path'] == ancestor['path']
-        first_only.append([item, []])
-    return list_ul(path, first_only, 'first-level')
-
-def view_second_level(path):
-    second_level = section.get_second_level(path)
-    for item in second_level:
-        item[0]['is_ancestor'] = False
-        item[1] = None
-    return list_ul(path, second_level, 'second-level')
+def view_nth_level(path, params):
+    n = int(params[0])
+    classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
+    hierarchy = section.get_top_level()
+    while n:
+        for h in hierarchy:
+            if section.is_ancestor(path, h[0]['path']):
+                hierarchy = h[1]
+        n -= 1
+    parents_only = []
+    print hierarchy
+    for item, _ in hierarchy:
+        item['is_ancestor'] = section.is_ancestor(item['path'], path)
+        parents_only.append([item, []])
+    return list_ul(path, parents_only, classes)
 
 def set_ancestry(path, items):
     for item in items:
@@ -114,16 +115,23 @@ def set_ancestry(path, items):
             item[1] = None
     return items
 
-def view_second_level_expanding_hierarchy(path):
-    second_level = section.get_second_level(path)
-    for item in second_level:
+def view_expanding_hierarchy(path, params):
+    n = int(params[0])
+    classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
+    hierarchy = section.get_top_level()
+    while n:
+        for h in hierarchy:
+            if section.is_ancestor(path, h[0]['path']):
+                hierarchy = h[1]
+        n -= 1
+    for item in hierarchy:
         if(section.is_ancestor(path, item[0]['path'])):
             item[0]['is_ancestor'] = True
             item[1] = set_ancestry(path, item[1])
         else:
             item[0]['is_ancestor'] = False
             item[1] = None
-    return list_ul(path, second_level, 'second-level-expanding-hierarchy')
+    return list_ul(path, hierarchy, classes)
 
 def list_ul(path, items, style):
     if not items: return ''

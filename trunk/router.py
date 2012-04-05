@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -17,14 +18,12 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os, traceback
+import traceback
 
 import webapp2
 
-from framework import section
+from framework.subsystems import section
 import settings
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
