@@ -199,3 +199,15 @@ def update_section(old, path, parent_path, name, title):
     old.title = title
     old.put()
     memcache.Client().delete(MEMCACHE_KEY)
+
+def update_section_rank(section, new_rank):
+    larger, smaller = max(section.rank, new_rank), min(section.rank, new_rank)
+    for sibling in Section.gql("WHERE parent_path=:1 AND rank>=:2 AND rank<=:3 ORDER BY rank", section.parent_path, smaller, larger):
+        if sibling.rank < section.rank:
+            sibling.rank += 1
+        elif sibling.rank > section.rank:
+            sibling.rank -= 1
+        else:
+            sibling.rank = new_rank
+        sibling.put()
+    memcache.Client().delete(MEMCACHE_KEY)
