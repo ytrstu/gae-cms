@@ -26,9 +26,13 @@ a {
 	text-decoration: none;
 	font-size: 220%;
 	font-weight: normal;
+	padding-left: 55px;
 }
 .site-header.sub a {
 	font-size: 90%;
+}
+.hd {
+	background: url(/theme/images/sprite.png) 0 16px no-repeat;
 }
 .bd {
 	margin: 0.8em 0;
@@ -79,70 +83,4 @@ input {
 	padding: 1em;
 	margin: 1em 0;
 	border: 1px solid black;
-}
-
-/* Top Nav */
-
-.navigation.first-level {
-	background-color: #EBEFF9;
-	border-bottom: 1px solid #6B90DA;
-	padding: 1em 0.5em 0.6em 0.5em;
-	margin: 0;
-}
-.navigation.first-level li {
-	display: inline;
-	margin: 0 0.5em;
-	padding: 0.6em 0.6em 0.7em 0.6em;
-}
-.navigation.first-level li.first {
-	margin-left: 0;
-}
-.navigation.first-level li.current, .navigation.first-level li.ancestor {
-	font-weight: bold;
-	background-color: white;
-	border: 1px solid #6B90DA;
-	border-bottom: none;
-}
-.navigation.first-level li.current a, .navigation.first-level li.ancestor a {
-	color: black;
-	text-decoration: none;
-}
-
-/* Expanding Hierarchy */
-
-ul.navigation.second-level-expanding-hierarchy {
-	list-style: none;
-	border-right: 0.3em solid #EBEFF9;
-	margin-left: 0;
-	padding: 1em 0;
-}
-.navigation.second-level-expanding-hierarchy ul {
-	list-style-type: none;
-	margin-top: 0;
-	margin-right: 0;
-}
-.navigation.second-level-expanding-hierarchy a {
-}
-.navigation.second-level-expanding-hierarchy a {
-	display: block;
-	width: 100%;
-	padding: 0.3em 0 0.3em 0.3em;
-	margin: 0.3em 0;
-}
-.navigation.second-level-expanding-hierarchy li.current a {
-	background-color: #EBEFF9;
-	border-top-left-radius: 0.4em;
-	border-bottom-left-radius: 0.4em;
-}
-.navigation.second-level-expanding-hierarchy li.current li a {
-	background: none;
-}
-.navigation.second-level-expanding-hierarchy li.current a {
-	color: black;
-	text-decoration: none;
-	font-weight: bold;
-}
-.navigation.second-level-expanding-hierarchy li.current li a {
-	color: #0000FF;
-	text-decoration: underline;
 }

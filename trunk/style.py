@@ -22,12 +22,12 @@ import webapp2
 class Style(webapp2.RequestHandler):
     def get(self, path):
         try:
-            path = path.split('.')[0].strip('/').replace('-', '/').lower().strip()
-            path = [x + '.css' for x in path.split('_')]
+            path = path.split('.')[0].strip('/').replace('+', '/').lower().strip()
+            path = [x + '.css' for x in path.split('|')]
             css = ''
             for p in path:
-                css += open(p, 'r').read()
-            response = webapp2.Response(css, content_type='text/css')
+                css += open(p, 'r').read() + '\n'
+            response = webapp2.Response(css.strip(), content_type='text/css')
             response.headers['Connection'] = 'Keep-Alive'
             return response
         except:
