@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -20,13 +21,10 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from google.appengine.ext import db
 
 class base:
+    
     path = db.StringProperty()
     rank = db.IntegerProperty()
     section_path = db.StringProperty()
-    
-    handler = None
-    path_parts = None
-    section = None
     
     base_permissions = {
                         'administrate': 'Administer Permissions'

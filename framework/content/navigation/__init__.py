@@ -20,8 +20,10 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from .. import base
 from framework.subsystems import section
+from framework.subsystems.forms import form, control, selectcontrol
 
 class navigation(base.base):
+    
     content_permissions = {
                            'create': 'Create section',
                            'edit': 'Edit section',
@@ -29,7 +31,7 @@ class navigation(base.base):
                            }
     
     def action_create(self):
-        ret = ''
+        ret = '<h2>Create new section</h2>'
         if self.handler.request.get('submit'):
             path, parent_path, name, title = get_values(self.handler.request)
             try:
@@ -42,7 +44,7 @@ class navigation(base.base):
         return ret
 
     def action_edit(self):
-        ret = ''
+        ret = '<h2>Edit section "' + self.section.path + '"</h2>'
         if self.handler.request.get('submit'):
             path, parent_path, name, title = get_values(self.handler.request)
             try:
@@ -57,18 +59,22 @@ class navigation(base.base):
     def action_reorder(self):
         siblings = section.get_siblings(self.section.path)
         if not len(siblings) > 1: raise Exception('BadRequest')
-        # TODO: Handle saving form
-        form = '<form method="POST" action="/' + '/'.join(self.path_parts).strip('/') + '"><select>'
-        select_next = False
+        if self.handler.request.get('submit'):
+            new_rank = int(self.handler.request.get('rank'))
+            if self.section.rank != new_rank:
+                section.update_section_rank(self.section, new_rank)
+            raise Exception('Redirect', '/' + (self.section.path if self.section.path != section.UNALTERABLE_HOME_PATH else ''))
+        f = form('/'.join(self.path_parts).strip('/'))
+        items = [[0, 'At the top']]
+        adder = 1
         for item, _ in siblings:
-            if item['path'] != self.section.path:
-                form += '<option value="' + str(item['rank']) + '"' + (' selected' if select_next else '') + '>Before ' + item['path'] + '</option>'
-                select_next = False
+            if self.section.rank != item['rank']:
+                items.append([item['rank'] + adder, 'After ' + item['path']])
             else:
-                select_next = True
-        form += '<option value="' + str(self.section.rank) + '"' + (' selected' if self.section.rank == (len(siblings) - 1) else '') + '>At the bottom</option>'
-        form += '</select><input type="submit" name="submit" id="submit"></form>'
-        return form
+                adder = 0
+        f.add_control(selectcontrol('rank', items, self.section.rank, 'Position'))
+        f.add_control(control('submit', 'submit'))
+        return '<h2>Reorder section "' + self.section.path + '"</h2>' + str(f)
 
 def get_values(request):
         path = request.get('path').replace(' ', '').replace('/', '').lower()
@@ -78,16 +84,16 @@ def get_values(request):
         return path, parent_path, name, title
             
 def get_form(action, path, parent_path, name, title):
-    form = '<form method="POST" action="/' + action + '">'
+    f = form(action)
     if path == section.UNALTERABLE_HOME_PATH:
-        form += '<input type="hidden" name="path" id="path" value="' + path + '">'
+        f.add_control(control('hidden', 'path', path))
     else:
-        form += '<label for="path">Path</label><input type="text" name="path" id="path" value="' + path + '">'
-    form += '<label for="parent_path">Parent Path</label><input type="text" name="parent_path" id="parent_path" value="' + (parent_path if parent_path else '') + '">'
-    form += '<label for="name">Name</label><input type="text" size="60" name="name" id="name" value="' + (name if name else '') + '">'
-    form += '<label for="title">Title</label><input type="text" size="60" name="title" id="title" value="' + (title if title else '') + '">'
-    form += '<input type="submit" name="submit" id="submit"></form>'
-    return form
+        f.add_control(control('text', 'path', path, 'Path'))
+    f.add_control(control('text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
+    f.add_control(control('text', 'name', name if name else '', 'Name', 30))
+    f.add_control(control('text', 'title', title if title else '', 'Title', 60))
+    f.add_control(control('submit', 'submit'))
+    return str(f)
 
 def view_nth_level(path, params):
     n = int(params[0])
@@ -101,7 +107,7 @@ def view_nth_level(path, params):
     parents_only = []
     print hierarchy
     for item, _ in hierarchy:
-        item['is_ancestor'] = section.is_ancestor(item['path'], path)
+        item['is_ancestor'] = section.is_ancestor(path, item['path'])
         parents_only.append([item, []])
     return list_ul(path, parents_only, classes)
 

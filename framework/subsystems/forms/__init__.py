@@ -16,3 +16,61 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
+
+class form:
+    
+    def __init__(self, action = '/'):
+        self.action = action
+        self.controls = []
+        
+    def add_control(self, control):
+        self.controls.append(control)
+        
+    def __str__(self):
+        out = '<form method="POST" action="/' + self.action + '">'
+        for c in self.controls:
+            out += str(c)
+        out += '</form>'
+        return out
+        
+class control:
+    
+    def __init__(self, itype, name, value=None, label=None, width=None, length=None):
+        self.itype = itype
+        self.name = name
+        self.value = value
+        self.label = label
+        self.width = width
+        self.length = length
+        
+    def __str__(self):
+        out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
+        out += '<input type="' + self.itype + '" name="' + self.name + '" id="' + self.name + '"'
+        if self.value: out += ' value="' + self.value + '"'
+        if self.length: out += ' length="' + self.length + '"'
+        style = ''
+        if self.width:
+            style += ' width:' + str(self.width) + '%'
+        elif self.itype == 'text':
+            style += ' width:20%'
+        if style: out += ' style="' + style.strip() + '"'
+        out += '>'
+        return out
+        
+class selectcontrol(control):
+    
+    def __init__(self, name, items=[], value=None, label=None):
+        self.name = name
+        self.items = items
+        self.value = value
+        self.label = label
+        
+    def __str__(self):
+        out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
+        out += '<select name="' + self.name + '" id="' + self.name + '">'
+        for i in self.items:
+            out += '<option value="' + str(i[0]) + '"'
+            if self.value == i[0]: out += ' selected'
+            out += '>' + i[1] + '</option>'
+        out += '</select>'
+        return out
