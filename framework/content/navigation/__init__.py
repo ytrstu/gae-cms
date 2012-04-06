@@ -99,21 +99,22 @@ def get_form(action, path, parent_path, name=None, title=None, keywords=None, de
     f.add_control(control('submit', 'submit'))
     return str(f)
 
-def view_nth_level(path, params):
+def view_nth_level(s, params):
     n = int(params[0])
     classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
     hierarchy = section.get_top_level()
     while n:
         for h in hierarchy:
-            if section.is_ancestor(path, h[0]['path']):
+            if section.is_ancestor(s.path, h[0]['path']):
                 hierarchy = h[1]
         n -= 1
     parents_only = []
     print hierarchy
     for item, _ in hierarchy:
-        item['is_ancestor'] = section.is_ancestor(path, item['path'])
+        item['is_ancestor'] = section.is_ancestor(s.path, item['path'])
         parents_only.append([item, []])
-    return list_ul(path, parents_only, classes)
+    s.css.append('nth-level')
+    return list_ul(s.path, parents_only, classes)
 
 def set_ancestry(path, items):
     for item in items:
@@ -125,23 +126,24 @@ def set_ancestry(path, items):
             item[1] = None
     return items
 
-def view_expanding_hierarchy(path, params):
+def view_expanding_hierarchy(s, params):
     n = int(params[0])
     classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
     hierarchy = section.get_top_level()
     while n:
         for h in hierarchy:
-            if section.is_ancestor(path, h[0]['path']):
+            if section.is_ancestor(s.path, h[0]['path']):
                 hierarchy = h[1]
         n -= 1
     for item in hierarchy:
-        if(section.is_ancestor(path, item[0]['path'])):
+        if(section.is_ancestor(s.path, item[0]['path'])):
             item[0]['is_ancestor'] = True
-            item[1] = set_ancestry(path, item[1])
+            item[1] = set_ancestry(s.path, item[1])
         else:
             item[0]['is_ancestor'] = False
             item[1] = None
-    return list_ul(path, hierarchy, classes)
+    s.css.append('expanding-hierarchy')
+    return list_ul(s.path, hierarchy, classes)
 
 def list_ul(path, items, style):
     if not items: return ''

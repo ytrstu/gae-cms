@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,6 +28,6 @@ PROJECT_ROOT = os.path.dirname(__file__)
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "theme/templates"),)
 
 CONSTANTS = {
-             'SITE_HEADER': 'gae-python-cms',
-             'SITE_SUB_HEADER': 'Python Google AppEngine CMS',
+             'SITE_HEADER': 'gae-cms',
+             'SITE_SUB_HEADER': 'Python-based Google App Engine Content Management System',
              }

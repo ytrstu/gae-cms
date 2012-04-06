@@ -25,5 +25,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
 
-def html(params):
-    return render_to_string('Default.html', params)
+def html(s, params):
+    html = render_to_string('Default.html', params)
+    # TODO: use s.css and replace the included css
+    return html
