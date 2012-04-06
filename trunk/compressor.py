@@ -21,18 +21,23 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import webapp2, os, traceback
 
 from framework.subsystems import cache
+from framework.subsystems import utils
 import settings
 
 class Compressor(webapp2.RequestHandler):
     def get(self, path):     
         try:
-            path = path.strip('/').replace(' ', '').replace('+', '/').lower().strip()
+            path = path.strip('/').replace(' ', '').lower().strip()
             path, extension = os.path.splitext(path)
 
             contents = cache.get('compressed-' + path + extension)
+
             if not contents:
-                filenames = [(x + extension) for x in path.split('|')]
-                contents = '\n'.join([open(f, 'r').read() for f in filenames])
+                filenames = [(x + extension) for x in path.split('_')]
+                if len(filenames) != len(utils.unique_list(filenames)):
+                    webapp2.abort(404)
+                files = utils.file_search(filenames)
+                contents = '\n'.join([open(f, 'r').read() for f in files])
                 cache.set('compressed-' + path + extension, contents)
 
             response = webapp2.Response(contents.strip(), content_type='text/css')

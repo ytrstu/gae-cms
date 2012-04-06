@@ -29,5 +29,5 @@ TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "theme/templates"),)
 
 CONSTANTS = {
              'SITE_HEADER': 'gae-cms',
-             'SITE_SUB_HEADER': 'Python-based Google App Engine Content Management System',
+             'SITE_SUB_HEADER': 'Python-based Content Management System for Google App Engine',
              }

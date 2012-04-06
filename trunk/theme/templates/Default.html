@@ -6,9 +6,9 @@
 		<meta name="keywords" content="{{ self.keywords }}">{% endif %}{% if self.description %}
 		<meta name="description" content="{{ self.description }}">{% endif %}
 		<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?3.4.1/build/cssfonts/cssfonts-min.css&3.4.1/build/cssreset/cssreset-min.css&3.4.1/build/cssbase/cssbase-min.css&3.4.1/build/cssgrids/grids-min.css">
-		<link rel="stylesheet" type="text/css" href="/framework+content+navigation+assets+css+nth-level|framework+content+navigation+assets+css+expanding-hierarchy|theme+css+default.css">
+		<link rel="stylesheet" type="text/css" href="/default.css">
 	</head>
-	<body class="yui3-skin-sam yui-skin-sam {{ classes }}">
+	<body class="yui3-skin-sam yui-skin-sam {{ self.classes }}">
 		<div class="hd">
 			<h1 class="site-header main"><a href="/">{{ CONSTANTS.SITE_HEADER }}</a></h1>
 			<h2 class="site-header sub"><a href="/">{{ CONSTANTS.SITE_SUB_HEADER }}</a></h2>
@@ -30,14 +30,14 @@
 						<ul>
 							<li><a href="/{{ self.path }}/navigation/edit">Edit this page</a></li>
 							<li><a href="/{{ self.path }}/navigation/create">Create new page</a></li>
-							{% if section_has_siblings %}<li><a href="/{{ self.path }}/navigation/reorder">Reorder page</a></li>{% endif %} 
+							{% if self.has_siblings %}<li><a href="/{{ self.path }}/navigation/reorder">Reorder page</a></li>{% endif %} 
 						</ul>
 					</div>
 				{% endif %}
-				<a href="{{ logout_url }}">Logout</a>
+				<a href="{{ self.logout_url }}">Logout</a>
 			</div>
 		{% else %}
-			<a href="{{ login_url }}">Login</a>
+			<a href="{{ self.login_url }}">Login</a>
 		{% endif %}
 	</body>
 </html>
