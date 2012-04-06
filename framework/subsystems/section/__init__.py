@@ -42,21 +42,20 @@ class Section(db.Model):
     
     path_parts = None
     handler = None
-    css = []
     
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
         loginout_url = self.path if self.path != UNALTERABLE_HOME_PATH else '/'
+        self.logout_url = users.create_logout_url(loginout_url)
+        self.login_url = users.create_login_url(loginout_url)
+        self.has_siblings = len(get_siblings(self.path)) > 1
+        self.classes = 'section-' + self.path.replace('/', '-').rstrip('-')
+        self.css = []
         params = {
             'CONSTANTS': settings.CONSTANTS,
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(self.path),
-            'section_has_siblings': len(get_siblings(self.path)) > 1,
-            'logout_url': users.create_logout_url(loginout_url),
-            'login_url': users.create_login_url(loginout_url),
             'self': self,
-            'classes': 'section' + self.path.replace('/', '-').rstrip('-'),
-            'primary_ancestor': get_primary_ancestor(self.path),
             'main': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>Main content goes here',
         }
         return template.html(self, params)
@@ -84,7 +83,7 @@ def get_section(handler, path_parts):
         return section
     except:
         if path_parts[0] == UNALTERABLE_HOME_PATH and not path_parts[1]:
-            section = create_section(handler, path=path_parts[0], name='Home', title='GAE-Python-CMS', force=True)
+            section = create_section(handler, path=path_parts[0], name='Home', title='GAE-CMS', force=True)
             section.path_parts = [path_parts[0], None, None, None]
             return section
         raise Exception('NotFound', path_parts)

@@ -20,18 +20,26 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
 
-from framework.subsystems import utils
+def unique_list(seq, idfun=None):
+    if idfun is None:
+        def idfun(x): return x
+    seen = {}
+    result = []
+    for item in seq:
+        marker = idfun(item)
+        if marker in seen: continue
+        seen[marker] = 1
+        result.append(item)
+    return result
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-
-from django.template.loaders.filesystem import Loader
-from django.template.loader import render_to_string
-
-def html(s, params):
-    s.css = utils.unique_list(s.css)
-    html = render_to_string('Default.html', params)
-
-    find = '<link rel="stylesheet" type="text/css" href="/'
-    html = html.replace(find, find + '_'.join(s.css) + '_', 1)
-
-    return html
+def file_search(search):
+    files = []
+    for dirname, _, filenames in os.walk('.'):
+        for filename in filenames:
+            if filename in search:
+                files.append(os.path.join(dirname, filename))
+    ret = []
+    for s in search: # Reorder
+        for f in files:
+            if f.endswith(s): ret.append(f)
+    return ret
