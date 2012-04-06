@@ -42,6 +42,7 @@ class Section(db.Model):
     
     path_parts = None
     handler = None
+    css = []
     
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
@@ -58,7 +59,7 @@ class Section(db.Model):
             'primary_ancestor': get_primary_ancestor(self.path),
             'main': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>Main content goes here',
         }
-        return template.html(params)
+        return template.html(self, params)
         
     def content(self):
         package = "framework.content." + self.path_parts[1]
