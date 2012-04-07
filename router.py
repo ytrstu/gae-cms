@@ -44,6 +44,8 @@ class Router(webapp2.RequestHandler):
                 webapp2.abort(400)
             elif inst[0] == 'Forbidden':
                 webapp2.abort(403)
+            elif inst[0] == 'AccessDenied':
+                webapp2.abort(403)
             elif settings.DEBUG:
                 return webapp2.Response('RouterError: ' + str(inst) + '\n\n' + traceback.format_exc())
             else:
