@@ -46,8 +46,8 @@ class Section(db.Model):
     
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
-        self.logout_url = users.create_logout_url(self.path)
-        self.login_url = users.create_login_url(self.path)
+        self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
+        self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
         self.has_siblings = len(get_siblings(self.path)) > 1
         self.classes = 'section-' + self.path.replace('/', '-').rstrip('-')
         self.css = []

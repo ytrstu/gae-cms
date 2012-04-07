@@ -1,6 +1,7 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+GAE-Python-CMS: Python-based CMS designed for Google App Engine
+Copyright (C) 2012
+@author: Imran Somji
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,9 +24,11 @@ def is_admin(path):
     return users.is_current_user_admin() # TODO: currently only super admins can do page management
 
 def view_section(section):
-    if not section.is_private or (section.is_private and users.is_current_user_admin()):
-        return True
-    return False # TODO: currently only super admins can view private page
+    if not section.is_private:
+        return True # TODO: if a parent is private then the child should inherit that
+    elif section.is_private and users.is_current_user_admin():
+        return True # TODO: currently only super admins can view private page
+    return False
 
 def perform_action(content, path_parts):
     if path_parts[2] not in content.permissions():
