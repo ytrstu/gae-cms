@@ -20,40 +20,40 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from .. import base
 from framework.subsystems import section
-from framework.subsystems.forms import form, control, selectcontrol, textareacontrol
+from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
 class navigation(base.base):
-    
+
     content_permissions = {
                            'create': 'Create section',
                            'edit': 'Edit section',
                            'reorder': 'Reorder section',
                            }
-    
+
     def action_create(self):
         ret = '<h2>Create new section</h2>'
         if self.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description = get_values(self.handler.request)
+            path, parent_path, name, title, keywords, description, is_private, is_default = get_values(self.handler.request)
             try:
-                section.create_section(self.handler, path, parent_path, name, title, keywords, description)
+                section.create_section(self.handler, path, parent_path, name, title, keywords, description, is_private, is_default)
             except Exception as inst:
                 ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
-                raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
+                raise Exception('Redirect', '/' + (path if not is_default else ''))
         ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path)
         return ret
 
     def action_edit(self):
         ret = '<h2>Edit section "' + self.section.path + '"</h2>'
         if self.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description = get_values(self.handler.request)
+            path, parent_path, name, title, keywords, description, is_private, is_default = get_values(self.handler.request)
             try:
-                section.update_section(self.section, path, parent_path, name, title, keywords, description)
+                section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default)
             except Exception as inst:
                 ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
-                raise Exception('Redirect', '/' + (path if path != section.UNALTERABLE_HOME_PATH else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description)
+                raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
+        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default)
         return ret
 
     def action_reorder(self):
@@ -63,7 +63,7 @@ class navigation(base.base):
             new_rank = int(self.handler.request.get('rank'))
             if self.section.rank != new_rank:
                 section.update_section_rank(self.section, new_rank)
-            raise Exception('Redirect', '/' + (self.section.path if self.section.path != section.UNALTERABLE_HOME_PATH else ''))
+            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         f = form('/'.join(self.path_parts).strip('/'))
         items = [[0, 'At the top']]
         adder = 1
@@ -83,19 +83,20 @@ def get_values(request):
         title = request.get('title')
         keywords = request.get('keywords')
         description = request.get('description')
-        return path, parent_path, name, title, keywords, description
+        is_private = request.get('is_private') != ''
+        is_default = request.get('is_default') != ''
+        return path, parent_path, name, title, keywords, description, is_private, is_default
             
-def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None):
+def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False):
     f = form(action)
-    if path == section.UNALTERABLE_HOME_PATH:
-        f.add_control(control('hidden', 'path', path))
-    else:
-        f.add_control(control('text', 'path', path, 'Path'))
+    f.add_control(control('text', 'path', path, 'Path'))
     f.add_control(control('text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
     f.add_control(control('text', 'name', name if name else '', 'Name', 30))
     f.add_control(control('text', 'title', title if title else '', 'Title', 60))
     f.add_control(textareacontrol('keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol('description', description if description else '', 'Description', 60, 5))
+    f.add_control(checkboxcontrol('is_private', is_private, 'Is private'))
+    if not is_default: f.add_control(checkboxcontrol('is_default', is_default, 'Is default'))
     f.add_control(control('submit', 'submit'))
     return str(f)
 
@@ -109,7 +110,6 @@ def view_nth_level(s, params):
                 hierarchy = h[1]
         n -= 1
     parents_only = []
-    print hierarchy
     for item, _ in hierarchy:
         item['is_ancestor'] = section.is_ancestor(s.path, item['path'])
         parents_only.append([item, []])
@@ -159,7 +159,7 @@ def list_li(path, items):
         classes = 'current' if item['path'] == path else ''
         if item['is_ancestor']: classes += ' ancestor'
         if not i: classes += ' first '
-        li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item['path'] if item['path'] != section.UNALTERABLE_HOME_PATH else '') + '">' + (item['name'] if item['name'] else '-') + '</a>'
+        li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item['path'] if not item['is_default'] else '') + '">' + (item['name'] if item['name'] else '-') + '</a>'
         if children:
             li += '<ul>' + list_li(path, children) + '</ul>'
         li += '</li>'

@@ -27,7 +27,7 @@ from framework.subsystems import permission
 
 import settings
 
-UNALTERABLE_HOME_PATH = 'home'
+FIRST_RUN_HOME_PATH = 'home'
 CACHE_KEY = 'section_hierarchy'
 
 class Section(db.Model):
@@ -39,15 +39,15 @@ class Section(db.Model):
     description = db.StringProperty()
     rank = db.IntegerProperty(default = 0)
     is_private = db.BooleanProperty(default=False)
+    is_default = db.BooleanProperty(default=False)
     
     path_parts = None
     handler = None
     
     def __str__(self):
         if not permission.view_section(self): raise Exception('AccessDenied', self.path)
-        loginout_url = self.path if self.path != UNALTERABLE_HOME_PATH else '/'
-        self.logout_url = users.create_logout_url(loginout_url)
-        self.login_url = users.create_login_url(loginout_url)
+        self.logout_url = users.create_logout_url(self.path)
+        self.login_url = users.create_login_url(self.path)
         self.has_siblings = len(get_siblings(self.path)) > 1
         self.classes = 'section-' + self.path.replace('/', '-').rstrip('-')
         self.css = []
@@ -77,14 +77,21 @@ def section_key(path):
 
 def get_section(handler, path_parts):
     try:
-        section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path_parts[0]))[0]
+        if not path_parts[0]:
+            section = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
+        else:
+            section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path_parts[0]))[0]
+        # The default page with no action should only be accessible from root
+        if section.is_default and path_parts[0] and not path_parts[1]:
+            raise Exception('NotFound')
         section.handler = handler
         section.path_parts = path_parts
         return section
     except:
-        if path_parts[0] == UNALTERABLE_HOME_PATH and not path_parts[1]:
-            section = create_section(handler, path=path_parts[0], name='Home', title='GAE-CMS', force=True)
-            section.path_parts = [path_parts[0], None, None, None]
+        if not get_top_level() and not path_parts[1]:
+            section = create_section(handler, path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
+            section.handler = handler
+            section.path_parts = [FIRST_RUN_HOME_PATH, None, None, None]
             return section
         raise Exception('NotFound', path_parts)
 
@@ -136,7 +143,7 @@ def get_top_level():
 def db_get_hierarchy(path=None):
     ret = []
     for s in Section.gql("WHERE parent_path=:1 ORDER BY rank", path):
-        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'rank': s.rank, 'is_private': s.is_private, 'name': s.name, 'title': s.title, 'keywords': s.keywords, 'description': s.description}, db_get_hierarchy(s.path)])
+        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'rank': s.rank, 'is_private': s.is_private, 'name': s.name, 'title': s.title, 'keywords': s.keywords, 'description': s.description, 'is_private': s.is_private, 'is_default': s.is_default}, db_get_hierarchy(s.path)])
     return ret
 
 def is_ancestor(path, another_path):
@@ -161,29 +168,48 @@ def can_path_exist(path, parent_path, old_path=None):
         raise Exception('Parent path does not exist')
     return True
 
-def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', force=False):
+def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', is_private=False, is_default=False, force=False):
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
+
+    if is_default:
+        try:
+            old_default = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
+            old_default.is_default=False
+            old_default.put()
+        except:
+            pass # Probably no sections yet
+
     max_rank = 0
     for item, _ in get_children(parent_path):
         if item['rank'] <= max_rank: max_rank = item['rank'] + 1
-    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description)
+
+    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default)
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
     cache.delete(CACHE_KEY)
     return section
 
-def update_section(old, path, parent_path, name, title, keywords, description):
+def update_section(old, path, parent_path, name, title, keywords, description, is_private, is_default):
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
+
+    if old.is_default:
+        is_default=True # Cannot change the default page except if another page is promoted
+    elif not old.is_default and is_default:
+        old_default = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
+        if old_default.path != old.path:
+            old_default.is_default=False
+            old_default.put()
+
     if old.path != path:
         can_path_exist(path, parent_path, old.path)
         for child in Section.gql("WHERE parent_path=:1", old.path):
             child.parent_path = path
             child.put()
-        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description)
+        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default)
         old.delete()
         new.put()
         return
@@ -197,6 +223,8 @@ def update_section(old, path, parent_path, name, title, keywords, description):
     old.title = title
     old.keywords = keywords
     old.description = description
+    old.is_private = is_private
+    old.is_default = is_default
     old.put()
     cache.delete(CACHE_KEY)
 

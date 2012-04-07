@@ -93,3 +93,17 @@ class textareacontrol(control):
         if self.value: out += self.value
         out += '</textarea>'
         return out
+        
+class checkboxcontrol(control):
+    
+    def __init__(self, name, value=False, label=None):
+        self.name = name
+        self.value = value
+        self.label = label
+        
+    def __str__(self):
+        out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
+        out += '<input type="checkbox" name="' + self.name + '" id="' + self.name + '"'
+        if self.value: out += ' checked'
+        out += '>'
+        return out
