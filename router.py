@@ -28,10 +28,6 @@ import settings
 class Router(webapp2.RequestHandler):
     def get(self, path):
         path = path.strip('/').lower()
-        if path == section.UNALTERABLE_HOME_PATH:
-            webapp2.abort(404) # Only want to access UNALTERABLE_HOME_PATH through the root
-        elif not path:
-            path = section.UNALTERABLE_HOME_PATH
         path_parts = get_path_parts(path)
         if path_parts[1] and not path_parts[2]: # Content is defined but no action
                 webapp2.abort(404)
