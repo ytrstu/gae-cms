@@ -20,6 +20,8 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import webapp2, os, traceback
 
+from google.appengine.api import urlfetch
+
 from framework.subsystems import cache
 from framework.subsystems import utils
 import settings
@@ -30,17 +32,30 @@ class Compressor(webapp2.RequestHandler):
             path = path.strip('/').replace(' ', '').lower().strip()
             path, extension = os.path.splitext(path)
 
-            contents = cache.get('compressed-' + path + extension)
+            contents = cache.get(path + extension)
 
             if not contents:
-                filenames = [(x + extension) for x in path.split('_')]
+                contents = ''
+                yui_parts = path[path.find('__yui__'):path.find('__local__')].lstrip('__yui__')
+                local_path = path if path.find('__local__') < 0 else path[path.find('__local__'):].lstrip('__local__')
+                if yui_parts:
+                    yui_version = '3.4.1/build/'
+                    yui_absolute = 'http://yui.yahooapis.com/combo?'
+                    yui_parts = yui_parts.split('__')
+                    yui_parts = [(yui_version + x.replace('_', '/') + '-min' + extension) for x in yui_parts]
+                    result = urlfetch.fetch(yui_absolute + '&'.join(yui_parts))
+                    if result.status_code == 200:
+                        contents += result.content + '\n\n'
+                    else:
+                        webapp2.abort(404)
+                filenames = [(x + extension) for x in local_path.split('_')]
                 if len(filenames) != len(utils.unique_list(filenames)):
                     webapp2.abort(404)
                 files = utils.file_search(filenames)
-                contents = '\n'.join([open(f, 'r').read() for f in files])
-                cache.set('compressed-' + path + extension, contents)
+                contents += ('\n'.join([open(f, 'r').read() for f in files])).strip()
+                cache.set(path, contents)
 
-            response = webapp2.Response(contents.strip(), content_type='text/css')
+            response = webapp2.Response(contents, content_type='text/css')
             response.headers['Connection'] = 'Keep-Alive'
             return response
         except Exception as inst:
