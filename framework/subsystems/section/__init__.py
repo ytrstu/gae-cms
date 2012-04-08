@@ -40,12 +40,17 @@ class Section(db.Model):
     rank = db.IntegerProperty(default = 0)
     is_private = db.BooleanProperty(default=False)
     is_default = db.BooleanProperty(default=False)
+    redirect_to = db.StringProperty()
+    new_window = db.BooleanProperty(default=False)
     
     path_parts = None
     handler = None
     
     def __str__(self):
-        if not permission.view_section(self): raise Exception('AccessDenied', self.path)
+        if not permission.view_section(self):
+            raise Exception('AccessDenied', self.path)
+        elif not self.path_parts[1] and self.redirect_to and self.redirect_to.strip('/') != self.path:
+            raise Exception('Redirect', self.redirect_to)
         self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
         self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
         self.has_siblings = len(get_siblings(self.path)) > 1
@@ -143,7 +148,7 @@ def get_top_level():
 def db_get_hierarchy(path=None):
     ret = []
     for s in Section.gql("WHERE parent_path=:1 ORDER BY rank", path):
-        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'rank': s.rank, 'is_private': s.is_private, 'name': s.name, 'title': s.title, 'keywords': s.keywords, 'description': s.description, 'is_private': s.is_private, 'is_default': s.is_default}, db_get_hierarchy(s.path)])
+        ret.append([{'path': s.path, 'parent_path': s.parent_path, 'rank': s.rank, 'is_private': s.is_private, 'name': s.name, 'title': s.title, 'keywords': s.keywords, 'description': s.description, 'is_private': s.is_private, 'is_default': s.is_default, 'redirect_to': s.redirect_to, 'new_window': s.new_window}, db_get_hierarchy(s.path)])
     return ret
 
 def is_ancestor(path, another_path):
@@ -168,7 +173,7 @@ def can_path_exist(path, parent_path, old_path=None):
         raise Exception('Parent path does not exist')
     return True
 
-def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', is_private=False, is_default=False, force=False):
+def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', is_private=False, is_default=False, redirect_to='', new_window=False, force=False):
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
@@ -185,14 +190,14 @@ def create_section(handler, path, parent_path=None, name='', title='', keywords=
     for item, _ in get_children(parent_path):
         if item['rank'] <= max_rank: max_rank = item['rank'] + 1
 
-    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default)
+    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, is_private=is_private, redirect_to=redirect_to, new_window=new_window, is_default=is_default)
     section.put()
     section.handler = handler
     section.path_parts = [path, parent_path, None, None]
     cache.delete(CACHE_KEY)
     return section
 
-def update_section(old, path, parent_path, name, title, keywords, description, is_private, is_default):
+def update_section(old, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window):
     path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
     parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
 
@@ -209,7 +214,7 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
         for child in Section.gql("WHERE parent_path=:1", old.path):
             child.parent_path = path
             child.put()
-        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default)
+        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()
         new.put()
         return
@@ -225,6 +230,8 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
     old.description = description
     old.is_private = is_private
     old.is_default = is_default
+    old.redirect_to = redirect_to
+    old.new_window = new_window
     old.put()
     cache.delete(CACHE_KEY)
 
