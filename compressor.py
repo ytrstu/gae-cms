@@ -53,7 +53,7 @@ class Compressor(webapp2.RequestHandler):
                     webapp2.abort(404)
                 files = utils.file_search(filenames)
                 contents += ('\n'.join([open(f, 'r').read() for f in files])).strip()
-                cache.set(path, contents)
+                cache.set(path + extension, contents)
 
             response = webapp2.Response(contents, content_type='text/css')
             response.headers['Connection'] = 'Keep-Alive'
