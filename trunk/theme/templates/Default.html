@@ -28,9 +28,10 @@
 					<div class="admin">
 						<h2>Navigation Administration</h2>
 						<ul>
-							<li><a href="/{{ self.path }}/navigation/edit">Edit this page</a></li>
-							<li><a href="/{{ self.path }}/navigation/create">Create new page</a></li>
-							{% if self.has_siblings %}<li><a href="/{{ self.path }}/navigation/reorder">Reorder page</a></li>{% endif %} 
+							<li><a href="/{{ self.path }}/navigation/edit">Edit this section</a></li>
+							<li><a href="/{{ self.path }}/navigation/create">Create new section</a></li>
+							{% if self.has_siblings %}<li><a href="/{{ self.path }}/navigation/reorder">Reorder section</a></li>{% endif %}
+							<li><a href="/{{ self.path }}/navigation/manage">Manage sections</a></li> 
 						</ul>
 					</div>
 				{% endif %}

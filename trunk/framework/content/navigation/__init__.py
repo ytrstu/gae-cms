@@ -28,14 +28,15 @@ class navigation(base.base):
                            'create': 'Create section',
                            'edit': 'Edit section',
                            'reorder': 'Reorder section',
+                           'manage': 'Manage sections',
                            }
 
     def action_create(self):
         ret = '<h2>Create new section</h2>'
         if self.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description, is_private, is_default = get_values(self.handler.request)
+            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.handler.request)
             try:
-                section.create_section(self.handler, path, parent_path, name, title, keywords, description, is_private, is_default)
+                section.create_section(self.handler, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
@@ -46,14 +47,14 @@ class navigation(base.base):
     def action_edit(self):
         ret = '<h2>Edit section "' + self.section.path + '"</h2>'
         if self.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description, is_private, is_default = get_values(self.handler.request)
+            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.handler.request)
             try:
-                section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default)
+                section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">' + str(inst[0]) + '</div>'
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default)
+        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
     def action_reorder(self):
@@ -76,6 +77,12 @@ class navigation(base.base):
         f.add_control(control('submit', 'submit'))
         return '<h2>Reorder section "' + self.section.path + '"</h2>' + str(f)
 
+    def action_manage(self):
+        ret = '<h2>Manage sections</h2>'
+        ret += list_ul(self.section.path, section.get_top_level(), 'manage', True)
+        self.section.css.append('nav-manage')
+        return ret
+
 def get_values(request):
         path = request.get('path').replace(' ', '').replace('/', '').lower()
         parent_path = request.get('parent_path').replace(' ', '').replace('/', '').lower()
@@ -85,9 +92,11 @@ def get_values(request):
         description = request.get('description')
         is_private = request.get('is_private') != ''
         is_default = request.get('is_default') != ''
-        return path, parent_path, name, title, keywords, description, is_private, is_default
+        redirect_to = request.get('redirect_to')
+        new_window = request.get('new_window') != ''
+        return path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window
             
-def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False):
+def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
     f = form(action)
     f.add_control(control('text', 'path', path, 'Path'))
     f.add_control(control('text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
@@ -97,6 +106,8 @@ def get_form(action, path, parent_path, name=None, title=None, keywords=None, de
     f.add_control(textareacontrol('description', description if description else '', 'Description', 60, 5))
     f.add_control(checkboxcontrol('is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol('is_default', is_default, 'Is default'))
+    f.add_control(control('text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
+    f.add_control(checkboxcontrol('new_window', new_window, 'New window'))
     f.add_control(control('submit', 'submit'))
     return str(f)
 
@@ -113,7 +124,7 @@ def view_nth_level(s, params):
     for item, _ in hierarchy:
         item['is_ancestor'] = section.is_ancestor(s.path, item['path'])
         parents_only.append([item, []])
-    s.css.append('nth-level')
+    s.css.append('nav-nth-level')
     return list_ul(s.path, parents_only, classes)
 
 def set_ancestry(path, items):
@@ -142,26 +153,31 @@ def view_expanding_hierarchy(s, params):
         else:
             item[0]['is_ancestor'] = False
             item[1] = None
-    s.css.append('expanding-hierarchy')
+    s.css.append('nav-expanding-hierarchy')
     return list_ul(s.path, hierarchy, classes)
 
-def list_ul(path, items, style):
+def list_ul(path, items, style, manage=False):
     if not items: return ''
     ul = '<ul class="content navigation view ' + style + '">'
-    ul += list_li(path, items)
+    ul += list_li(path, items, manage)
     ul += '</ul>' 
     return ul
 
-def list_li(path, items):
+def list_li(path, items, manage=False):
     li = ''
     i = 0
     for item, children in items:
         classes = 'current' if item['path'] == path else ''
-        if item['is_ancestor']: classes += ' ancestor'
+        if 'is_ancestor' in item and item['is_ancestor']: classes += ' ancestor'
         if not i: classes += ' first '
-        li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="/' + (item['path'] if not item['is_default'] else '') + '">' + (item['name'] if item['name'] else '-') + '</a>'
+        if item['redirect_to']:
+            link = item['redirect_to']
+        else:
+            link = '/' + (item['path'] if not item['is_default'] else '')
+        li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="' + link + '"' + (' target="_blank"' if item['new_window'] else '') + '>' + (item['name'] if item['name'] else '-') + '</a>'
+        if manage: li += '<span><a href="/' + item['path'] + '/navigation/edit">[Edit</a><a href="/' + item['path'] + '/navigation/create">, Create subsection</a><a href="/' + item['path'] + '/navigation/reorder">, Reorder]</a></span>'
         if children:
-            li += '<ul>' + list_li(path, children) + '</ul>'
+            li += '<ul>' + list_li(path, children, manage) + '</ul>'
         li += '</li>'
         i += 1
     return li
