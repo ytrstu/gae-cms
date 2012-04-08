@@ -30,14 +30,11 @@ libraries:
   version: 1.2
 
 handlers:
-- url: /theme/js
-  static_dir: theme/js
-  
 - url: /theme/images
   static_dir: theme/images
   expiration: 30d
 
-- url: /(.*).css
+- url: /(.*\.(css|js))
   script: compressor.app
   
 - url: /.*

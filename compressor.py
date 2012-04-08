@@ -36,8 +36,9 @@ class Compressor(webapp2.RequestHandler):
 
             if not contents:
                 contents = ''
-                yui_parts = path[path.find('__yui__'):path.find('__local__')].lstrip('__yui__')
-                local_path = path if path.find('__local__') < 0 else path[path.find('__local__'):].lstrip('__local__')
+                yui_parts = '' if path.find('___yui___') < 0 else path[path.find('___yui___'):].replace('___yui___', '', 1)
+                yui_parts = yui_parts if yui_parts.find('___') < 0 else yui_parts[:yui_parts.find('___')]
+                local_path = path.replace('___yui___', '', 1).replace(yui_parts, '', 1).replace('___local___', '', 1)
                 if yui_parts:
                     yui_version = '3.4.1/build/'
                     yui_absolute = 'http://yui.yahooapis.com/combo?'
