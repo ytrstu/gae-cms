@@ -1,7 +1,22 @@
-.navigation.manage span {
-	margin-left: 0.5em;
-}
 .navigation.manage ul {
 	margin-top: 0;
 	margin-bottom: 0;
+}
+.navigation.manage li {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+.navigation.manage a.edit, .navigation.manage a.subsection, .navigation.manage a.reorder {
+	background: url(/theme/images/sprite.png) 0 -578px no-repeat;
+	width: 20px;
+	display: block;
+	text-indent: -9999px;
+	float: left;
+	padding: 1px;
+}
+.navigation.manage a.subsection {
+	background-position: 0 -554px
+}
+.navigation.manage a.reorder {
+	background-position: 0 -739px
 }
