@@ -175,7 +175,8 @@ def list_li(path, items, manage=False):
         else:
             link = '/' + (item['path'] if not item['is_default'] else '')
         li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="' + link + '"' + (' target="_blank"' if item['new_window'] else '') + '>' + (item['name'] if item['name'] else '-') + '</a>'
-        if manage: li += '<span><a href="/' + item['path'] + '/navigation/edit" class="edit" title="Edit">[Edit</a><a href="/' + item['path'] + '/navigation/create" class="subsection" title="Create subsection">, Create subsection</a><a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder]</a></span>'
+        if manage: li += '<a href="/' + item['path'] + '/navigation/edit" class="edit" title="Edit">[Edit</a><a href="/' + item['path'] + '/navigation/create" class="subsection" title="Create subsection">, Create subsection</a>'
+        if manage and len(section.get_siblings(item['path'])) > 1: li += '<a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder]</a>'
         if children:
             li += '<ul>' + list_li(path, children, manage) + '</ul>'
         li += '</li>'

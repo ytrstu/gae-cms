@@ -5,7 +5,7 @@ ul.navigation.vertical {
 	padding: 1em 0;
 }
 .navigation.vertical ul {
-	list-style-type: none;
+	list-style: none;
 	margin-top: 0;
 	margin-right: 0;
 }

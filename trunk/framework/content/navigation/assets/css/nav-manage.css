@@ -1,6 +1,10 @@
+.navigation.manage {
+	list-style: none;
+}
 .navigation.manage ul {
 	margin-top: 0;
 	margin-bottom: 0;
+	list-style: none;
 }
 .navigation.manage li {
 	padding-top: 5px;
