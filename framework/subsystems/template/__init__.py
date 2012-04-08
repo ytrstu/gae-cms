@@ -31,7 +31,7 @@ def html(s, params):
     s.css = utils.unique_list(s.css)
     html = render_to_string('Default.html', params)
 
-    find = '<link rel="stylesheet" type="text/css" href="/'
+    find = '__local__'
     html = html.replace(find, find + '_'.join(s.css) + '_', 1)
 
     return html
