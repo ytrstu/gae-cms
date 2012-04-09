@@ -6,33 +6,35 @@ h1, h2, h3, h4, h5, h6 {
 a {
 	color: #0000FF;
 }
+.user-bar {
+	text-align: right;
+	border-bottom: 1px solid #C9D7F1;
+	padding: 0.3em 0.5em;
+}
 .site-header {
 	background: none;
 	border: none;
-}
-.site-header.main {
-	margin-bottom: 0;
-	padding-bottom: 0;
-}
-.site-header.sub {
 	margin: 0;
 	padding: 0;
+	font-weight: normal;
+	min-width: 450px;
 }
 .site-header a {
 	color: #666;
 	text-decoration: none;
-	font-size: 220%;
+	font-size: 215%;
 	font-weight: normal;
-	padding-left: 55px;
+	padding-left: 57px;
 	outline: none;
 }
 .site-header.sub a {
-	font-size: 90%;
+	font-size: 80%;
 	color: #444;
+	margin: 0;
 }
 .hd {
-	background: url(/theme/images/sprite.png) 0 16px no-repeat;
-	margin: 0 0.8em;
+	background: url(/theme/images/sprite.png) 0 12px no-repeat;
+	margin: 0.5em 0.95em 0 0.95em;
 }
 .bd {
 	margin: 0.8em;
