@@ -30,6 +30,10 @@ libraries:
   version: 1.2
 
 handlers:
+- url: /favicon.ico
+  static_files: theme/images/favicon.ico
+  upload: theme/images/favicon.ico
+
 - url: /theme/images
   static_dir: theme/images
   expiration: 30d
