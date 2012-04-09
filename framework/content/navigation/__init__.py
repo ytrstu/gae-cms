@@ -24,12 +24,21 @@ from framework.subsystems.forms import form, control, selectcontrol, textareacon
 
 class navigation(base.base):
 
-    content_permissions = {
-                           'create': 'Create section',
-                           'edit': 'Edit section',
-                           'reorder': 'Reorder section',
-                           'manage': 'Manage sections',
-                           }
+    content_actions = {
+
+    'create':   'Create section',
+    'edit':     'Edit section',
+    'reorder':  'Reorder section',
+    'manage':   'Manage sections',
+
+    }
+
+    content_views = {
+
+    'nth_level_only': 'nth level without any children',
+    'expanding_hierarchy': 'Entire hierarchy with only the trail to the current section and its children expanded',
+
+    }
 
     def action_create(self):
         ret = '<h2>Create new section</h2>'
@@ -111,7 +120,7 @@ def get_form(action, path, parent_path, name=None, title=None, keywords=None, de
     f.add_control(control('submit', 'submit'))
     return str(f)
 
-def view_nth_level(s, params):
+def view_nth_level_only(s, _, params):
     n = int(params[0])
     classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
     hierarchy = section.get_top_level()
@@ -127,17 +136,7 @@ def view_nth_level(s, params):
     s.css.append('nav-nth-level')
     return list_ul(s.path, parents_only, classes)
 
-def set_ancestry(path, items):
-    for item in items:
-        if section.is_ancestor(path, item[0]['path']):
-            item[0]['is_ancestor'] = True 
-            item[1] = set_ancestry(path, item[1])
-        else:
-            item[0]['is_ancestor'] = False
-            item[1] = None
-    return items
-
-def view_expanding_hierarchy(s, params):
+def view_expanding_hierarchy(s, _, params):
     n = int(params[0])
     classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
     hierarchy = section.get_top_level()
@@ -155,6 +154,16 @@ def view_expanding_hierarchy(s, params):
             item[1] = None
     s.css.append('nav-expanding-hierarchy')
     return list_ul(s.path, hierarchy, classes)
+
+def set_ancestry(path, items):
+    for item in items:
+        if section.is_ancestor(path, item[0]['path']):
+            item[0]['is_ancestor'] = True 
+            item[1] = set_ancestry(path, item[1])
+        else:
+            item[0]['is_ancestor'] = False
+            item[1] = None
+    return items
 
 def list_ul(path, items, style, manage=False):
     if not items: return ''
@@ -175,10 +184,16 @@ def list_li(path, items, manage=False):
         else:
             link = '/' + (item['path'] if not item['is_default'] else '')
         li += '<li' + ((' class="' + classes.strip() + '"') if classes.strip() else '') + '><a href="' + link + '"' + (' target="_blank"' if item['new_window'] else '') + '>' + (item['name'] if item['name'] else '-') + '</a>'
-        if manage: li += '<a href="/' + item['path'] + '/navigation/edit" class="edit" title="Edit">[Edit</a><a href="/' + item['path'] + '/navigation/create" class="subsection" title="Create subsection">, Create subsection</a>'
-        if manage and len(section.get_siblings(item['path'])) > 1: li += '<a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder]</a>'
-        if children:
-            li += '<ul>' + list_li(path, children, manage) + '</ul>'
+        if manage: li += get_manage_links(item)
+        if children: li += '<ul>' + list_li(path, children, manage) + '</ul>'
         li += '</li>'
         i += 1
     return li
+
+def get_manage_links(item):
+    ret = '<a href="/' + item['path'] + '/navigation/edit" class="edit" title="Edit">[Edit</a><a href="/' + item['path'] + '/navigation/create" class="subsection" title="Create subsection">, Create subsection</a>'
+    if len(section.get_siblings(item['path'])) > 1:
+        ret += '<a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder]</a>'
+    else:
+        ret += '<span class="reorder-disabled" title="Not reorderable, has no siblings">, Not reorderable]</a>'
+    return ret

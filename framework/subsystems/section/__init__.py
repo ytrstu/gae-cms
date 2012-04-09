@@ -31,6 +31,7 @@ FIRST_RUN_HOME_PATH = 'home'
 CACHE_KEY = 'section_hierarchy'
 
 class Section(db.Model):
+
     path = db.StringProperty(required=True)
     parent_path = db.StringProperty()
     title = db.StringProperty()
@@ -42,10 +43,10 @@ class Section(db.Model):
     is_default = db.BooleanProperty(default=False)
     redirect_to = db.StringProperty()
     new_window = db.BooleanProperty(default=False)
-    
+
     path_parts = None
     handler = None
-    
+
     def __str__(self):
         if not permission.view_section(self):
             raise Exception('AccessDenied', self.path)
@@ -64,7 +65,7 @@ class Section(db.Model):
             'main': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>Main content goes here',
         }
         return template.html(self, params)
-        
+
     def content(self):
         package = "framework.content." + self.path_parts[1]
         try:
