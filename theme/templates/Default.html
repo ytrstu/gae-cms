@@ -7,7 +7,8 @@
 		<meta name="description" content="{{ self.description }}">{% endif %}
 		<link rel="stylesheet" type="text/css" href="/___yui___cssfonts_cssfonts__cssreset_cssreset__cssbase_cssbase__cssgrids_grids___local___default.css">
 	</head>
-	<body class="yui3-skin-sam yui-skin-sam {{ self.classes }}">
+	<body class="yui3-skin-sam {{ self.classes }}">
+		<div class="user-bar">{% if user %}<a href="{{ self.logout_url }}">Sign out</a>{% else %}<a href="{{ self.login_url }}">Sign in</a>{% endif %}</div>
 		<div class="hd">
 			<h1 class="site-header main"><a href="/">{{ CONSTANTS.SITE_HEADER }}</a></h1>
 			<h2 class="site-header sub"><a href="/">{{ CONSTANTS.SITE_SUB_HEADER }}</a></h2>
@@ -34,10 +35,7 @@
 						</ul>
 					</div>
 				{% endif %}
-				<a href="{{ self.logout_url }}">Logout</a>
 			</div>
-		{% else %}
-			<a href="{{ self.login_url }}">Login</a>
 		{% endif %}
 	</body>
 </html>
