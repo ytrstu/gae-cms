@@ -28,6 +28,7 @@ a {
 }
 .site-header.sub a {
 	font-size: 90%;
+	color: #444;
 }
 .hd {
 	background: url(/theme/images/sprite.png) 0 16px no-repeat;
