@@ -27,9 +27,8 @@ import settings
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
-        path = path.strip('/').lower()
-        path_parts = get_path_parts(path)
-        if path_parts[1] and not path_parts[2]: # Content is defined but no action
+        path_parts = path.strip('/').lower().split('/')
+        if len(path_parts) == 2: # Content is defined but no action
                 webapp2.abort(404)
         try:
             response = webapp2.Response(str(section.get_section(self, path_parts)))
@@ -53,15 +52,5 @@ class Router(webapp2.RequestHandler):
 
     def post(self, path):
         return self.get(path)
-
-def get_path_parts(path):
-    base_path = path.split('/')[0]
-    path = path.lstrip(base_path).strip('/')
-    content_path = path.split('/')[0]
-    path = path.lstrip(content_path).strip('/')
-    action_path = path.split('/')[0]
-    path = path.lstrip(action_path).strip('/')
-    parameter_path = path.split('/')[0]
-    return base_path, content_path, action_path, parameter_path
 
 app = webapp2.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)

@@ -27,7 +27,6 @@ SCOPE_LOCAL = 'LOCAL'
 
 class Content(db.Model):
 
-    scope = db.StringProperty(default=SCOPE_GLOBAL, required=True, choices=[SCOPE_GLOBAL, SCOPE_LOCAL])
     section_path = db.StringProperty(default=None)
     location_id = db.StringProperty()
     rank = db.IntegerProperty(default=None)
@@ -44,19 +43,18 @@ class Content(db.Model):
         return self
 
     def get(self, scope, section_path, location_id, rank=None):
+        if not location_id: raise Exception('location_id is required')
         try:
-            return self.gql("WHERE scope=:1 AND section_path=:2 AND location_id=:3 AND rank=:4 LIMIT 1", scope, section_path, location_id, rank)[0]
+            return self.gql("WHERE ANCESTOR IS :1 LIMIT 1", self.content_key(scope, section_path, location_id, rank))[0]
         except:
             return None
 
     def get_or_create(self, scope, section_path, location_id, rank=None):
-        if scope == SCOPE_GLOBAL: section_path = None
         item = self.get(scope, section_path, location_id, rank)
         if not item:
-            self.scope=scope
-            self.section_path=section_path
-            self.location_id=location_id
-            self.rank=rank
+            self.__init__(parent=self.content_key(scope, section_path, location_id, rank),
+                          section_path=section_path if scope != SCOPE_GLOBAL else None,
+                          location_id=location_id, rank=rank)
             self.put()
             item = self
         return item
@@ -72,3 +70,9 @@ class Content(db.Model):
             ret += '<li><a href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action + '/' + self.location_id +  '">' + self.actions[action] + '</a></li>'
         ret += '</ul>'
         return ret
+
+    def content_key(self, scope, section_path, location_id, rank=None):
+        path = location_id + (('.' + rank) if rank else '')
+        if scope != SCOPE_GLOBAL:
+            path = section_path + '.' + path
+        return db.Key.from_path(self.__class__.__name__, path)

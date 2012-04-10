@@ -54,7 +54,7 @@ class Navigation(content.Content):
         return ret
 
     def action_edit(self):
-        ret = '<h2>Edit section "' + self.section.path + '"</h2>'
+        ret = '<h2>Edit section "%s"</h2>' % self.section.path
         if self.section.handler.request.get('submit'):
             path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
             try:
