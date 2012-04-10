@@ -22,6 +22,7 @@ from django.template import Library
 import importlib, traceback
 
 from framework.subsystems import permission
+import framework.content as content
 import settings
 
 register = Library()
@@ -34,18 +35,18 @@ def view(section, param_string):
             scope, mod, view, location_id = params[0:4]
         except:
             raise Exception('A minimum of four parameters required')
-        finally:
+        else:
             params = params[4:] if len(params) > 4 else None
 
-        if scope not in ['global', 'local']:
+        if scope not in [content.SCOPE_GLOBAL, content.SCOPE_LOCAL]:
             raise Exception('Scope must be "global" or "local"')
 
-        m = importlib.import_module('framework.content.' + mod)
-        contentmod = getattr(m, mod)(section, section.handler, section.path_parts)
+        m = importlib.import_module('framework.content.' + mod.lower())
+        contentmod = getattr(m, mod)(scope=scope, section_path=section.path, location_id=location_id, rank=None).init(section)
 
         if permission.view_content(contentmod, section, view):
-            view = getattr(m, 'view_' + view)
-            return view(section, scope, location_id, params)
+            view = getattr(contentmod, 'view_' + view)
+            return view(scope, location_id, params)
         else:
             raise Exception('You do not have permission to view this content')
     except Exception as inst:
