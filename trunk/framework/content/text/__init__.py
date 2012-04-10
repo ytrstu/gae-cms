@@ -37,6 +37,12 @@ class Text(content.Content):
 
     }
 
+    def action_edit(self):
+        location_id = self.section.path_parts[3]
+        rank = self.section.path_parts[4] if len(self.section.path_parts) > 4 else None
+        ret = '<h2>Edit text</h2>Coming soon: ' + str(location_id) + '/' + str(rank)
+        return ret
+
     def view_default(self, scope, location_id, params):
         item = self.get_or_create(scope, self.section.path, location_id)
         ret = self.get_manage_links(item)

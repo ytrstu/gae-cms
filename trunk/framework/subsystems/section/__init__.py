@@ -50,7 +50,7 @@ class Section(db.Model):
     def __str__(self):
         if not permission.view_section(self):
             raise Exception('AccessDenied', self.path)
-        elif not self.path_parts[1] and self.redirect_to and self.redirect_to.strip('/') != self.path:
+        elif len(self.path_parts) < 3 and self.redirect_to and self.redirect_to.strip('/') != self.path:
             raise Exception('Redirect', self.redirect_to)
         self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
         self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
@@ -62,7 +62,7 @@ class Section(db.Model):
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(self.path),
             'self': self,
-            'main': self.content() if self.path_parts[2] else '<h2>Under Construction</h2>Main content goes here',
+            'main': self.content() if len(self.path_parts) > 1 and self.path_parts[1] else '<h2>Under Construction</h2>Main content goes here',
         }
         return template.html(self, params)
 
@@ -94,7 +94,7 @@ def get_section(handler, path_parts):
         section.path_parts = path_parts
         return section
     except:
-        if not get_top_level() and not path_parts[1]:
+        if not get_top_level():
             section = create_section(handler, path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
             section.handler = handler
             section.path_parts = [FIRST_RUN_HOME_PATH, None, None, None]
