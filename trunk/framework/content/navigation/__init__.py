@@ -120,7 +120,7 @@ def get_form(action, path, parent_path, name=None, title=None, keywords=None, de
     f.add_control(control('submit', 'submit'))
     return str(f)
 
-def view_nth_level_only(s, _, params):
+def view_nth_level_only(s, scope, location_id, params):
     n = int(params[0])
     classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
     hierarchy = section.get_top_level()
@@ -136,7 +136,7 @@ def view_nth_level_only(s, _, params):
     s.css.append('nav-nth-level')
     return list_ul(s.path, parents_only, classes)
 
-def view_expanding_hierarchy(s, _, params):
+def view_expanding_hierarchy(s, scope, location_id, params):
     n = int(params[0])
     classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
     hierarchy = section.get_top_level()
