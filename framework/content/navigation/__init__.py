@@ -18,13 +18,13 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from .. import base
+import framework.content as content
 from framework.subsystems import section
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
-class navigation(base.base):
+class Navigation(content.Content):
 
-    content_actions = {
+    actions = {
 
     'create':   'Create section',
     'edit':     'Edit section',
@@ -33,7 +33,7 @@ class navigation(base.base):
 
     }
 
-    content_views = {
+    views = {
 
     'nth_level_only': 'nth level without any children',
     'expanding_hierarchy': 'Entire hierarchy with only the trail to the current section and its children expanded',
@@ -42,39 +42,39 @@ class navigation(base.base):
 
     def action_create(self):
         ret = '<h2>Create new section</h2>'
-        if self.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.handler.request)
+        if self.section.handler.request.get('submit'):
+            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
             try:
-                section.create_section(self.handler, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
+                section.create_section(self.section.handler, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  str(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not is_default else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path)
+        ret += get_form('/'.join(self.section.path_parts).strip('/'), '', self.section.path)
         return ret
 
     def action_edit(self):
         ret = '<h2>Edit section "' + self.section.path + '"</h2>'
-        if self.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.handler.request)
+        if self.section.handler.request.get('submit'):
+            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
             try:
                 section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  str(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
-        ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
+        ret += get_form('/'.join(self.section.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
     def action_reorder(self):
         siblings = section.get_siblings(self.section.path)
         if not len(siblings) > 1: raise Exception('BadRequest')
-        if self.handler.request.get('submit'):
-            new_rank = int(self.handler.request.get('rank'))
+        if self.section.handler.request.get('submit'):
+            new_rank = int(self.section.handler.request.get('rank'))
             if self.section.rank != new_rank:
                 section.update_section_rank(self.section, new_rank)
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-        f = form('/'.join(self.path_parts).strip('/'))
+        f = form('/'.join(self.section.path_parts).strip('/'))
         items = [[0, 'At the top']]
         adder = 1
         for item, _ in siblings:
@@ -92,9 +92,44 @@ class navigation(base.base):
         self.section.css.append('nav-manage')
         return ret
 
+    def view_nth_level_only(self, scope, location_id, params):
+        n = int(params[0])
+        classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
+        hierarchy = section.get_top_level()
+        while n:
+            for h in hierarchy:
+                if section.is_ancestor(self.section.path, h[0]['path']):
+                    hierarchy = h[1]
+            n -= 1
+        parents_only = []
+        for item, _ in hierarchy:
+            item['is_ancestor'] = section.is_ancestor(self.section.path, item['path'])
+            parents_only.append([item, []])
+        self.section.css.append('nav-nth-level')
+        return list_ul(self.section.path, parents_only, classes)
+    
+    def view_expanding_hierarchy(self, scope, location_id, params):
+        n = int(params[0])
+        classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
+        hierarchy = section.get_top_level()
+        while n:
+            for h in hierarchy:
+                if section.is_ancestor(self.section.path, h[0]['path']):
+                    hierarchy = h[1]
+            n -= 1
+        for item in hierarchy:
+            if(section.is_ancestor(self.section.path, item[0]['path'])):
+                item[0]['is_ancestor'] = True
+                item[1] = set_ancestry(self.section.path, item[1])
+            else:
+                item[0]['is_ancestor'] = False
+                item[1] = None
+        self.section.css.append('nav-expanding-hierarchy')
+        return list_ul(self.section.path, hierarchy, classes)
+
 def get_values(request):
-        path = request.get('path').replace(' ', '').replace('/', '').lower()
-        parent_path = request.get('parent_path').replace(' ', '').replace('/', '').lower()
+        path = request.get('path').replace('/', '-').replace(' ', '-').lower()
+        parent_path = request.get('parent_path').replace('/', '-').replace(' ', '-').lower()
         name = request.get('name')
         title = request.get('title')
         keywords = request.get('keywords')
@@ -119,41 +154,6 @@ def get_form(action, path, parent_path, name=None, title=None, keywords=None, de
     f.add_control(checkboxcontrol('new_window', new_window, 'New window'))
     f.add_control(control('submit', 'submit'))
     return str(f)
-
-def view_nth_level_only(s, scope, location_id, params):
-    n = int(params[0])
-    classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
-    hierarchy = section.get_top_level()
-    while n:
-        for h in hierarchy:
-            if section.is_ancestor(s.path, h[0]['path']):
-                hierarchy = h[1]
-        n -= 1
-    parents_only = []
-    for item, _ in hierarchy:
-        item['is_ancestor'] = section.is_ancestor(s.path, item['path'])
-        parents_only.append([item, []])
-    s.css.append('nav-nth-level')
-    return list_ul(s.path, parents_only, classes)
-
-def view_expanding_hierarchy(s, scope, location_id, params):
-    n = int(params[0])
-    classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
-    hierarchy = section.get_top_level()
-    while n:
-        for h in hierarchy:
-            if section.is_ancestor(s.path, h[0]['path']):
-                hierarchy = h[1]
-        n -= 1
-    for item in hierarchy:
-        if(section.is_ancestor(s.path, item[0]['path'])):
-            item[0]['is_ancestor'] = True
-            item[1] = set_ancestry(s.path, item[1])
-        else:
-            item[0]['is_ancestor'] = False
-            item[1] = None
-    s.css.append('nav-expanding-hierarchy')
-    return list_ul(s.path, hierarchy, classes)
 
 def set_ancestry(path, items):
     for item in items:

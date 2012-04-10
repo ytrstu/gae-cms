@@ -28,8 +28,8 @@ from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
 
 def html(s, params):
-    s.css = utils.unique_list(s.css)
     html = render_to_string('Default.html', params)
+    s.css = utils.unique_list(s.css)
 
     find = '___local___'
     html = html.replace(find, find + '_'.join(s.css) + '_', 1)

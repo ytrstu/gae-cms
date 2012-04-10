@@ -17,7 +17,28 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from .. import base
+from google.appengine.ext import db
 
-class text(base.base):
-    pass
+import framework.content as content
+
+class Text(content.Content):
+
+    items = db.StringListProperty()
+
+    actions = {
+
+    'edit':     'Edit text',
+
+    }
+
+    views = {
+
+    'default': 'Default - multiple items are tabbed',
+
+    }
+
+    def view_default(self, scope, location_id, params):
+        item = self.get_or_create(scope, self.section.path, location_id)
+        ret = self.get_manage_links(item)
+        ret += '&copy; 2012 GAE-Python-CMS. All Rights Reserved.'.join(item.items)
+        return ret

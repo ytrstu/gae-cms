@@ -31,9 +31,9 @@ def view_section(section):
     return False
 
 def perform_action(content, path_parts):
-    if path_parts[2] not in content.all_actions(): raise Exception('NotFound')
-    return is_admin(path_parts[0])
+    if path_parts[2] not in content.actions: raise Exception('NotFound')
+    return is_admin(path_parts[0]) # TODO: Check if actually has permission
 
 def view_content(content, section, view):
-    if view not in content.all_views(): raise Exception('NotFound')
+    if view not in content.views: raise Exception('NotFound')
     return view_section(section)

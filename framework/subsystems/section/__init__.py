@@ -72,8 +72,8 @@ class Section(db.Model):
             m = __import__(package, globals(), locals(), [self.path_parts[1]])
         except:
             raise Exception('BadRequest', self.path_parts[1])
-        klass = getattr(m, self.path_parts[1])
-        content = klass(self, self.handler, self.path_parts)
+        klass = getattr(m, self.path_parts[1].title())
+        content = klass().init(self)
         if not permission.perform_action(content, self.path_parts):
             raise Exception('Forbidden', self.path_parts[0], self.path_parts[1])
         return content
@@ -175,8 +175,8 @@ def can_path_exist(path, parent_path, old_path=None):
     return True
 
 def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', is_private=False, is_default=False, redirect_to='', new_window=False, force=False):
-    path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
-    parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
+    path = path.replace('/', '-').replace(' ', '-').strip().lower() if path else None
+    parent_path = parent_path.replace('/', '-').replace(' ', '-').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
 
     if is_default:
@@ -199,8 +199,8 @@ def create_section(handler, path, parent_path=None, name='', title='', keywords=
     return section
 
 def update_section(old, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window):
-    path = path.replace('/', '').replace(' ', '').strip().lower() if path else None
-    parent_path = parent_path.replace('/', '').replace(' ', '').strip().lower() if parent_path else None
+    path = path.replace('/', '-').replace(' ', '-').strip().lower() if path else None
+    parent_path = parent_path.replace('/', '-').replace(' ', '-').strip().lower() if parent_path else None
 
     if old.is_default:
         is_default=True # Cannot change the default page except if another page is promoted
@@ -218,12 +218,14 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
         new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()
         new.put()
-        return
+        cache.delete(CACHE_KEY)
+        return new
     elif old.parent_path != parent_path and can_path_exist(path, parent_path, old.path):
         max_rank = 0
         for item, _ in get_children(parent_path):
             if item['rank'] <= max_rank: max_rank = item['rank'] + 1
         old.rank = max_rank
+
     old.parent_path = parent_path
     old.name = name
     old.title = title
@@ -235,6 +237,7 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
     old.new_window = new_window
     old.put()
     cache.delete(CACHE_KEY)
+    return old
 
 def update_section_rank(section, new_rank):
     larger, smaller = max(section.rank, new_rank), min(section.rank, new_rank)
