@@ -33,3 +33,6 @@ def set(key, val):
 
 def delete(key):
     return memcache.Client().delete(os.environ['CURRENT_VERSION_ID'] + '_' + key)
+
+def flush_all():
+    return memcache.Client().flush_all()
