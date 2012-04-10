@@ -50,4 +50,4 @@ def view(section, param_string):
             raise Exception('You do not have permission to view this content')
     except Exception as inst:
         error = str(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
-        return '<div class="status error">Error: View does not exist: ' + error + '</div>'
+        return '<div class="status error">Error: View does not exist: %s</div>' % error

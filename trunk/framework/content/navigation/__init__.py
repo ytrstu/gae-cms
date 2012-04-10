@@ -47,7 +47,7 @@ class navigation(base.base):
             try:
                 section.create_section(self.handler, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
-                ret += '<div class="status error">' + str(inst[0]) + '</div>'
+                ret += '<div class="status error">%s</div>' %  str(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not is_default else ''))
         ret += get_form('/'.join(self.path_parts).strip('/'), '', self.section.path)
@@ -60,7 +60,7 @@ class navigation(base.base):
             try:
                 section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
-                ret += '<div class="status error">' + str(inst[0]) + '</div>'
+                ret += '<div class="status error">%s</div>' %  str(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
         ret += get_form('/'.join(self.path_parts).strip('/'), self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
@@ -84,7 +84,7 @@ class navigation(base.base):
                 adder = 0
         f.add_control(selectcontrol('rank', items, self.section.rank, 'Position'))
         f.add_control(control('submit', 'submit'))
-        return '<h2>Reorder section "' + self.section.path + '"</h2>' + str(f)
+        return '<h2>Reorder section "%s"</h2>%s' % (self.section.path, str(f))
 
     def action_manage(self):
         ret = '<h2>Manage sections</h2>'
