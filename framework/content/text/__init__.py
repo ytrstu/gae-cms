@@ -41,8 +41,7 @@ class Text(content.Content):
 
     }
 
-    def action_edit(self, scope, location_id, rank):
-        item = self.get(scope, self.section.path, location_id, rank)
+    def action_edit(self, item):
         if not item:
             raise Exception('NotFound')
         if self.section.handler.request.get('submit'):
@@ -69,9 +68,8 @@ class Text(content.Content):
         ret += unicode(f)
         return ret
 
-    def view_default(self, scope, location_id, rank, params):
-        item = self.get_or_create(scope, self.section.path, location_id, rank)
-        ret = self.get_manage_links(item)
+    def view_default(self, item, params):
+        ret = ''
         for i in range(len(item.titles)):
             if item.titles[i]:
                 ret += '<h2>' + item.titles[i] + '</h2>'

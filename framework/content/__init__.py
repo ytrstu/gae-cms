@@ -35,25 +35,25 @@ class Content(db.Model):
     actions = {}
     views = {}
 
+    show_permissions_if_managing = True
+
     def __unicode__(self):
-        scope = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
-        location_id = self.section.p_params[1] if self.section.p_params and len(self.section.p_params) > 1 else None
-        rank = self.section.p_params[2]  if self.section.p_params and len(self.section.p_params) > 2 else None
+        location_id = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
+        rank = self.section.p_params[1]  if self.section.p_params and len(self.section.p_params) > 1 else None
+        item = self.get_local_else_global(self.section.path, location_id, rank)
         # If the action doesn't exist, the AttributeError will lead to a 404
-        return getattr(self, 'action_%s' % self.section.p_action)(scope, location_id, rank)
+        return getattr(self, 'action_%s' % self.section.p_action)(item)
 
     def init(self, section):
         self.section = section
         return self
 
-    def get(self, scope, section_path, location_id, rank=None):
-        if not location_id: raise Exception('location_id is required')
-        try:
-            return self.gql("WHERE ANCESTOR IS :1 LIMIT 1", self.content_key(scope.upper(), section_path, location_id, rank))[0]
-        except:
-            return None
+    def get_local_else_global(self, section_path, location_id, rank):
+        if not location_id: return None
+        item = self.get(SCOPE_LOCAL, section_path, location_id, rank)
+        return item if item else self.get(SCOPE_GLOBAL, section_path, location_id, rank)
 
-    def get_or_create(self, scope, section_path, location_id, rank=None):
+    def get_else_create(self, scope, section_path, location_id, rank):
         item = self.get(scope, section_path, location_id, rank)
         if not item:
             self.__init__(parent=self.content_key(scope.upper(), section_path, location_id, rank),
@@ -64,7 +64,15 @@ class Content(db.Model):
             item = self
         return item
 
+    def get(self, scope, section_path, location_id, rank):
+        if not location_id: raise Exception('location_id is required')
+        try:
+            return self.gql("WHERE ANCESTOR IS :1 LIMIT 1", self.content_key(scope.upper(), section_path, location_id, rank))[0]
+        except:
+            return None
+
     def get_manage_links(self, item):
+        if not self.show_permissions_if_managing: return ''
         permissions = []
         for action in self.actions:
             if permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action):
@@ -72,11 +80,11 @@ class Content(db.Model):
         if len(permissions) == 0: return ''
         ret = '<ul class="manage-links">'
         for action in permissions:
-            ret += '<li><a href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action + '/' + self.scope.lower() + '/' + self.location_id +  '">' + self.actions[action] + '</a></li>'
+            ret += '<li><a href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action + '/' + self.location_id +  '">' + self.actions[action] + '</a></li>'
         ret += '</ul>'
         return ret
 
-    def content_key(self, scope, section_path, location_id, rank=None):
+    def content_key(self, scope, section_path, location_id, rank):
         path = scope.upper() + '.' + location_id + (('.' + rank) if rank else '')
         if scope.upper() != SCOPE_GLOBAL:
             path = section_path + '.' + path

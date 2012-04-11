@@ -42,13 +42,19 @@ def view(section, param_string):
             raise Exception('Scope must be one of: ' + str([content.SCOPE_GLOBAL, content.SCOPE_LOCAL]))
         elif '-' in location_id or ' ' in location_id:
             raise Exception('Invalid character "-" or " " for location_id')
+        elif location_id in section.location_ids:
+            raise Exception('This view has a duplicate location_id to one already defined in this theme')
+        else:
+            section.location_ids.append(location_id)
 
         m = importlib.import_module('framework.content.' + mod.lower())
         contentmod = getattr(m, mod)(scope=scope, section_path=section.path, location_id=location_id, rank=None).init(section)
+        item = getattr(contentmod, 'get_else_create')(scope, section.path, location_id, rank=None)
 
-        if permission.view_content(contentmod, section, view):
-            view = getattr(contentmod, 'view_' + view)
-            return view(scope, location_id, None, params)
+        if permission.view_content(item, section, view):
+            manage = getattr(contentmod, 'get_manage_links')(item)
+            view = getattr(contentmod, 'view_' + view)(item, params)
+            return manage + view
         else:
             raise Exception('You do not have permission to view this content')
     except Exception as inst:
