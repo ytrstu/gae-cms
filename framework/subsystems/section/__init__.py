@@ -44,7 +44,7 @@ class Section(db.Model):
     redirect_to = db.StringProperty()
     new_window = db.BooleanProperty(default=False)
 
-    def __str__(self):
+    def __unicode__(self):
         if not permission.view_section(self):
             raise Exception('AccessDenied', self.path)
         elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.p_action:

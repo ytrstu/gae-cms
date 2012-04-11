@@ -35,7 +35,7 @@ class Content(db.Model):
     actions = {}
     views = {}
 
-    def __str__(self):
+    def __unicode__(self):
         # If the action doesn't exist, the AttributeError will lead to a 404
         return getattr(self, 'action_%s' % self.section.p_action)()
 

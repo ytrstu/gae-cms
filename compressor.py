@@ -61,7 +61,7 @@ class Compressor(webapp2.RequestHandler):
             return response
         except Exception as inst:
             if settings.DEBUG:
-                return webapp2.Response('RouterError: ' + str(inst) + '\n\n' + traceback.format_exc())
+                return webapp2.Response('RouterError: ' + unicode(inst) + '\n\n' + traceback.format_exc())
             webapp2.abort(404)
 
     def post(self, path):

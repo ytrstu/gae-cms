@@ -26,10 +26,10 @@ class form:
     def add_control(self, control):
         self.controls.append(control)
         
-    def __str__(self):
+    def __unicode__(self):
         out = '<form method="POST" action="' + self.action + '">'
         for c in self.controls:
-            out += str(c)
+            out += unicode(c)
         out += '</form>'
         return out
         
@@ -50,7 +50,7 @@ class control:
         if self.length: out += ' length="' + self.length + '"'
         style = ''
         if self.width:
-            style += ' width:' + str(self.width) + '%'
+            style += ' width:' + unicode(self.width) + '%'
         elif self.itype == 'text':
             style += ' width:20%'
         if style: out += ' style="' + style.strip() + '"'
@@ -69,7 +69,7 @@ class selectcontrol(control):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<select name="' + self.name + '" id="' + self.name + '">'
         for i in self.items:
-            out += '<option value="' + str(i[0]) + '"'
+            out += '<option value="' + unicode(i[0]) + '"'
             if self.value == i[0]: out += ' selected'
             out += '>' + i[1] + '</option>'
         out += '</select>'
@@ -87,8 +87,8 @@ class textareacontrol(control):
     def __str__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<textarea name="' + self.name + '" id="' + self.name + '"'
-        if self.width: out += ' style="width:' + str(self.width) + '%"'
-        if self.rows: out += ' rows="' + str(self.rows) + '"'
+        if self.width: out += ' style="width:' + unicode(self.width) + '%"'
+        if self.rows: out += ' rows="' + unicode(self.rows) + '"'
         out += '>'
         if self.value: out += self.value
         out += '</textarea>'

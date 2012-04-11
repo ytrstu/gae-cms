@@ -33,12 +33,12 @@ class Router(webapp2.RequestHandler):
         p_action = path_parts[2] if len(path_parts) > 2 else None
         p_params = path_parts[3:] if len(path_parts) > 3 else None
         try:
-            response = webapp2.Response(str(section.get_section(self, path, p_content, p_action, p_params)))
+            response = webapp2.Response(unicode(section.get_section(self, path, p_content, p_action, p_params)))
             response.headers['Connection'] = 'Keep-Alive'
             return response
         except Exception as inst:
             if inst[0] == 'Redirect':
-                return self.redirect(str(inst[1]))
+                return self.redirect(unicode(inst[1]))
             elif inst[0] == 'NotFound':
                 webapp2.abort(404)
             elif inst[0] == 'BadRequest':
@@ -48,7 +48,7 @@ class Router(webapp2.RequestHandler):
             elif inst[0] == 'AccessDenied':
                 webapp2.abort(403)
             elif settings.DEBUG:
-                return webapp2.Response('RouterError: ' + str(inst) + '\n\n' + traceback.format_exc())
+                return webapp2.Response('RouterError: ' + unicode(inst) + '\n\n' + traceback.format_exc())
             else:
                 webapp2.abort(400)
 
