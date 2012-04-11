@@ -52,3 +52,7 @@ def view(section, param_string):
     except Exception as inst:
         error = str(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
         return '<div class="status error">Error: View does not exist: %s</div>' % error
+
+@register.filter
+def joinby(value, arg):
+    return arg.join(value)
