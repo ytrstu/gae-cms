@@ -32,21 +32,23 @@ def view(section, param_string):
     params = [x.strip() for x in param_string.split(',')]
     try:
         try:
-            scope, mod, view, location_id = params[0:4]
+            scope, location_id, mod, view = params[0:4]
         except:
             raise Exception('A minimum of four parameters required')
         else:
             params = params[4:] if len(params) > 4 else None
 
         if scope not in [content.SCOPE_GLOBAL, content.SCOPE_LOCAL]:
-            raise Exception('Scope must be "global" or "local"')
+            raise Exception('Scope must be one of: ' + str([content.SCOPE_GLOBAL, content.SCOPE_LOCAL]))
+        elif '-' in location_id or ' ' in location_id:
+            raise Exception('Invalid character "-" or " " for location_id')
 
         m = importlib.import_module('framework.content.' + mod.lower())
         contentmod = getattr(m, mod)(scope=scope, section_path=section.path, location_id=location_id, rank=None).init(section)
 
         if permission.view_content(contentmod, section, view):
             view = getattr(contentmod, 'view_' + view)
-            return view(scope, location_id, params)
+            return view(scope, location_id, None, params)
         else:
             raise Exception('You do not have permission to view this content')
     except Exception as inst:

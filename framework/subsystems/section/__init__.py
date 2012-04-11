@@ -80,7 +80,7 @@ class Section(db.Model):
 def section_key(path):
     return db.Key.from_path('Section', path)
 
-def get_section(handler, path, p_content, p_action, p_params):
+def get_section(handler, full_path, path, p_content, p_action, p_params):
     try:
         if not path:
             section = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
@@ -94,16 +94,10 @@ def get_section(handler, path, p_content, p_action, p_params):
         else:
             raise Exception('NotFound', path, p_action, p_params)
     section.handler = handler
+    section.full_path = full_path
     section.p_content = p_content
     section.p_action = p_action
     section.p_params = p_params
-    section.full_path = '/' + section.path
-    if(p_content):
-        section.full_path += '/' + p_content
-        if(p_action):
-            section.full_path += '/' + p_action
-            if(p_params):
-                section.full_path += '/' + '/'.join(p_params)
     return section
 
 def get_helper(path, hierarchy):

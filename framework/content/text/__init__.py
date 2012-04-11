@@ -41,10 +41,7 @@ class Text(content.Content):
 
     }
 
-    def action_edit(self):
-        scope = self.section.p_params[0]
-        location_id = self.section.p_params[1]
-        rank = self.section.p_params[2] if len(self.section.p_params) > 2 else None
+    def action_edit(self, scope, location_id, rank):
         item = self.get(scope, self.section.path, location_id, rank)
         if not item:
             raise Exception('NotFound')
@@ -72,8 +69,8 @@ class Text(content.Content):
         ret += unicode(f)
         return ret
 
-    def view_default(self, scope, location_id, params):
-        item = self.get_or_create(scope, self.section.path, location_id)
+    def view_default(self, scope, location_id, rank, params):
+        item = self.get_or_create(scope, self.section.path, location_id, rank)
         ret = self.get_manage_links(item)
         for i in range(len(item.titles)):
             if item.titles[i]:

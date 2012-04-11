@@ -27,13 +27,14 @@ import settings
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
-        path_parts = path.strip('/').lower().split('/')
+        full_path = path.strip('/').lower()
+        path_parts = full_path.split('/')
         path = path_parts[0]
         p_content = path_parts[1] if len(path_parts) > 1 else None
         p_action = path_parts[2] if len(path_parts) > 2 else None
         p_params = path_parts[3:] if len(path_parts) > 3 else None
         try:
-            response = webapp2.Response(unicode(section.get_section(self, path, p_content, p_action, p_params)))
+            response = webapp2.Response(unicode(section.get_section(self, '/' + full_path, path, p_content, p_action, p_params)))
             response.headers['Connection'] = 'Keep-Alive'
             return response
         except Exception as inst:
