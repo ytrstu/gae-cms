@@ -13,9 +13,9 @@
 			<h1 class="site-header main"><a href="/">{{ CONSTANTS.SITE_HEADER }}</a></h1>
 			<h2 class="site-header sub"><a href="/">{{ CONSTANTS.SITE_SUB_HEADER }}</a></h2>
 		</div>
-		{{ self|view:"GLOBAL, top_navigation, Navigation, nth_level_only, 0, horizontal"|safe }}
+		{{ self|view:"GLOBAL, topnav, Navigation, nth_level_only, 0, horizontal"|safe }}
 		<div class="bd yui3-g">
-			<div class="sd yui3-u-1-6">{{ self|view:"GLOBAL, side_navigation, Navigation, expanding_hierarchy, 1, vertical"|safe }}</div>
+			<div class="sd yui3-u-1-6">{{ self|view:"GLOBAL, sidenav, Navigation, expanding_hierarchy, 1, vertical"|safe }}</div>
 			<div class="mn yui3-u-5-6">{{ main|safe }}</div>
 		</div>
 		<div class="ft">

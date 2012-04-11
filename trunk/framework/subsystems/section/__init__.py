@@ -45,10 +45,12 @@ class Section(db.Model):
     new_window = db.BooleanProperty(default=False)
 
     def __unicode__(self):
+
         if not permission.view_section(self):
             raise Exception('AccessDenied', self.path)
         elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.p_action:
             raise Exception('Redirect', self.redirect_to)
+
         self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
         self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
         self.has_siblings = len(get_siblings(self.path)) > 1
@@ -56,6 +58,7 @@ class Section(db.Model):
         if self.p_content: self.classes.append('content-' + self.p_content)
         if self.p_action: self.classes.append('action-' + self.p_action)
         self.css = []
+
         params = {
             'CONSTANTS': settings.CONSTANTS,
             'user': users.get_current_user(),
@@ -98,6 +101,7 @@ def get_section(handler, full_path, path, p_content, p_action, p_params):
     section.p_content = p_content
     section.p_action = p_action
     section.p_params = p_params
+    section.location_ids = [] # Want to track these so themer doesn't add a duplicate id
     return section
 
 def get_helper(path, hierarchy):
