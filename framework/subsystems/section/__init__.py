@@ -44,13 +44,10 @@ class Section(db.Model):
     redirect_to = db.StringProperty()
     new_window = db.BooleanProperty(default=False)
 
-    path_parts = None
-    handler = None
-
     def __str__(self):
         if not permission.view_section(self):
             raise Exception('AccessDenied', self.path)
-        elif len(self.path_parts) < 3 and self.redirect_to and self.redirect_to.strip('/') != self.path:
+        elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.p_action:
             raise Exception('Redirect', self.redirect_to)
         self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
         self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
@@ -62,44 +59,43 @@ class Section(db.Model):
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(self.path),
             'self': self,
-            'main': self.content() if len(self.path_parts) > 1 and self.path_parts[1] else '<h2>Under Construction</h2>Main content goes here',
+            'main': self.content() if self.p_action else '<h2>Under Construction</h2>Main content goes here',
         }
         return template.html(self, params)
 
     def content(self):
-        package = "framework.content." + self.path_parts[1]
+        package = "framework.content." + self.p_content
         try:
-            m = __import__(package, globals(), locals(), [self.path_parts[1]])
+            m = __import__(package, globals(), locals(), [self.p_content])
         except:
-            raise Exception('BadRequest', self.path_parts[1])
-        klass = getattr(m, self.path_parts[1].title())
+            raise Exception('BadRequest', self.p_content)
+        klass = getattr(m, self.p_content.title())
         content = klass().init(self)
-        if not permission.perform_action(content, self.path_parts):
-            raise Exception('Forbidden', self.path_parts[0], self.path_parts[1])
+        if not permission.perform_action(content, self.path, self.p_content, self.p_action):
+            raise Exception('Forbidden', self.path, self.p_content, self.p_action, self.p_params)
         return content
 
 def section_key(path):
     return db.Key.from_path('Section', path)
 
-def get_section(handler, path_parts):
+def get_section(handler, path, p_content, p_action, p_params):
     try:
-        if not path_parts[0]:
+        if not path:
             section = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
         else:
-            section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path_parts[0]))[0]
-        # The default page with no action should only be accessible from root
-        if section.is_default and path_parts[0] and not path_parts[1]:
-            raise Exception('NotFound')
-        section.handler = handler
-        section.path_parts = path_parts
-        return section
+            section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path))[0]
+        if section.is_default and path and not p_action:
+            raise Exception('NotFound') # The default page with no action should only be accessible from root
     except:
         if not get_top_level():
             section = create_section(handler, path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
-            section.handler = handler
-            section.path_parts = [FIRST_RUN_HOME_PATH, None, None, None]
-            return section
-        raise Exception('NotFound', path_parts)
+        else:
+            raise Exception('NotFound', path, p_action, p_params)
+    section.handler = handler
+    section.p_content = p_content
+    section.p_action = p_action
+    section.p_params = p_params
+    return section
 
 def get_helper(path, hierarchy):
     for item, children in hierarchy:
@@ -193,8 +189,6 @@ def create_section(handler, path, parent_path=None, name='', title='', keywords=
 
     section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, is_private=is_private, redirect_to=redirect_to, new_window=new_window, is_default=is_default)
     section.put()
-    section.handler = handler
-    section.path_parts = [path, parent_path, None, None]
     cache.delete(CACHE_KEY)
     return section
 

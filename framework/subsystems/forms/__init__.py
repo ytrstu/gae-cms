@@ -27,7 +27,7 @@ class form:
         self.controls.append(control)
         
     def __str__(self):
-        out = '<form method="POST" action="/' + self.action + '">'
+        out = '<form method="POST" action="' + self.action + '">'
         for c in self.controls:
             out += str(c)
         out += '</form>'

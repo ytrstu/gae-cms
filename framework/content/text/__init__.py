@@ -38,8 +38,8 @@ class Text(content.Content):
     }
 
     def action_edit(self):
-        location_id = self.section.path_parts[3]
-        rank = self.section.path_parts[4] if len(self.section.path_parts) > 4 else None
+        location_id = self.section.p_params[0]
+        rank = self.section.p_params[1] if len(self.section.p_params) > 1 else None
         ret = '<h2>Edit text</h2>Coming soon: ' + str(location_id) + '/' + str(rank)
         return ret
 
