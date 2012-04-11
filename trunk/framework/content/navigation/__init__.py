@@ -47,7 +47,7 @@ class Navigation(content.Content):
             try:
                 section.create_section(self.section.handler, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
-                ret += '<div class="status error">%s</div>' %  str(inst[0])
+                ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not is_default else ''))
         ret += get_form(self.section.full_path, '', self.section.path)
@@ -60,7 +60,7 @@ class Navigation(content.Content):
             try:
                 section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
-                ret += '<div class="status error">%s</div>' %  str(inst[0])
+                ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
         ret += get_form(self.section.full_path, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
@@ -84,7 +84,7 @@ class Navigation(content.Content):
                 adder = 0
         f.add_control(selectcontrol('rank', items, self.section.rank, 'Position'))
         f.add_control(control('submit', 'submit'))
-        return '<h2>Reorder section "%s"</h2>%s' % (self.section.path, str(f))
+        return '<h2>Reorder section "%s"</h2>%s' % (self.section.path, unicode(f))
 
     def action_manage(self):
         ret = '<h2>Manage sections</h2>'
@@ -153,7 +153,7 @@ def get_form(action, path, parent_path, name=None, title=None, keywords=None, de
     f.add_control(control('text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
     f.add_control(checkboxcontrol('new_window', new_window, 'New window'))
     f.add_control(control('submit', 'submit'))
-    return str(f)
+    return unicode(f)
 
 def set_ancestry(path, items):
     for item in items:
@@ -195,5 +195,5 @@ def get_manage_links(item):
     if len(section.get_siblings(item['path'])) > 1:
         ret += '<a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder]</a>'
     else:
-        ret += '<span class="reorder-disabled" title="Not reorderable, has no siblings">, Not reorderable]</a>'
+        ret += '<span class="reorder-disabled" title="Not reorderable, has no siblings">, Not reorderable]</span>'
     return ret

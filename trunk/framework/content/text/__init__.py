@@ -19,6 +19,8 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from google.appengine.ext import db
 
+from django.utils.html import strip_tags
+
 import framework.content as content
 from framework.subsystems.forms import form, control, textareacontrol
 
@@ -50,9 +52,9 @@ class Text(content.Content):
             i = 0
             item.titles = []
             item.bodies = []
-            while self.section.handler.request.get('title' + str(i)) or self.section.handler.request.get('body' + str(i)):
-                title = self.section.handler.request.get('title' + str(i)).strip()
-                body = self.section.handler.request.get('body' + str(i)).strip()
+            while self.section.handler.request.get('title' + unicode(i)) or self.section.handler.request.get('body' + unicode(i)):
+                title = strip_tags(self.section.handler.request.get('title' + unicode(i))).strip()
+                body = self.section.handler.request.get('body' + unicode(i)).strip()
                 if title or body:
                     item.titles.append(title)
                     item.bodies.append(body)
@@ -62,12 +64,12 @@ class Text(content.Content):
         ret = '<h2>Edit text</h2>'
         f = form(self.section.full_path)
         for i in range(len(item.titles)):
-            f.add_control(control('text', 'title' + str(i), item.titles[i], 'Title', 60))
-            f.add_control(textareacontrol('body' + str(i), item.bodies[i], 'Body', 100, 10))
-        f.add_control(control('text', 'title' + str(len(item.titles)), '', 'Title', 60))
-        f.add_control(textareacontrol('body' + str(len(item.bodies)), '', 'Body', 100, 10))
+            f.add_control(control('text', 'title' + unicode(i), item.titles[i], 'Title', 60))
+            f.add_control(textareacontrol('body' + unicode(i), item.bodies[i], 'Body', 100, 10))
+        f.add_control(control('text', 'title' + unicode(len(item.titles)), '', 'Title', 60))
+        f.add_control(textareacontrol('body' + unicode(len(item.bodies)), '', 'Body', 100, 10))
         f.add_control(control('submit', 'submit'))
-        ret += str(f)
+        ret += unicode(f)
         return ret
 
     def view_default(self, scope, location_id, params):
