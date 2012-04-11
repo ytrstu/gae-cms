@@ -36,8 +36,11 @@ class Content(db.Model):
     views = {}
 
     def __unicode__(self):
+        scope = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
+        location_id = self.section.p_params[1] if self.section.p_params and len(self.section.p_params) > 1 else None
+        rank = self.section.p_params[2]  if self.section.p_params and len(self.section.p_params) > 2 else None
         # If the action doesn't exist, the AttributeError will lead to a 404
-        return getattr(self, 'action_%s' % self.section.p_action)()
+        return getattr(self, 'action_%s' % self.section.p_action)(scope, location_id, rank)
 
     def init(self, section):
         self.section = section
