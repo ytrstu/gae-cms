@@ -36,7 +36,7 @@ class Content(db.Model):
 
     def __str__(self):
         # If the action doesn't exist, the AttributeError will lead to a 404
-        return getattr(self, 'action_%s' % self.section.path_parts[2])()
+        return getattr(self, 'action_%s' % self.section.p_action)()
 
     def init(self, section):
         self.section = section
@@ -62,7 +62,7 @@ class Content(db.Model):
     def get_manage_links(self, item):
         permissions = []
         for action in self.actions:
-            if permission.perform_action(item, [self.section.path, self.__class__.__name__.lower(), action]):
+            if permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action):
                 permissions.append(action)
         if len(permissions) == 0: return ''
         ret = '<ul>'
