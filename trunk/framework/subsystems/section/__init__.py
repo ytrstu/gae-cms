@@ -52,7 +52,9 @@ class Section(db.Model):
         self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
         self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
         self.has_siblings = len(get_siblings(self.path)) > 1
-        self.classes = 'section-' + self.path.replace('/', '-').rstrip('-')
+        self.classes = ['path-' + self.path]
+        if self.p_content: self.classes.append('content-' + self.p_content)
+        if self.p_action: self.classes.append('action-' + self.p_action)
         self.css = []
         params = {
             'CONSTANTS': settings.CONSTANTS,
@@ -95,6 +97,13 @@ def get_section(handler, path, p_content, p_action, p_params):
     section.p_content = p_content
     section.p_action = p_action
     section.p_params = p_params
+    section.full_path = '/' + section.path
+    if(p_content):
+        section.full_path += '/' + p_content
+        if(p_action):
+            section.full_path += '/' + p_action
+            if(p_params):
+                section.full_path += '/' + '/'.join(p_params)
     return section
 
 def get_helper(path, hierarchy):

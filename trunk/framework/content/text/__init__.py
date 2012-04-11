@@ -20,10 +20,12 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from google.appengine.ext import db
 
 import framework.content as content
+from framework.subsystems.forms import form, control, textareacontrol
 
 class Text(content.Content):
 
-    items = db.StringListProperty()
+    titles = db.StringListProperty()
+    bodies = db.StringListProperty()
 
     actions = {
 
@@ -38,13 +40,42 @@ class Text(content.Content):
     }
 
     def action_edit(self):
-        location_id = self.section.p_params[0]
-        rank = self.section.p_params[1] if len(self.section.p_params) > 1 else None
-        ret = '<h2>Edit text</h2>Coming soon: ' + str(location_id) + '/' + str(rank)
+        scope = self.section.p_params[0]
+        location_id = self.section.p_params[1]
+        rank = self.section.p_params[2] if len(self.section.p_params) > 2 else None
+        item = self.get(scope, self.section.path, location_id, rank)
+        if not item:
+            raise Exception('NotFound')
+        if self.section.handler.request.get('submit'):
+            i = 0
+            item.titles = []
+            item.bodies = []
+            while self.section.handler.request.get('title' + str(i)) or self.section.handler.request.get('body' + str(i)):
+                title = self.section.handler.request.get('title' + str(i)).strip()
+                body = self.section.handler.request.get('body' + str(i)).strip()
+                if title or body:
+                    item.titles.append(title)
+                    item.bodies.append(body)
+                i += 1
+            item.put()
+            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+        ret = '<h2>Edit text</h2>'
+        f = form(self.section.full_path)
+        for i in range(len(item.titles)):
+            f.add_control(control('text', 'title' + str(i), item.titles[i], 'Title', 60))
+            f.add_control(textareacontrol('body' + str(i), item.bodies[i], 'Body', 100, 10))
+        f.add_control(control('text', 'title' + str(len(item.titles)), '', 'Title', 60))
+        f.add_control(textareacontrol('body' + str(len(item.bodies)), '', 'Body', 100, 10))
+        f.add_control(control('submit', 'submit'))
+        ret += str(f)
         return ret
 
     def view_default(self, scope, location_id, params):
         item = self.get_or_create(scope, self.section.path, location_id)
         ret = self.get_manage_links(item)
-        ret += '&copy; 2012 GAE-Python-CMS. All Rights Reserved.'.join(item.items)
+        for i in range(len(item.titles)):
+            if item.titles[i]:
+                ret += '<h2>' + item.titles[i] + '</h2>'
+            if item.bodies[i]:
+                ret += item.bodies[i]
         return ret

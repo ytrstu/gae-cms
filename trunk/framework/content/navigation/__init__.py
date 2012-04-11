@@ -50,7 +50,7 @@ class Navigation(content.Content):
                 ret += '<div class="status error">%s</div>' %  str(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not is_default else ''))
-        ret += get_form('/' + self.section.path + '/' + self.section.p_content + '/' + self.section.p_action, '', self.section.path)
+        ret += get_form(self.section.full_path, '', self.section.path)
         return ret
 
     def action_edit(self):
@@ -63,7 +63,7 @@ class Navigation(content.Content):
                 ret += '<div class="status error">%s</div>' %  str(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
-        ret += get_form('/' + self.section.path + '/' + self.section.p_content + '/' + self.section.p_action, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
+        ret += get_form(self.section.full_path, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
     def action_reorder(self):
@@ -74,7 +74,7 @@ class Navigation(content.Content):
             if self.section.rank != new_rank:
                 section.update_section_rank(self.section, new_rank)
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-        f = form((('/' + self.section.path) if not self.section.is_default else '') + '/' + self.section.p_content + '/' + self.section.p_action)
+        f = form(self.section.full_path)
         items = [[0, 'At the top']]
         adder = 1
         for item, _ in siblings:
