@@ -29,9 +29,22 @@ from django.template.loader import render_to_string
 
 def html(s, params):
     html = render_to_string('Default.html', params)
-    s.css = utils.unique_list(s.css)
 
-    find = '___local___'
-    html = html.replace(find, find + '_'.join(s.css) + '_', 1)
+    s.css = s.css + s.themecss
+    s.js = s.js + s.themejs
+
+    s.yuicss, s.css, s.yuijs, s.js = (utils.unique_list(x) for x in [s.yuicss, s.css, s.yuijs, s.js])
+
+    s.yuicss = '__'.join([x[:-4] if x.endswith('.css') else x for x in s.yuicss]).replace('/', '_')
+    s.css = '_'.join([x[:-4] if x.endswith('.css') else x for x in s.css]).replace('/', '_')
+    s.yuijs = '__'.join([x[:-3] if x.endswith('.js') else x for x in s.yuijs]).replace('/', '_')
+    s.js = '_'.join([x[:-3] if x.endswith('.js') else x for x in s.js]).replace('/', '_')
+
+    if s.yuicss: s.yuicss = '___yui___' + s.yuicss
+    if s.css: s.css = '___local___' + s.css
+
+    if s.yuicss or s.css:
+        linkrel = '<link rel="stylesheet" type="text/css" href="/' + s.yuicss + s.css + '.css">'
+        html = html.replace('</head>', '\t' + linkrel + '\n\t</head>', 1)
 
     return html

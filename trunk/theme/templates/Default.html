@@ -5,7 +5,9 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if self.keywords %}
 		<meta name="keywords" content="{{ self.keywords }}">{% endif %}{% if self.description %}
 		<meta name="description" content="{{ self.description }}">{% endif %}
-		<link rel="stylesheet" type="text/css" href="/___yui___cssfonts_cssfonts__cssreset_cssreset__cssbase_cssbase__cssgrids_grids___local___default.css">
+		<meta name="generator" content="GAE-CMS {{ VERSION }}">
+		{{ self|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/grids.css" }}
+		{{ self|themecss:"default.css" }}
 	</head>
 	<body class="yui3-skin-sam {{ self.classes|joinby:" " }}">
 		<div class="user-bar">{% if user %}<a href="{{ self.logout_url }}">Sign out</a>{% else %}<a href="{{ self.login_url }}">Sign in</a>{% endif %}</div>
