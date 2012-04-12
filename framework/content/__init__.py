@@ -82,7 +82,7 @@ class Content(db.Model):
         if len(permissions) == 0: return ''
 
         self.section.css.append('content-permissions')
-        ret = '<ul class="content permissions"><li><a href="#">%s</a><ul>' % self.name
+        ret = '<ul class="content %s permissions"><li><a href="#">%s</a><ul>' % (self.__class__.__name__.lower(), self.name)
         for action in permissions:
             ret += '<li><a href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action + '/' + self.location_id +  '">' + self.actions[action] + '</a></li>'
         ret += '</ul></li></ul>'
