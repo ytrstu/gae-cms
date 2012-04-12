@@ -24,6 +24,9 @@ from framework.subsystems.forms import form, control, selectcontrol, textareacon
 
 class Navigation(content.Content):
 
+    name = 'Navigation'
+    author = 'Imran Somji'
+
     actions = {
 
     'create':   'Create section',
