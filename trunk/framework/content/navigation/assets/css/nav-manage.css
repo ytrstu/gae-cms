@@ -11,7 +11,7 @@
 	padding-bottom: 5px;
 }
 .navigation.manage a.edit, .navigation.manage a.subsection, .navigation.manage a.reorder, .navigation.manage span.reorder-disabled {
-	background: url(/theme/images/sprite.png) 0 -578px no-repeat;
+	background: url(/theme/images/sprite.png) 0 -587px no-repeat;
 	width: 14px;
 	display: block;
 	text-indent: -9999px;
@@ -20,10 +20,10 @@
 	margin-right: 0.5em;
 }
 .navigation.manage a.subsection {
-	background-position: 0 -554px;
+	background-position: 0 -563px;
 }
 .navigation.manage a.reorder, .navigation.manage span.reorder-disabled {
-	background-position: 0 -739px;
+	background-position: 0 -748px;
 }
 .navigation.manage span.reorder-disabled {
 	background-color: #CCC;
