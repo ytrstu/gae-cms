@@ -18,6 +18,8 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os
+
 from google.appengine.ext import db
 from google.appengine.api import users
 
@@ -28,7 +30,7 @@ from framework.subsystems import permission
 import settings
 
 FIRST_RUN_HOME_PATH = 'home'
-CACHE_KEY = 'section_hierarchy'
+CACHE_KEY = 'SECTION_HIERARCHY'
 
 class Section(db.Model):
 
@@ -57,10 +59,10 @@ class Section(db.Model):
         self.classes = ['path-' + self.path]
         if self.p_content: self.classes.append('content-' + self.p_content)
         if self.p_action: self.classes.append('action-' + self.p_action)
-        self.css = []
 
         params = {
             'CONSTANTS': settings.CONSTANTS,
+            'VERSION': os.environ['CURRENT_VERSION_ID'],
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(self.path),
             'self': self,
@@ -96,12 +98,22 @@ def get_section(handler, full_path, path, p_content, p_action, p_params):
             section = create_section(handler, path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
         else:
             raise Exception('NotFound', path, p_action, p_params)
+
     section.handler = handler
+
     section.full_path = full_path
     section.p_content = p_content
     section.p_action = p_action
     section.p_params = p_params
+
     section.location_ids = [] # Want to track these so themer doesn't add a duplicate id
+
+    section.yuicss = []
+    section.themecss = []
+    section.css = []
+    section.yuijs = []
+    section.themejs = []
+    section.js = []
     return section
 
 def get_helper(path, hierarchy):

@@ -64,3 +64,28 @@ def view(section, param_string):
 @register.filter
 def joinby(value, arg):
     return arg.join(value)
+
+@register.filter
+def yuicss(section, args):
+    [section.yuicss.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
+
+@register.filter
+def themecss(section, args):
+    [section.themecss.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
+
+@register.filter
+def css(section, args):
+    [section.css.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
+
+@register.filter
+def yuijs(section, args):
+    [section.yuijs.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
+
+@register.filter
+def js(section, args):
+    [section.js.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
