@@ -32,17 +32,12 @@ class Text(content.Content):
     titles = db.StringListProperty()
     bodies = db.StringListProperty()
 
-    actions = {
-
-    'edit':     'Edit',
-
-    }
-
-    views = {
-
-    'default': 'Default - multiple items are tabbed',
-
-    }
+    actions = [
+        ['edit', 'Edit', True],
+    ]
+    views = [
+        ['default', 'Default - multiple items are tabbed', True],
+    ]
 
     def action_edit(self, item):
         if not item:

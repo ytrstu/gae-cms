@@ -27,23 +27,16 @@ class Navigation(content.Content):
     name = 'Navigation'
     author = 'Imran Somji'
 
-    actions = {
-
-    'create':   'Create section',
-    'edit':     'Edit section',
-    'reorder':  'Reorder section',
-    'manage':   'Manage sections',
-
-    }
-
-    views = {
-
-    'nth_level_only': 'nth level without any children',
-    'expanding_hierarchy': 'Entire hierarchy with only the trail to the current section and its children expanded',
-
-    }
-
-    show_permissions_if_managing = False
+    actions = [
+        ['create', 'Create', False],
+        ['edit', 'Edit', False],
+        ['reorder', 'Reorder', False],
+        ['manage', 'Manage', False],
+    ]
+    views = [
+        ['nth_level_only', 'nth level without any children', True],
+        ['expanding_hierarchy', 'Entire hierarchy with only the trail to the current section and its children expanded', True],
+    ]
 
     def action_create(self, item=None):
         ret = '<h2>Create new section</h2>'
