@@ -9,7 +9,7 @@
 		{{ self|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/grids.css" }}
 		{{ self|themecss:"default.css" }}
 	</head>
-	<body class="yui3-skin-sam {{ self.classes|joinby:" " }}">
+	<body class="{{ self.classes|joinby:" " }}">
 		<div class="user-bar">{% if user %}<a href="{{ self.logout_url }}">Sign out</a>{% else %}<a href="{{ self.login_url }}">Sign in</a>{% endif %}</div>
 		<div class="hd">
 			<h1 class="site-header main"><a href="/">{{ CONSTANTS.SITE_HEADER }}</a></h1>

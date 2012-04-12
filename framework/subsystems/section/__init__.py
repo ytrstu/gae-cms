@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
+import importlib, traceback, os
 
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -30,6 +30,9 @@ from framework.subsystems import permission
 import settings
 
 FIRST_RUN_HOME_PATH = 'home'
+FORBIDDEN_EXTENSIONS = ['css', 'js']
+FORBIDDEN_PATHS = ['favicon.ico']
+MAIN_CONTAINER_LOCATION_ID = 'main'
 CACHE_KEY = 'SECTION_HIERARCHY'
 
 class Section(db.Model):
@@ -53,24 +56,17 @@ class Section(db.Model):
         elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.p_action:
             raise Exception('Redirect', self.redirect_to)
 
-        self.logout_url = users.create_logout_url('/' + self.path if not self.is_default else '')
-        self.login_url = users.create_login_url('/' + self.path if not self.is_default else '')
-        self.has_siblings = len(get_siblings(self.path)) > 1
-        self.classes = ['path-' + self.path]
-        if self.p_content: self.classes.append('content-' + self.p_content)
-        if self.p_action: self.classes.append('action-' + self.p_action)
-
         params = {
             'CONSTANTS': settings.CONSTANTS,
             'VERSION': os.environ['CURRENT_VERSION_ID'],
             'user': users.get_current_user(),
             'is_admin': permission.is_admin(self.path),
             'self': self,
-            'main': self.content() if self.p_action else '<h2>Under Construction</h2>Main content goes here',
+            'main': self.get_action() if self.p_action else self.get_main_container_view()
         }
         return template.html(self, params)
 
-    def content(self):
+    def get_action(self):
         package = "framework.content." + self.p_content
         try:
             m = __import__(package, globals(), locals(), [self.p_content])
@@ -78,9 +74,26 @@ class Section(db.Model):
             raise Exception('BadRequest', self.p_content)
         klass = getattr(m, self.p_content.title())
         content = klass().init(self)
+
         if not permission.perform_action(content, self.path, self.p_content, self.p_action):
             raise Exception('Forbidden', self.path, self.p_content, self.p_action, self.p_params)
+
         return content
+
+    def get_view(self, scope, location_id, mod, view, params=None):
+        m = importlib.import_module('framework.content.' + mod.lower())
+        contentmod = getattr(m, mod)(scope=scope, section_path=self.path, location_id=location_id, rank=None).init(self)
+        item = getattr(contentmod, 'get_else_create')(scope, self.path, location_id, rank=None)
+
+        if not permission.view_content(item, self, view):
+            raise Exception('You do not have permission to view this content')
+
+        manage = getattr(contentmod, 'get_manage_links')(item)
+        view = getattr(contentmod, 'view_' + view)(item, params)
+        return manage + view
+
+    def get_main_container_view(self):
+        return '<h2>Under Construction</h2>Main content goes here'
 
 def section_key(path):
     return db.Key.from_path('Section', path)
@@ -106,7 +119,9 @@ def get_section(handler, full_path, path, p_content, p_action, p_params):
     section.p_action = p_action
     section.p_params = p_params
 
-    section.location_ids = [] # Want to track these so themer doesn't add a duplicate id
+    section.classes = ['yui3-skin-sam path-' + section.path]
+    if p_content: section.classes.append('content-' + p_content)
+    if p_action: section.classes.append('action-' + p_action)
 
     section.yuicss = []
     section.themecss = []
@@ -114,6 +129,11 @@ def get_section(handler, full_path, path, p_content, p_action, p_params):
     section.yuijs = []
     section.themejs = []
     section.js = []
+
+    section.logout_url = users.create_logout_url('/' + section.path if not section.is_default else '')
+    section.login_url = users.create_login_url('/' + section.path if not section.is_default else '')
+    section.has_siblings = len(get_siblings(section.path)) > 1
+
     return section
 
 def get_helper(path, hierarchy):
@@ -123,7 +143,6 @@ def get_helper(path, hierarchy):
         if val: return val
     return None
 
-# TODO: This should replace the get_section function to make it more efficient
 def get(path):
     return get_helper(path, get_top_level())
 
@@ -179,10 +198,14 @@ def is_ancestor(path, another_path):
 def can_path_exist(path, parent_path, old_path=None):
     if not path:
         raise Exception('Path is required')
+    elif any(path.endswith('.' + ext) for ext in FORBIDDEN_EXTENSIONS):
+        raise Exception('This extension is not allowed')
+    elif any(path == ext for ext in FORBIDDEN_PATHS):
+        raise Exception('This path is reserved')
     elif parent_path and is_ancestor(path, parent_path):
-        raise Exception('Path recursion detected: Path is a descendant')
+        raise Exception('Path recursion detected: path is a descendant')
     elif is_ancestor(parent_path, path):
-        raise Exception('Path recursion detected: Path is an ancestor')
+        raise Exception('Path recursion detected: path is an ancestor')
     elif old_path != path and get(path):
         raise Exception('Path already exists')
     elif parent_path and not get(parent_path):

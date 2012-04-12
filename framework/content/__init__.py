@@ -34,10 +34,9 @@ class Content(db.Model):
 
     name = 'Base Content'
     author = 'Imran Somji'
-    actions = {}
-    views = {}
 
-    show_permissions_if_managing = True
+    actions = [] # Format: [[action_id, action_string, display_in_outer], ...]
+    views = [] # Format: [[view_id, view_string, display_in_outer], ...]
 
     def __unicode__(self):
         location_id = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
@@ -74,17 +73,17 @@ class Content(db.Model):
             return None
 
     def get_manage_links(self, item):
-        if not self.show_permissions_if_managing: return ''
-        permissions = []
+        allowed = []
         for action in self.actions:
-            if permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action):
-                permissions.append(action)
-        if len(permissions) == 0: return ''
+            if action[2] and permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action[0]):
+                allowed.append(action)
+        if len(allowed) == 0: return ''
 
         self.section.css.append('content-permissions')
-        ret = '<ul class="content %s permissions"><li><a href="#">%s</a><ul>' % (self.__class__.__name__.lower(), self.name)
-        for action in permissions:
-            ret += '<li><a href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action + '/' + self.location_id +  '">' + self.actions[action] + '</a></li>'
+        ret = '<ul class="content %s %s permissions"><li><a href="#">%s</a><ul>' % (self.scope.lower(), self.__class__.__name__.lower(), self.name)
+        for action in allowed:
+            link = '/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action[0] + '/' + self.location_id
+            ret += '<li><a href="%s">%s</a></li>' % (link, action[1])
         ret += '</ul></li></ul>'
         return ret
 

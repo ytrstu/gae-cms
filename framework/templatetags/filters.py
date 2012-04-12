@@ -18,11 +18,12 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from django.template import Library
-import importlib, traceback
+import traceback
 
-from framework.subsystems import permission
+from django.template import Library
+
 import framework.content as content
+from framework.subsystems.section import MAIN_CONTAINER_LOCATION_ID
 import settings
 
 register = Library()
@@ -42,21 +43,9 @@ def view(section, param_string):
             raise Exception('Scope must be one of: ' + str([content.SCOPE_GLOBAL, content.SCOPE_LOCAL]))
         elif '-' in location_id or ' ' in location_id:
             raise Exception('Invalid character "-" or " " for location_id')
-        elif location_id in section.location_ids:
-            raise Exception('This view has a duplicate location_id to one already defined in this theme')
-        else:
-            section.location_ids.append(location_id)
-
-        m = importlib.import_module('framework.content.' + mod.lower())
-        contentmod = getattr(m, mod)(scope=scope, section_path=section.path, location_id=location_id, rank=None).init(section)
-        item = getattr(contentmod, 'get_else_create')(scope, section.path, location_id, rank=None)
-
-        if permission.view_content(item, section, view):
-            manage = getattr(contentmod, 'get_manage_links')(item)
-            view = getattr(contentmod, 'view_' + view)(item, params)
-            return manage + view
-        else:
-            raise Exception('You do not have permission to view this content')
+        elif location_id == MAIN_CONTAINER_LOCATION_ID:
+            raise Exception('"%s" is a reserved location_id' % MAIN_CONTAINER_LOCATION_ID)
+        return section.get_view(scope, location_id, mod, view, params)
     except Exception as inst:
         error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
         return '<div class="status error">Error: View does not exist: %s</div>' % error
