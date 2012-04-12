@@ -32,6 +32,8 @@ class Content(db.Model):
     location_id = db.StringProperty()
     rank = db.IntegerProperty(default=None)
 
+    name = 'Base Content'
+    author = 'Imran Somji'
     actions = {}
     views = {}
 
@@ -78,10 +80,12 @@ class Content(db.Model):
             if permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action):
                 permissions.append(action)
         if len(permissions) == 0: return ''
-        ret = '<ul class="manage-links">'
+
+        self.section.css.append('content-permissions')
+        ret = '<ul class="content permissions"><li><a href="#">%s</a><ul>' % self.name
         for action in permissions:
             ret += '<li><a href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action + '/' + self.location_id +  '">' + self.actions[action] + '</a></li>'
-        ret += '</ul>'
+        ret += '</ul></li></ul>'
         return ret
 
     def content_key(self, scope, section_path, location_id, rank):
