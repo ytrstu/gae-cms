@@ -39,7 +39,7 @@ class Router(webapp2.RequestHandler):
             return response
         except Exception as inst:
             if inst[0] == 'Redirect':
-                return self.redirect(unicode(inst[1]))
+                return self.redirect(str(inst[1]))
             elif inst[0] == 'NotFound':
                 webapp2.abort(404)
             elif inst[0] == 'BadRequest':

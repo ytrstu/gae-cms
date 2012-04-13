@@ -23,7 +23,7 @@ import traceback
 from django.template import Library
 
 import framework.content as content
-from framework.subsystems.section import MAIN_CONTAINER_LOCATION_ID
+from framework.subsystems.section import MAIN_CONTAINER_TEMPLATE_NAMESPACE
 import settings
 
 register = Library()
@@ -33,7 +33,7 @@ def view(section, param_string):
     params = [x.strip() for x in param_string.split(',')]
     try:
         try:
-            scope, location_id, mod, view = params[0:4]
+            scope, template_namespace, mod, view = params[0:4]
         except:
             raise Exception('A minimum of four parameters required')
         else:
@@ -41,11 +41,11 @@ def view(section, param_string):
 
         if scope not in [content.SCOPE_GLOBAL, content.SCOPE_LOCAL]:
             raise Exception('Scope must be one of: ' + str([content.SCOPE_GLOBAL, content.SCOPE_LOCAL]))
-        elif '-' in location_id or ' ' in location_id:
-            raise Exception('Invalid character "-" or " " for location_id')
-        elif location_id == MAIN_CONTAINER_LOCATION_ID:
-            raise Exception('"%s" is a reserved location_id' % MAIN_CONTAINER_LOCATION_ID)
-        return section.get_view(scope, location_id, mod, view, None, params)
+        elif '-' in template_namespace or ' ' in template_namespace:
+            raise Exception('Invalid character "-" or " " for template_namespace')
+        elif template_namespace == MAIN_CONTAINER_TEMPLATE_NAMESPACE:
+            raise Exception('"%s" is a reserved template_namespace' % MAIN_CONTAINER_TEMPLATE_NAMESPACE)
+        return section.get_view(scope, template_namespace, mod, view, None, params)
     except Exception as inst:
         error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
         return '<div class="status error">Error: View does not exist: %s</div>' % error
