@@ -46,14 +46,17 @@ class Container(content.Content):
 
     def action_add(self, item):
         ret = '<h2>Add content</h2>'
-        if self.section.handler.request.get('submit') and not self.section.handler.request.get('container_namespace'):
+        content_view = self.section.handler.request.get('content_view') if self.section.handler.request.get('content_view') else ''
+        container_namespace = self.section.handler.request.get('container_namespace').replace('/', '-').replace(' ', '-').lower() if self.section.handler.request.get('container_namespace') else '' 
+        if self.section.handler.request.get('submit') and not self.section.handler.request.get('content_view'):
+            ret += '<div class="status error">Content is required</div>'
+        elif self.section.handler.request.get('submit') and not self.section.handler.request.get('container_namespace'):
             ret += '<div class="status error">Container namespace is required</div>'
         elif self.section.handler.request.get('submit') and self.section.handler.request.get('container_namespace').replace('/', '-').replace(' ', '-').lower() in item.container_namespaces:
             ret += '<div class="status error">Selected namespace already exists in this container</div>'
         elif self.section.handler.request.get('submit'):
             rank = int(self.section.p_params[1])
-            name, view = self.section.handler.request.get('content_view').split('.')
-            container_namespace = self.section.handler.request.get('container_namespace').replace('/', '-').replace(' ', '-').lower()
+            name, view = content_view.split('.')
             # TODO: Ensure that all of the previous actually exist
             m = importlib.import_module('framework.content.' + name)
             for v in getattr(m, name.title())().views:
@@ -67,16 +70,19 @@ class Container(content.Content):
                     item.put()
                     break
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-        content_views = []
+        content_views = [['', '']]
         for name in os.listdir('framework/content'):
             if os.path.isdir('framework/content/' + name) and os.path.isfile('framework/content/' + name + '/__init__.py'):
                 m = importlib.import_module('framework.content.' + name)
+                views = []
                 for v in getattr(m, name.title())().views:
                     if v[2]:
-                        content_views.append([name + '.' + v[0], name.title() + ' ----- ' + v[1]])
+                        views.append([name + '.' + v[0], v[1]])
+                if views:
+                    content_views.append([name.title(), views])
         f = form(self.section.full_path)
-        f.add_control(selectcontrol('content_view', content_views, label='Content - Views'))
-        f.add_control(control('text', 'container_namespace', '', 'Container namespace'))
+        f.add_control(selectcontrol('content_view', content_views, content_view, 'Content'))
+        f.add_control(control('text', 'container_namespace', container_namespace, 'Container namespace'))
         f.add_control(control('submit', 'submit'))
         ret += unicode(f)
         return ret
