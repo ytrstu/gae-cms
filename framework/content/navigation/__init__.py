@@ -87,7 +87,7 @@ class Navigation(content.Content):
     def action_manage(self, item=None):
         ret = '<h2>Manage sections</h2>'
         ret += list_ul(self.section.path, section.get_top_level(), 'manage', True)
-        self.section.css.append('nav-manage')
+        self.section.css.append('nav-manage.css')
         return ret
 
     def view_nth_level_only(self, item=None, params=None):
@@ -103,7 +103,7 @@ class Navigation(content.Content):
         for item, _ in hierarchy:
             item['is_ancestor'] = section.is_ancestor(self.section.path, item['path'])
             parents_only.append([item, []])
-        self.section.css.append('nav-nth-level')
+        self.section.css.append('nav-nth-level.css')
         return list_ul(self.section.path, parents_only, classes)
 
     def view_expanding_hierarchy(self, item=None, params=None):
@@ -122,7 +122,7 @@ class Navigation(content.Content):
             else:
                 item[0]['is_ancestor'] = False
                 item[1] = None
-        self.section.css.append('nav-expanding-hierarchy')
+        self.section.css.append('nav-expanding-hierarchy.css')
         return list_ul(self.section.path, hierarchy, classes)
 
 def get_values(request):

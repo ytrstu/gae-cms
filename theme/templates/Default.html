@@ -6,7 +6,7 @@
 		<meta name="keywords" content="{{ self.keywords }}">{% endif %}{% if self.description %}
 		<meta name="description" content="{{ self.description }}">{% endif %}
 		<meta name="generator" content="GAE-CMS {{ VERSION }}">
-		{{ self|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/grids.css" }}
+		{{ self|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/cssgrids.css" }}
 		{{ self|themecss:"default.css" }}
 	</head>
 	<body class="{{ self.classes|joinby:" " }}">

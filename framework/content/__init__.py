@@ -79,7 +79,9 @@ class Content(db.Model):
                 allowed.append(action)
         if len(allowed) == 0: return ''
 
-        self.section.css.append('content-permissions')
+        self.section.css.append('content-permissions.css')
+        #self.section.yuijs.append('yui/yui.js')
+        #self.section.js.append('content-permissions.js')
         ret = '<ul class="content %s %s permissions"><li><a href="#">%s</a><ul>' % (self.scope.lower(), self.__class__.__name__.lower(), self.name)
         for action in allowed:
             link = '/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action[0] + '/' + self.location_id
