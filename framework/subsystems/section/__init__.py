@@ -23,6 +23,7 @@ import importlib, traceback, os
 from google.appengine.ext import db
 from google.appengine.api import users
 
+from framework.content import SCOPE_LOCAL
 from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems import permission
@@ -93,7 +94,7 @@ class Section(db.Model):
         return manage + view
 
     def get_main_container_view(self):
-        return '<h2>Under Construction</h2>Main content goes here'
+        return self.get_view(SCOPE_LOCAL, MAIN_CONTAINER_LOCATION_ID, 'Container', 'default', None)
 
 def section_key(path):
     return db.Key.from_path('Section', path)

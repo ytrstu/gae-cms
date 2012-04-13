@@ -1,11 +1,10 @@
 ul.content.permissions {
-	margin: 0.5em 0;
-	padding: 0.5em 0;
+	margin: 0.3em 0;
+	padding: 0.3em 0;
 	list-style: none;
 	text-align: left;
-	border-top: 1px solid #38B214;
-	border-bottom: 1px solid #38B214;
-	background: #DAFFD3;
+	border: 1px solid #38B214;
+	background-color: #DAFFD3;
 }
 
 ul.content.permissions li {
@@ -14,12 +13,12 @@ ul.content.permissions li {
 
 ul.content.permissions li ul {
 	display: none;
-	margin: 0.5em 0;
+	margin: 0.3em 0;
 }
 
 ul.content.permissions a {
 	text-decoration: none;
-	padding: 0.5em;
+	padding: 0.3em;
 	color: black;
 	font-weight: bold;
 }
