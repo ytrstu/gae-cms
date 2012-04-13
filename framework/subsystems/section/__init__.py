@@ -33,7 +33,7 @@ import settings
 FIRST_RUN_HOME_PATH = 'home'
 FORBIDDEN_EXTENSIONS = ['css', 'js']
 FORBIDDEN_PATHS = ['favicon.ico']
-MAIN_CONTAINER_LOCATION_ID = 'main'
+MAIN_CONTAINER_TEMPLATE_NAMESPACE = 'main'
 CACHE_KEY = 'SECTION_HIERARCHY'
 
 class Section(db.Model):
@@ -81,10 +81,10 @@ class Section(db.Model):
 
         return content
 
-    def get_view(self, scope, location_id, mod, view, rank=None, params=None):
+    def get_view(self, scope, template_namespace, mod, view, container_namespace=None, params=None):
         m = importlib.import_module('framework.content.' + mod.lower())
-        contentmod = getattr(m, mod.title())(scope=scope, section_path=self.path, location_id=location_id, rank=rank).init(self)
-        item = getattr(contentmod, 'get_else_create')(scope, self.path, location_id, rank)
+        contentmod = getattr(m, mod.title())(scope=scope, section_path=self.path, template_namespace=template_namespace, container_namespace=container_namespace).init(self)
+        item = getattr(contentmod, 'get_else_create')(scope, self.path, template_namespace, container_namespace)
 
         if not permission.view_content(item, self, view):
             raise Exception('You do not have permission to view this content')
@@ -94,7 +94,7 @@ class Section(db.Model):
         return manage + view
 
     def get_main_container_view(self):
-        return self.get_view(SCOPE_LOCAL, MAIN_CONTAINER_LOCATION_ID, 'Container', 'default', None, None)
+        return self.get_view(SCOPE_LOCAL, MAIN_CONTAINER_TEMPLATE_NAMESPACE, 'Container', 'default', None, None)
 
 def section_key(path):
     return db.Key.from_path('Section', path)
