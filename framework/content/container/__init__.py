@@ -24,7 +24,7 @@ from framework.subsystems import permission
 
 class Container(content.Content):
 
-    content_locations = db.StringListProperty()
+    location_ids = db.StringListProperty()
 
     name = 'Container'
     author = 'Imran Somji'
@@ -49,7 +49,7 @@ class Container(content.Content):
         if can_add:
             self.section.css.append('container.css')
             add_link = '<a class="container add" href="/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + add_action[0] + '/' + self.location_id + '/%d">' + add_action[1] + '</a>'
-        for cl in self.content_locations:
+        for cl in self.location_ids:
             if can_add: ret += add_link % rank
             rank += 1
             pass # Need to show module views for those defined
