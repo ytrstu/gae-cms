@@ -26,11 +26,11 @@ from framework.subsystems.forms import form, control, textareacontrol
 
 class Text(content.Content):
 
-    name = 'Text'
-    author = 'Imran Somji'
-
     titles = db.StringListProperty()
     bodies = db.StringListProperty()
+
+    name = 'Text'
+    author = 'Imran Somji'
 
     actions = [
         ['edit', 'Edit', True],
