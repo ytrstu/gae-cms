@@ -39,6 +39,8 @@ class Navigation(content.Content):
         ['expanding_hierarchy', 'Entire hierarchy with only the trail to the current section and its children expanded', True],
     ]
 
+    sitewide_singleton = True
+
     def action_create(self, item=None):
         ret = '<h2>Create new section</h2>'
         if self.section.handler.request.get('submit'):
@@ -92,8 +94,8 @@ class Navigation(content.Content):
         return ret
 
     def view_nth_level_only(self, item=None, params=None):
-        n = int(params[0])
-        classes = 'nth-level ' + ('vertical' if len(params) < 2 else params[1])
+        n = int(params[0]) if params else 0
+        classes = 'nth-level ' + ('horizontal' if not params or len(params) < 2 else params[1])
         hierarchy = section.get_top_level()
         while n:
             for h in hierarchy:
@@ -108,8 +110,8 @@ class Navigation(content.Content):
         return list_ul(self.section.path, parents_only, classes)
 
     def view_expanding_hierarchy(self, item=None, params=None):
-        n = int(params[0])
-        classes = 'expanding-hierarchy ' + ('vertical' if len(params) < 2 else params[1])
+        n = int(params[0]) if params else 0
+        classes = 'expanding-hierarchy ' + ('vertical' if not params or len(params) < 2 else params[1])
         hierarchy = section.get_top_level()
         while n:
             for h in hierarchy:
@@ -127,11 +129,11 @@ class Navigation(content.Content):
         return list_ul(self.section.path, hierarchy, classes)
 
     def view_manage(self, item=None, params=None):
-        ret = '<div class="admin"><h2>Navigation Administration</h2><ul>'
-        ret += '<li><a href="/' + self.section.path + '/navigation/edit/' + item.location_id + '">Edit this section</a></li>'
-        ret += '<li><a href="/' + self.section.path + '/navigation/create/' + item.location_id + '">Create new section</a></li>'
-        if self.section.has_siblings: ret += '<li><a href="/' + self.section.path + '/navigation/reorder/' + item.location_id + '">Reorder section</a></li>'
-        ret += '<li><a href="/' + self.section.path + '/navigation/manage/' + item.location_id + '">Manage sections</a></li>'
+        ret = '<div class="admin"><h2>Navigation administration</h2><ul>'
+        ret += '<li><a href="/' + self.section.path + '/navigation/edit">Edit this section</a></li>'
+        ret += '<li><a href="/' + self.section.path + '/navigation/create">Create new section</a></li>'
+        if self.section.has_siblings: ret += '<li><a href="/' + self.section.path + '/navigation/reorder">Reorder section</a></li>'
+        ret += '<li><a href="/' + self.section.path + '/navigation/manage">Manage sections</a></li>'
         ret += '</ul></div>'
         return ret
 

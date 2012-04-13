@@ -69,8 +69,10 @@ class Text(content.Content):
     def view_default(self, item, params):
         ret = ''
         for i in range(len(item.titles)):
+            ret += '<div class="context text default">'
             if item.titles[i]:
                 ret += '<h2>' + item.titles[i] + '</h2>'
             if item.bodies[i]:
                 ret += item.bodies[i]
+            ret += '</div>'
         return ret
