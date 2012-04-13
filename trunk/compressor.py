@@ -40,7 +40,7 @@ class Compressor(webapp2.RequestHandler):
                 yui_parts = yui_parts if yui_parts.find('___') < 0 else yui_parts[:yui_parts.find('___')]
                 local_path = path.replace('___yui___', '', 1).replace(yui_parts, '', 1).replace('___local___', '', 1)
                 if yui_parts:
-                    yui_version = '3.4.1/build/'
+                    yui_version = '3.5.0/build/'
                     yui_absolute = 'http://yui.yahooapis.com/combo?'
                     yui_parts = yui_parts.split('__')
                     yui_parts = [(yui_version + x.replace('_', '/') + '-min' + extension) for x in yui_parts]

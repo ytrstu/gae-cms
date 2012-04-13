@@ -43,8 +43,15 @@ def html(s, params):
     if s.yuicss: s.yuicss = '___yui___' + s.yuicss
     if s.css: s.css = '___local___' + s.css
 
+    if s.yuijs: s.yuijs = '___yui___' + s.yuijs
+    if s.js: s.js = '___local___' + s.js
+
     if s.yuicss or s.css:
         linkrel = '<link rel="stylesheet" type="text/css" href="/' + s.yuicss + s.css + '.css">'
         html = html.replace('</head>', '\t' + linkrel + '\n\t</head>', 1)
+
+    if s.yuijs or s.js:
+        script = '<script type="text/javascript" src="/' + s.yuijs + s.js + '.js"></script>'
+        html = html.replace('</head>', '\t' + script + '\n\t</head>', 1)
 
     return html
