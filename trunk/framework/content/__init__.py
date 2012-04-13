@@ -40,12 +40,14 @@ class Content(db.Model):
 
     def __unicode__(self):
         location_id = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
-        if location_id and '-' in location_id:
+        if location_id.endswith('-'):
+            raise Exception('NotFound')
+        elif location_id and '-' in location_id:
             location_id, rank = location_id.split('-')
         else:
             rank = None
         item = self.get_local_else_global(self.section.path, location_id, rank)
-        # If the action doesn't exist, the AttributeError will lead to a 404
+        if not item: raise Exception('NotFound')
         return getattr(self, 'action_%s' % self.section.p_action)(item)
 
     def init(self, section):
