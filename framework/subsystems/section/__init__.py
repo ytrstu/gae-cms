@@ -81,10 +81,10 @@ class Section(db.Model):
 
         return content
 
-    def get_view(self, scope, location_id, mod, view, params=None):
+    def get_view(self, scope, location_id, mod, view, rank=None, params=None):
         m = importlib.import_module('framework.content.' + mod.lower())
-        contentmod = getattr(m, mod)(scope=scope, section_path=self.path, location_id=location_id, rank=None).init(self)
-        item = getattr(contentmod, 'get_else_create')(scope, self.path, location_id, rank=None)
+        contentmod = getattr(m, mod.title())(scope=scope, section_path=self.path, location_id=location_id, rank=rank).init(self)
+        item = getattr(contentmod, 'get_else_create')(scope, self.path, location_id, rank)
 
         if not permission.view_content(item, self, view):
             raise Exception('You do not have permission to view this content')
@@ -94,7 +94,7 @@ class Section(db.Model):
         return manage + view
 
     def get_main_container_view(self):
-        return self.get_view(SCOPE_LOCAL, MAIN_CONTAINER_LOCATION_ID, 'Container', 'default', None)
+        return self.get_view(SCOPE_LOCAL, MAIN_CONTAINER_LOCATION_ID, 'Container', 'default', None, None)
 
 def section_key(path):
     return db.Key.from_path('Section', path)

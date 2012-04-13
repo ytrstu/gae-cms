@@ -45,7 +45,7 @@ def view(section, param_string):
             raise Exception('Invalid character "-" or " " for location_id')
         elif location_id == MAIN_CONTAINER_LOCATION_ID:
             raise Exception('"%s" is a reserved location_id' % MAIN_CONTAINER_LOCATION_ID)
-        return section.get_view(scope, location_id, mod, view, params)
+        return section.get_view(scope, location_id, mod, view, None, params)
     except Exception as inst:
         error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
         return '<div class="status error">Error: View does not exist: %s</div>' % error

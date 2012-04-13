@@ -38,16 +38,21 @@ class Content(db.Model):
     actions = [] # Format: [[action_id, action_string, display_in_outer], ...]
     views = [] # Format: [[view_id, view_string, display_in_outer], ...]
 
+    sitewide_singleton = False # Site-wide ontent such as Navigation are not constrained by location_id
+
     def __unicode__(self):
         location_id = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
-        if location_id.endswith('-'):
+        if not location_id and not self.sitewide_singleton:
+            raise Exception('NotFound')
+        elif location_id and location_id.endswith('-'):
             raise Exception('NotFound')
         elif location_id and '-' in location_id:
             location_id, rank = location_id.split('-')
         else:
             rank = None
         item = self.get_local_else_global(self.section.path, location_id, rank)
-        if not item: raise Exception('NotFound')
+        if not item and not self.sitewide_singleton:
+            raise Exception('NotFound')
         return getattr(self, 'action_%s' % self.section.p_action)(item)
 
     def init(self, section):
@@ -95,7 +100,7 @@ class Content(db.Model):
         return ret
 
     def content_key(self, scope, section_path, location_id, rank):
-        path = scope.upper() + '.' + location_id + (('.' + rank) if rank else '')
+        path = scope.upper() + '.' + location_id + (('.' + str(rank)) if rank else '')
         if scope.upper() != SCOPE_GLOBAL:
             path = section_path + '.' + path
         return db.Key.from_path(self.__class__.__name__, path)
