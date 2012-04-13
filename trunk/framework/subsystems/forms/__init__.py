@@ -17,6 +17,8 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import types
+
 class form:
     
     def __init__(self, action = '/'):
@@ -69,9 +71,17 @@ class selectcontrol(control):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<select name="' + self.name + '" id="' + self.name + '">'
         for i in self.items:
-            out += '<option value="' + unicode(i[0]) + '"'
-            if self.value == i[0]: out += ' selected'
-            out += '>' + i[1] + '</option>'
+            if isinstance(i[1], types.ListType):
+                out += '<optgroup label="' + i[0] + '">'
+                for j in i[1]:
+                    out += '<option value="' + unicode(j[0]) + '"'
+                    if self.value == j[0]: out += ' selected'
+                    out += '>' + j[1] + '</option>'
+                out += '</optgroup>'
+            else:
+                out += '<option value="' + unicode(i[0]) + '"'
+                if self.value == i[0]: out += ' selected'
+                out += '>' + i[1] + '</option>'
         out += '</select>'
         return out
         
