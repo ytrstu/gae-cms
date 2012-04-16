@@ -92,6 +92,8 @@ class Content(db.Model):
 
         self.section.yuijs.append('yui/yui')
         self.section.js.append('content-permissions')
+        self.section.css.append('content-permissions')
+
         identifier = self.section.path + '-' + self.__class__.__name__.lower() + '-' + self.template_namespace + (('-' + self.container_namespace) if self.container_namespace else '')
         params = {
                   'identifier': identifier,
