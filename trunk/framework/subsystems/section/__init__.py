@@ -56,16 +56,7 @@ class Section(db.Model):
             raise Exception('AccessDenied', self.path)
         elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.p_action:
             raise Exception('Redirect', self.redirect_to)
-
-        params = {
-            'CONSTANTS': settings.CONSTANTS,
-            'VERSION': os.environ['CURRENT_VERSION_ID'],
-            'user': users.get_current_user(),
-            'is_admin': permission.is_admin(self.path),
-            'self': self,
-            'main': self.get_action() if self.p_action else self.get_main_container_view()
-        }
-        return template.html(self, params)
+        return template.html(self, self.get_action() if self.p_action else self.get_main_container_view())
 
     def get_action(self):
         package = "framework.content." + self.p_content

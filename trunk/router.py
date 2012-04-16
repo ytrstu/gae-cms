@@ -23,6 +23,7 @@ import traceback
 import webapp2
 
 from framework.subsystems import section
+from framework.subsystems import template
 import settings
 
 class Router(webapp2.RequestHandler):
@@ -41,17 +42,28 @@ class Router(webapp2.RequestHandler):
             if inst[0] == 'Redirect':
                 return self.redirect(str(inst[1]))
             elif inst[0] == 'NotFound':
-                webapp2.abort(404)
+                err = 404
+                main = 'Page not found'
             elif inst[0] == 'BadRequest':
-                webapp2.abort(400)
+                err = 400
+                main = 'Bad Request'
+                main = ''
             elif inst[0] == 'Forbidden':
-                webapp2.abort(403)
+                err = 403
+                main = 'Forbidden'
             elif inst[0] == 'AccessDenied':
-                webapp2.abort(403)
+                err = 403
+                main = 'Access Denied'
             elif settings.DEBUG:
-                return webapp2.Response('RouterError: ' + unicode(inst) + '\n\n' + traceback.format_exc())
+                err = 400
+                main = 'RouterError: ' + unicode(inst) + '\n\n' + traceback.format_exc()
             else:
-                webapp2.abort(400)
+                err = 400
+                main = 'An error has occurred.'
+            default_section = section.get_section(None, '', '', None, None, None)
+            response = webapp2.Response(unicode(template.html(default_section, '<div class="status error">' + main + '</div>')))
+            response.set_status(err)
+            return response
 
     def post(self, path):
         return self.get(path)

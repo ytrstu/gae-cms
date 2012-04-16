@@ -88,20 +88,18 @@ class Content(db.Model):
         for action in self.actions:
             if action[2] and permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action[0]):
                 allowed.append(action)
-        if len(allowed) == 0: return ''
+        if permission.is_admin(self.section.path) and self.container_namespace:
+            pass
+        elif len(allowed) == 0:
+            return ''
 
-        self.section.yuijs.append('yui/yui')
-        self.section.js.append('content-permissions')
-        self.section.css.append('content-permissions')
-
-        identifier = self.section.path + '-' + self.__class__.__name__.lower() + '-' + self.template_namespace + (('-' + self.container_namespace) if self.container_namespace else '')
         params = {
-                  'identifier': identifier,
+                  'section': self.section,
                   'content_type': self.name,
-                  'section_path': self.section.path,
                   'content': self.__class__.__name__.lower(),
                   'template_namespace': self.template_namespace,
                   'container_namespace': self.container_namespace,
+                  'can_manage': permission.is_admin(self.section.path),
                   'allowed_actions': allowed,
                   }
         return template.snippet('content-permissions', params)
