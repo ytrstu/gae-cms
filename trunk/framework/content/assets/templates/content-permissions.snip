@@ -1,13 +1,11 @@
-<div id="{{ identifier }}" class="content-permissions yui3-menu yui3-menu-horizontal yui3-splitbuttonnav"><!-- Bounding box -->
-    <div class="yui3-menu-content"><!-- Content box -->
+<div id="{{ identifier }}" class="content-permissions yui3-menu yui3-menu-horizontal yui3-splitbuttonnav">
+    <div class="yui3-menu-content">
         <ul>
             <li>
-
-                <span class="yui3-menu-label"><!-- menu label root node -->
-                    <a href="#content-options">{{ content_type }}</a><!-- menu label default action -->
-                    <a href="#content-options" class="yui3-menu-toggle">Content Options</a><!-- menu label submenu toggle -->
+                <span class="yui3-menu-label">
+                    <a href="#content-options">{{ content_type }}</a>
+                    <a href="#content-options" class="yui3-menu-toggle">Content Options</a>
                 </span>
-
                 <div id="content-options" class="yui3-menu">
                     <div class="yui3-menu-content">
                         <ul>{% for action in allowed_actions %}
@@ -15,7 +13,6 @@
                         {% endfor %}</ul>
                     </div>
                 </div>
-
             </li>
         </ul>
     </div>
