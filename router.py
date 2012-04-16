@@ -47,7 +47,6 @@ class Router(webapp2.RequestHandler):
             elif inst[0] == 'BadRequest':
                 err = 400
                 main = 'Bad Request'
-                main = ''
             elif inst[0] == 'Forbidden':
                 err = 403
                 main = 'Forbidden'
