@@ -34,12 +34,24 @@ def unique_list(seq, idfun=None):
 
 def file_search(search):
     files = []
-    for dirname, _, filenames in os.walk('.'):
+    for dirpath, _, filenames in os.walk('.'):
         for filename in filenames:
             if filename in search:
-                files.append(os.path.join(dirname, filename))
+                files.append(os.path.join(dirpath, filename))
     ret = []
     for s in search: # Reorder
         for f in files:
-            if f.endswith(s): ret.append(f)
+            if f.endswith(os.path.sep + s): ret.append(f)
+    return ret
+
+def dir_search(search):
+    directories = []
+    for dirpath, dirnames, _ in os.walk('.'):
+        for dirname in dirnames:
+            if dirname in search:
+                directories.append(os.path.join(dirpath, dirname))
+    ret = []
+    for s in search: # Reorder
+        for d in directories:
+            if d.endswith(os.path.sep + s): ret.append(d)
     return ret

@@ -1,0 +1,6 @@
+<div class="admin"><h2>Navigation administration</h2><ul>
+	<li><a href="/{{ section_path }}/navigation/edit">Edit this section</a></li>
+	<li><a href="/{{ section_path }}/navigation/create">Create new section</a></li>{% if section_has_siblings %}
+    <li><a href="/{{ section_path }}/navigation/reorder">Reorder section</a></li>{% endif %}
+    <li><a href="/{{ section_path }}/navigation/manage">Manage sections</a></li>
+</ul></div>
