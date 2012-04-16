@@ -55,3 +55,6 @@ def html(s, params):
         html = html.replace('</head>', '\t' + script + '\n\t</head>', 1)
 
     return html
+
+def snippet(filename, params=None):
+    return render_to_string(filename + '.snip', params)

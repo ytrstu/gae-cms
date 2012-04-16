@@ -21,6 +21,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from google.appengine.ext import db
 
 from framework.subsystems import permission
+from framework.subsystems import template
 
 SCOPE_GLOBAL = 'GLOBAL'
 SCOPE_LOCAL = 'LOCAL'
@@ -89,15 +90,19 @@ class Content(db.Model):
                 allowed.append(action)
         if len(allowed) == 0: return ''
 
-        self.section.css.append('content-permissions.css')
-        #self.section.yuijs.append('yui/yui.js')
-        #self.section.js.append('content-permissions.js')
-        ret = '<ul class="content %s %s permissions"><li><a href="#">%s</a><ul>' % (self.scope.lower(), self.__class__.__name__.lower(), self.name)
-        for action in allowed:
-            link = '/' + self.section.path + '/' + self.__class__.__name__.lower() + '/' + action[0] + '/' + self.template_namespace + (('-' + self.container_namespace) if self.container_namespace else '')
-            ret += '<li><a href="%s">%s</a></li>' % (link, action[1])
-        ret += '</ul></li></ul>'
-        return ret
+        self.section.yuijs.append('yui/yui')
+        self.section.js.append('content-permissions')
+        identifier = self.section.path + '-' + self.__class__.__name__.lower() + '-' + self.template_namespace + (('-' + self.container_namespace) if self.container_namespace else '')
+        params = {
+                  'identifier': identifier,
+                  'content_type': self.name,
+                  'section_path': self.section.path,
+                  'content': self.__class__.__name__.lower(),
+                  'template_namespace': self.template_namespace,
+                  'container_namespace': self.container_namespace,
+                  'allowed_actions': allowed,
+                  }
+        return template.snippet('content-permissions', params)
 
     def content_key(self, scope, section_path, template_namespace, container_namespace):
         path = scope.upper() + '.' + template_namespace + (('.' + container_namespace) if container_namespace else '')

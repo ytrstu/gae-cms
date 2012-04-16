@@ -20,6 +20,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import framework.content as content
 from framework.subsystems import section
+from framework.subsystems import template
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
 class Navigation(content.Content):
@@ -129,13 +130,7 @@ class Navigation(content.Content):
         return list_ul(self.section.path, hierarchy, classes)
 
     def view_manage(self, item=None, params=None):
-        ret = '<div class="admin"><h2>Navigation administration</h2><ul>'
-        ret += '<li><a href="/' + self.section.path + '/navigation/edit">Edit this section</a></li>'
-        ret += '<li><a href="/' + self.section.path + '/navigation/create">Create new section</a></li>'
-        if self.section.has_siblings: ret += '<li><a href="/' + self.section.path + '/navigation/reorder">Reorder section</a></li>'
-        ret += '<li><a href="/' + self.section.path + '/navigation/manage">Manage sections</a></li>'
-        ret += '</ul></div>'
-        return ret
+        return template.snippet('nav-manage', {'section_path': self.section.path, 'section_has_siblings': self.section.has_siblings})
 
 def get_values(request):
         path = request.get('path').replace('/', '-').replace(' ', '-').lower()
@@ -149,7 +144,7 @@ def get_values(request):
         redirect_to = request.get('redirect_to')
         new_window = request.get('new_window') != ''
         return path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window
-            
+
 def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
     f = form(action)
     f.add_control(control('text', 'path', path, 'Path'))

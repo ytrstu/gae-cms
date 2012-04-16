@@ -18,14 +18,15 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
+from framework.subsystems import utils
 
 DEBUG = True
 
 INSTALLED_APPS = ('framework',)
 
-PROJECT_ROOT = os.path.dirname(__file__)
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "theme/templates"),)
+TEMPLATE_DIRS = []
+for d in utils.dir_search(['templates']):
+    TEMPLATE_DIRS.append(d)
 
 CONSTANTS = {
              'SITE_HEADER': 'gae-cms',
