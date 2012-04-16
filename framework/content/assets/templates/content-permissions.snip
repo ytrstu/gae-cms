@@ -1,4 +1,9 @@
-<div id="{{ identifier }}" class="content-permissions yui3-menu yui3-menu-horizontal yui3-splitbuttonnav">
+{% load filters %}
+{{ section|css:"content-permissions.css" }}
+{{ section|yuijs:"yui/yui.js" }}
+{{ section|js:"content-permissions.js" }}
+
+<div id="{{ section.path }}-{{ content }}-{{ template_namespace }}{% if container_namespace  %}-{{ container_namespace }}{% endif %}" class="content-permissions yui3-menu yui3-menu-horizontal yui3-splitbuttonnav">
     <div class="yui3-menu-content">
         <ul>
             <li>
@@ -8,9 +13,20 @@
                 </span>
                 <div id="content-options" class="yui3-menu">
                     <div class="yui3-menu-content">
-                        <ul>{% for action in allowed_actions %}
-                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section_path }}/{{ content }}/{{ action.0 }}/{{ template_namespace }}{% if container_namespace  %}-{{ container_namespace }}{% endif %}">{{ action.1 }}</a></li>
-                        {% endfor %}</ul>
+                        <ul>
+                        	{% for action in allowed_actions %}<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/{{ content }}/{{ action.0 }}/{{ template_namespace }}{% if container_namespace  %}-{{ container_namespace }}{% endif %}">{{ action.1 }}</a></li>{% endfor %}
+							{% if can_manage and container_namespace %}<li>
+							    <a class="yui3-menu-label" href="#manage">Manage</a>
+							    <div id="manage" class="yui3-menu">
+							        <div class="yui3-menu-content">
+							            <ul>
+							                <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/container/reorder/{{ template_namespace }}-{{ container_namespace }}">Reorder (under construction)</a>
+							                <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/container/delete/{{ template_namespace }}-{{ container_namespace }}">Delete (under construction)</a>
+							            </ul>
+							        </div>
+							    </div>
+							</li>{% endif %}
+                        </ul>
                     </div>
                 </div>
             </li>

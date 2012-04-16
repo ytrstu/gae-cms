@@ -1,33 +1,33 @@
 {% load filters %}<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 	<head>
-		<title>{{ self.title }}</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if self.keywords %}
-		<meta name="keywords" content="{{ self.keywords }}">{% endif %}{% if self.description %}
-		<meta name="description" content="{{ self.description }}">{% endif %}
+		<title>{{ section.title }}</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if section.keywords %}
+		<meta name="keywords" content="{{ section.keywords }}">{% endif %}{% if section.description %}
+		<meta name="description" content="{{ section.description }}">{% endif %}
 		<meta name="generator" content="GAE-CMS {{ VERSION }}">
-		{{ self|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/cssgrids.css" }}
-		{{ self|themecss:"default.css" }}
+		{{ section|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/cssgrids.css" }}
+		{{ section|themecss:"default.css" }}
 	</head>
-	<body class="{{ self.classes|joinby:" " }}">
-		<div class="user-bar">{% if user %}<a href="{{ self.logout_url }}">Sign out</a>{% else %}<a href="{{ self.login_url }}">Sign in</a>{% endif %}</div>
+	<body class="{{ section.classes|joinby:" " }}">
+		<div class="user-bar">{% if user %}<a href="{{ section.logout_url }}">Sign out</a>{% else %}<a href="{{ section.login_url }}">Sign in</a>{% endif %}</div>
 		<div class="hd">
 			<h1 class="site-header main"><a href="/">{{ CONSTANTS.SITE_HEADER }}</a></h1>
 			<h2 class="site-header sub"><a href="/">{{ CONSTANTS.SITE_SUB_HEADER }}</a></h2>
 		</div>
-		{{ self|view:"GLOBAL, topnav, Navigation, nth_level_only, 0, horizontal"|safe }}
+		{{ section|view:"GLOBAL, topnav, Navigation, nth_level_only, 0, horizontal"|safe }}
 		<div class="bd yui3-g">
-			<div class="sd yui3-u-1-6">{{ self|view:"GLOBAL, sidenav, Navigation, expanding_hierarchy, 1, vertical"|safe }}</div>
+			<div class="sd yui3-u-1-6">{{ section|view:"GLOBAL, sidenav, Navigation, expanding_hierarchy, 1, vertical"|safe }}</div>
 			<div class="mn yui3-u-5-6">{{ main|safe }}</div>
 		</div>
 		<div class="ft">
-			{{ self|view:"GLOBAL, footer, Text, default"|safe }}
+			{{ section|view:"GLOBAL, footer, Text, default"|safe }}
 		</div>
 		{% if user %}
 			<div class="slingbar user">
 				Welcome {{ user.email }}
 				{% if is_admin %}
-					{{ self|view:"GLOBAL, slingbar, Navigation, manage, 0, horizontal"|safe }}
+					{{ section|view:"GLOBAL, slingbar, Navigation, manage, 0, horizontal"|safe }}
 				{% endif %}
 			</div>
 		{% endif %}
