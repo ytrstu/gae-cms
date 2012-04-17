@@ -23,7 +23,7 @@ import importlib, traceback, os
 from google.appengine.ext import db
 from google.appengine.api import users
 
-from framework.content import SCOPE_LOCAL
+from framework import content
 from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems import permission
@@ -33,7 +33,7 @@ import settings
 FIRST_RUN_HOME_PATH = 'home'
 FORBIDDEN_EXTENSIONS = ['css', 'js']
 FORBIDDEN_PATHS = ['favicon.ico']
-MAIN_CONTAINER_TEMPLATE_NAMESPACE = 'main'
+MAIN_CONTAINER_NAMESPACE = 'main'
 CACHE_KEY = 'SECTION_HIERARCHY'
 
 class Section(db.Model):
@@ -51,33 +51,27 @@ class Section(db.Model):
     new_window = db.BooleanProperty(default=False)
 
     def __unicode__(self):
-
         if not permission.view_section(self):
             raise Exception('AccessDenied', self.path)
-        elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.p_action:
+        elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.path_action:
             raise Exception('Redirect', self.redirect_to)
-        return template.html(self, self.get_action() if self.p_action else self.get_main_container_view())
+        return template.html(self, self.get_action() if self.path_action else self.get_main_container_view())
 
     def get_action(self):
-        package = "framework.content." + self.p_content
-        try:
-            m = __import__(package, globals(), locals(), [self.p_content])
-        except:
-            raise Exception('BadRequest', self.p_content)
-        klass = getattr(m, self.p_content.title())
-        content = klass().init(self)
+        item = content.get(self.path, self.path_namespace)
+        if not item:
+            raise Exception('BadRequest', self.path_namespace, self.path_action)
+        elif not permission.perform_action(item, self.path, self.path_action):
+            raise Exception('Forbidden', self.path, self.path_namespace, self.path_action, self.path_params)
+        return item.init(self)
 
-        if not permission.perform_action(content, self.path, self.p_content, self.p_action):
-            raise Exception('Forbidden', self.path, self.p_content, self.p_action, self.p_params)
-
-        return content
-
-    def get_view(self, scope, template_namespace, mod, view, container_namespace=None, params=None):
-        m = importlib.import_module('framework.content.' + mod.lower())
-        contentmod = getattr(m, mod.title())(scope=scope, section_path=self.path, template_namespace=template_namespace, container_namespace=container_namespace).init(self)
-        item = getattr(contentmod, 'get_else_create')(scope, self.path, template_namespace, container_namespace)
+    def get_view(self, scope, namespace, content_type, view, params=None):
+        m = importlib.import_module('framework.content.' + content_type.lower())
+        contentmod = getattr(m, content_type)(scope=scope, section_path=self.path, namespace=namespace).init(self)
+        item = getattr(contentmod, 'get_else_create')(scope, self.path, content_type, namespace)
 
         if not permission.view_content(item, self, view):
+            print view
             raise Exception('You do not have permission to view this content')
 
         manage = getattr(contentmod, 'get_manage_links')(item)
@@ -85,35 +79,40 @@ class Section(db.Model):
         return manage + view
 
     def get_main_container_view(self):
-        return self.get_view(SCOPE_LOCAL, MAIN_CONTAINER_TEMPLATE_NAMESPACE, 'Container', 'default', None, None)
+        return self.get_view(content.SCOPE_LOCAL, MAIN_CONTAINER_NAMESPACE, 'Container', 'default')
 
 def section_key(path):
     return db.Key.from_path('Section', path)
 
-def get_section(handler, full_path, path, p_content, p_action, p_params):
+def get_section(handler, full_path):
+    path_parts = full_path.strip('/').lower().split('/')
+    path = path_parts[0]
+    path_namespace = path_parts[1] if len(path_parts) > 1 else None
+    path_action = path_parts[2] if len(path_parts) > 2 else None
+    path_params = path_parts[3:] if len(path_parts) > 3 else None
     try:
         if not path:
             section = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
         else:
             section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path))[0]
-        if section.is_default and path and not p_action:
+        if section.is_default and path and not path_action:
             raise Exception('NotFound') # The default page with no action should only be accessible from root
     except:
         if not get_top_level():
             section = create_section(handler, path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
         else:
-            raise Exception('NotFound', path, p_action, p_params)
+            raise Exception('NotFound', path, path_action, path_params)
 
     section.handler = handler
 
     section.full_path = full_path
-    section.p_content = p_content
-    section.p_action = p_action
-    section.p_params = p_params
+    section.path_namespace = path_namespace
+    section.path_action = path_action
+    section.path_params = path_params
 
     section.classes = ['yui3-skin-sam path-' + section.path]
-    if p_content: section.classes.append('content-' + p_content)
-    if p_action: section.classes.append('action-' + p_action)
+    if path_namespace: section.classes.append('content-' + path_namespace)
+    if path_action: section.classes.append('action-' + path_action)
 
     section.yuicss = []
     section.themecss = []

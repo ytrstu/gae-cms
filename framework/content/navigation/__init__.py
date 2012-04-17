@@ -40,8 +40,6 @@ class Navigation(content.Content):
         ['expanding_hierarchy', 'Entire hierarchy with only the trail to the current section and its children expanded', True],
     ]
 
-    sitewide_singleton = True
-
     def action_create(self, item=None):
         ret = '<h2>Create new section</h2>'
         if self.section.handler.request.get('submit'):
@@ -133,9 +131,7 @@ class Navigation(content.Content):
         params = {
                   'section': self.section,
                   'content_type': self.name,
-                  'content': self.__class__.__name__.lower(),
-                  'template_namespace': self.template_namespace,
-                  'container_namespace': self.container_namespace,
+                  'namespace': self.namespace,
                   }
         return template.snippet('nav-manage', params)
 

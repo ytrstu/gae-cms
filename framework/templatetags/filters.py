@@ -24,7 +24,7 @@ from django.template import Library
 from django import template
 
 from framework import content
-from framework.subsystems.section import MAIN_CONTAINER_TEMPLATE_NAMESPACE
+from framework.subsystems.section import MAIN_CONTAINER_NAMESPACE
 import settings
 
 register = Library()
@@ -34,7 +34,7 @@ def view(section, param_string):
     params = [x.strip() for x in param_string.split(',')]
     try:
         try:
-            scope, template_namespace, mod, view = params[0:4]
+            scope, namespace, content_type, view = params[0:4]
         except:
             raise Exception('A minimum of four parameters required')
         else:
@@ -42,14 +42,14 @@ def view(section, param_string):
 
         if scope not in [content.SCOPE_GLOBAL, content.SCOPE_LOCAL]:
             raise Exception('Scope must be one of: ' + str([content.SCOPE_GLOBAL, content.SCOPE_LOCAL]))
-        elif '-' in template_namespace or ' ' in template_namespace:
-            raise Exception('Invalid character "-" or " " for template_namespace')
-        elif template_namespace == MAIN_CONTAINER_TEMPLATE_NAMESPACE:
-            raise Exception('"%s" is a reserved template_namespace' % MAIN_CONTAINER_TEMPLATE_NAMESPACE)
-        return section.get_view(scope, template_namespace, mod, view, None, params)
+        elif ' ' in namespace:
+            raise Exception('Invalid character " " for namespace')
+        elif namespace == MAIN_CONTAINER_NAMESPACE:
+            raise Exception('"%s" is a reserved namespace' % MAIN_CONTAINER_NAMESPACE)
+        return section.get_view(scope, namespace, content_type, view, params)
     except Exception as inst:
         error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
-        return '<div class="status error">Error: View does not exist: %s</div>' % error
+        return '<div class="status error">Error: View "%s" does not exist: %s</div>' % (view, error)
 
 @register.filter
 def joinby(value, arg):

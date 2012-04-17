@@ -28,16 +28,9 @@ import settings
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
-        full_path = path.strip('/').lower()
-        path_parts = full_path.split('/')
-        path = path_parts[0]
-        p_content = path_parts[1] if len(path_parts) > 1 else None
-        p_action = path_parts[2] if len(path_parts) > 2 else None
-        p_params = path_parts[3:] if len(path_parts) > 3 else None
         try:
-            response = webapp2.Response(unicode(section.get_section(self, '/' + full_path, path, p_content, p_action, p_params)))
+            response = webapp2.Response(unicode(section.get_section(self, path)))
             response.headers['Connection'] = 'Keep-Alive'
-            response.set_status(200)
             return response
         except Exception as inst:
             if inst[0] == 'Redirect':
@@ -56,11 +49,11 @@ class Router(webapp2.RequestHandler):
                 main = 'Access Denied'
             elif settings.DEBUG:
                 err = 400
-                main = 'RouterError: ' + unicode(inst) + '\n\n' + traceback.format_exc()
+                main = 'RouterError: ' + unicode(inst) + '<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>'
             else:
                 err = 400
                 main = 'An error has occurred.'
-            default_section = section.get_section(None, '', '', None, None, None)
+            default_section = section.get_section(None, '')
             response = webapp2.Response(unicode(template.html(default_section, '<div class="status error">' + main + '</div>')))
             response.set_status(err)
             return response

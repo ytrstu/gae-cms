@@ -30,9 +30,9 @@ def view_section(section):
         return True # TODO: currently only super admins can view private page
     return False
 
-def perform_action(content, path, p_content, p_action):
+def perform_action(content, path, path_action):
     for action in content.actions:
-        if p_action == action[0]: return is_admin(path) # TODO: Check if actually has permission
+        if path_action == action[0]: return is_admin(path) # TODO: Check if actually has permission
     raise Exception('NotFound')
 
 def view_content(content, section, view_id):
