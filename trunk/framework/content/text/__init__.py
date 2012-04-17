@@ -40,8 +40,6 @@ class Text(content.Content):
     ]
 
     def action_edit(self, item):
-        if not item:
-            raise Exception('NotFound')
         if self.section.handler.request.get('submit'):
             i = 0
             item.titles = []
@@ -53,7 +51,7 @@ class Text(content.Content):
                     item.titles.append(title)
                     item.bodies.append(body)
                 i += 1
-            item.put()
+            item.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         ret = '<h2>Edit text</h2>'
         f = form(self.section.full_path)

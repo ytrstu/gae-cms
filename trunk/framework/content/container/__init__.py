@@ -22,6 +22,7 @@ import os, importlib
 from google.appengine.ext import db
 
 from framework import content
+from framework.subsystems import cache
 from framework.subsystems import permission
 from framework.subsystems.forms import form, control, selectcontrol
 
@@ -51,7 +52,7 @@ class Container(content.Content):
         if self.section.handler.request.get('submit') and not self.section.handler.request.get('content_view'):
             ret += '<div class="status error">Content is required</div>'
         elif self.section.handler.request.get('submit') and not self.section.handler.request.get('namespace'):
-            ret += '<div class="status error">Container namespace is required</div>'
+            ret += '<div class="status error">Namespace is required</div>'
         elif self.section.handler.request.get('submit') and self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() in item.namespaces:
             # TODO: This should actually check section/site wide?
             ret += '<div class="status error">Selected namespace already exists in this container</div>'
@@ -68,7 +69,7 @@ class Container(content.Content):
                     item.namespaces.insert(rank, namespace)
                     item.content_types.insert(rank, content_type)
                     item.content_views.insert(rank, view)
-                    item.put()
+                    item.update()
                     break
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         content_views = [['', '']]
