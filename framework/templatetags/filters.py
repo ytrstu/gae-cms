@@ -21,8 +21,9 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import traceback
 
 from django.template import Library
+from django import template
 
-import framework.content as content
+from framework import content
 from framework.subsystems.section import MAIN_CONTAINER_TEMPLATE_NAMESPACE
 import settings
 
@@ -78,3 +79,23 @@ def yuijs(section, args):
 def js(section, args):
     [section.js.append(x.strip('/ ')) for x in args.split(',')]
     return ''
+
+@register.tag(name='captureas')
+def do_captureas(parser, token):
+    try:
+        _, args = token.contents.split(None, 1)
+    except ValueError:
+        raise template.TemplateSyntaxError("'captureas' node requires a variable name.")
+    nodelist = parser.parse(('endcaptureas',))
+    parser.delete_first_token()
+    return CaptureasNode(nodelist, args)
+
+class CaptureasNode(template.Node):
+    def __init__(self, nodelist, varname):
+        self.nodelist = nodelist
+        self.varname = varname
+
+    def render(self, context):
+        output = self.nodelist.render(context)
+        context[self.varname] = output
+        return ''

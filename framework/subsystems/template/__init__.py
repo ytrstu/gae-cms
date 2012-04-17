@@ -66,7 +66,7 @@ def html(section, main=''):
         script = '<script type="text/javascript" src="/' + section.yuijs + section.js + '.js"></script>'
         html = html.replace('</head>', '\t' + script + '\n\t</head>', 1)
 
-    return html
+    return html.strip()
 
 def snippet(filename, params=None):
-    return render_to_string(filename + '.snip', params)
+    return render_to_string(filename + '.snip', params).strip()
