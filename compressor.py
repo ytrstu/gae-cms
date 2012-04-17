@@ -56,7 +56,8 @@ class Compressor(webapp2.RequestHandler):
                 contents += ('\n'.join([open(f, 'r').read() for f in files])).strip()
                 cache.set(path + extension, contents)
 
-            response = webapp2.Response(contents, content_type='text/css')
+            content_type = 'application/javascript' if extension == '.js' else 'text/css'
+            response = webapp2.Response(contents, content_type=content_type)
             response.headers['Connection'] = 'Keep-Alive'
             return response
         except Exception as inst:
