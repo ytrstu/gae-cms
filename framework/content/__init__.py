@@ -24,6 +24,9 @@ from google.appengine.ext import db
 
 from framework.subsystems import permission
 from framework.subsystems import template
+from framework.subsystems import cache
+
+CACHE_KEY_PREPEND = 'CONTENT_'
 
 SCOPE_GLOBAL = 'GLOBAL'
 SCOPE_LOCAL = 'LOCAL'
@@ -82,15 +85,25 @@ class Content(db.Model):
                   }
         return template.snippet('content-permissions', params)
 
+    def update(self):
+        key = self.put()
+        cache.delete(CACHE_KEY_PREPEND + self.namespace)
+        return key
+
 def get(section_path, namespace):
+    item = cache.get(CACHE_KEY_PREPEND + namespace)
+    if item: return item
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
         concrete = getattr(m, content_type.title())
         for scope in SCOPE_GLOBAL, SCOPE_LOCAL:
             try:
-                return concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(scope, section_path, content_type, namespace))[0]
+                item = concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(scope, section_path, content_type, namespace))[0]
             except:
                 pass
+            else:
+                cache.set(CACHE_KEY_PREPEND + section_path + '.' + namespace, item)
+                return item
     return None
 
 def get_all_content_types():
