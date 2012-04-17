@@ -36,9 +36,7 @@ class User(content.Content):
         params = {
                   'section': self.section,
                   'content_type': self.name,
-                  'content': self.__class__.__name__.lower(),
-                  'template_namespace': self.template_namespace,
-                  'container_namespace': self.container_namespace,
+                  'namespace': self.namespace,
                   'can_manage': permission.is_admin(self.section.path),
                   'user': users.get_current_user(),
                   'is_admin': permission.is_admin(self.section.path),

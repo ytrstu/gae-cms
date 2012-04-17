@@ -1,3 +1,7 @@
+{% load filters %}
+
+{% captureas unique %}{{ section.path }}-{{ namespace }}{% endcaptureas %}
+
 <span class="yui3-menu-label">
     <a href="#section-options-{{ unique }}">Section</a>
     <a href="#section-options-{{ unique }}" class="yui3-menu-toggle">Section Options</a>
@@ -5,10 +9,10 @@
 <div id="section-options-{{ unique }}" class="yui3-menu">
     <div class="yui3-menu-content">
         <ul>
-        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/edit">Edit</a></li>
-        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/create">Create</a></li>{% if section.has_siblings %}
-        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/reorder">Reorder</a></li>{% endif %}
-        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/manage">Manage</a></li>
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/{{ namespace }}/edit">Edit</a></li>
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/{{ namespace }}/create">Create</a></li>{% if section.has_siblings %}
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/{{ namespace }}/reorder">Reorder</a></li>{% endif %}
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/{{ namespace }}/manage">Manage</a></li>
         </ul>
     </div>
 </div>

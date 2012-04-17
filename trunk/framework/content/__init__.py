@@ -18,6 +18,8 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os
+
 from google.appengine.ext import db
 
 from framework.subsystems import permission
@@ -30,8 +32,8 @@ class Content(db.Model):
 
     scope = db.StringProperty(choices=[SCOPE_GLOBAL, SCOPE_LOCAL])
     section_path = db.StringProperty(default=None)
-    template_namespace = db.StringProperty()
-    container_namespace = db.StringProperty()
+    namespace = db.StringProperty()
+    container_namespace = db.StringProperty(default=None)
 
     name = 'Base Content'
     author = 'Imran Somji'
@@ -39,73 +41,68 @@ class Content(db.Model):
     actions = [] # Format: [[action_id, action_string, display_in_outer], ...]
     views = [] # Format: [[view_id, view_string, display_in_outer], ...]
 
-    sitewide_singleton = False # Site-wide ontent such as Navigation are not constrained by template_namespace
-
     def __unicode__(self):
-        template_namespace = self.section.p_params[0] if self.section.p_params and len(self.section.p_params) > 0 else None
-        if not template_namespace and not self.sitewide_singleton:
-            raise Exception('NotFound')
-        elif template_namespace and template_namespace.endswith('-'):
-            raise Exception('NotFound')
-        elif template_namespace and '-' in template_namespace:
-            template_namespace, container_namespace = template_namespace.split('-')
-        else:
-            container_namespace = None
-        item = self.get_local_else_global(self.section.path, template_namespace, container_namespace)
-        if not item and not self.sitewide_singleton:
-            raise Exception('NotFound')
-        return getattr(self, 'action_%s' % self.section.p_action)(item)
+        item = get(self.section.path, self.section.path_namespace)
+        if not item: raise Exception('NotFound')
+        return getattr(self, 'action_%s' % self.section.path_action)(item)
 
     def init(self, section):
         self.section = section
         return self
 
-    def get_local_else_global(self, section_path, template_namespace, container_namespace):
-        if not template_namespace: return None
-        item = self.get(SCOPE_LOCAL, section_path, template_namespace, container_namespace)
-        return item if item else self.get(SCOPE_GLOBAL, section_path, template_namespace, container_namespace)
-
-    def get_else_create(self, scope, section_path, template_namespace, container_namespace):
-        item = self.get(scope, section_path, template_namespace, container_namespace)
+    def get_else_create(self, scope, section_path, content_type, namespace, container_namespace=None):
+        item = get(section_path, namespace)
         if not item:
-            self.__init__(parent=self.content_key(scope.upper(), section_path, template_namespace, container_namespace),
+            self.__init__(parent=content_key(scope, section_path, content_type, namespace),
                           scope=scope,
                           section_path=section_path if scope != SCOPE_GLOBAL else None,
-                          template_namespace=template_namespace, container_namespace=container_namespace)
+                          namespace=namespace,
+                          container_namespace=container_namespace,
+                          )
             self.put()
             item = self
         return item
 
-    def get(self, scope, section_path, template_namespace, container_namespace):
-        if not template_namespace: raise Exception('template_namespace is required')
-        try:
-            return self.gql("WHERE ANCESTOR IS :1 LIMIT 1", self.content_key(scope.upper(), section_path, template_namespace, container_namespace))[0]
-        except:
-            return None
-
     def get_manage_links(self, item):
         allowed = []
         for action in self.actions:
-            if action[2] and permission.perform_action(item, self.section.path, self.__class__.__name__.lower(), action[0]):
+            if action[2] and permission.perform_action(item, self.section.path, action[0]):
                 allowed.append(action)
-        if permission.is_admin(self.section.path) and self.container_namespace:
+        if permission.is_admin(self.section.path) and item.container_namespace:
             pass
         elif len(allowed) == 0:
             return ''
-
         params = {
                   'section': self.section,
                   'content_type': self.name,
-                  'content': self.__class__.__name__.lower(),
-                  'template_namespace': self.template_namespace,
-                  'container_namespace': self.container_namespace,
+                  'namespace': item.namespace,
+                  'container_namespace': item.container_namespace,
                   'can_manage': permission.is_admin(self.section.path),
                   'allowed_actions': allowed,
                   }
         return template.snippet('content-permissions', params)
 
-    def content_key(self, scope, section_path, template_namespace, container_namespace):
-        path = scope.upper() + '.' + template_namespace + (('.' + container_namespace) if container_namespace else '')
-        if scope.upper() != SCOPE_GLOBAL:
-            path = section_path + '.' + path
-        return db.Key.from_path(self.__class__.__name__, path)
+def get(section_path, namespace):
+    for content_type in get_all_content_types():
+        m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
+        concrete = getattr(m, content_type.title())
+        for scope in SCOPE_GLOBAL, SCOPE_LOCAL:
+            try:
+                return concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(scope, section_path, content_type, namespace))[0]
+            except:
+                pass
+    return None
+
+def get_all_content_types():
+    content_types = []
+    for name in os.listdir('framework/content'):
+        if os.path.isdir('framework/content/' + name) and os.path.isfile('framework/content/' + name + '/__init__.py'):
+            content_types.append(name)
+    return content_types
+
+def content_key(scope, section_path, content_type, namespace):
+    if not namespace: raise Exception('namespace is required')
+    path = scope.upper() + '.' + namespace
+    if scope.upper() != SCOPE_GLOBAL:
+        path = section_path + '.' + path
+    return db.Key.from_path(content_type.title(), path)
