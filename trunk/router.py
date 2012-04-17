@@ -37,6 +37,7 @@ class Router(webapp2.RequestHandler):
         try:
             response = webapp2.Response(unicode(section.get_section(self, '/' + full_path, path, p_content, p_action, p_params)))
             response.headers['Connection'] = 'Keep-Alive'
+            response.set_status(200)
             return response
         except Exception as inst:
             if inst[0] == 'Redirect':

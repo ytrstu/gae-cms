@@ -59,6 +59,7 @@ class Compressor(webapp2.RequestHandler):
             content_type = 'application/javascript' if extension == '.js' else 'text/css'
             response = webapp2.Response(contents, content_type=content_type)
             response.headers['Connection'] = 'Keep-Alive'
+            response.set_status(200)
             return response
         except Exception as inst:
             if settings.DEBUG:
