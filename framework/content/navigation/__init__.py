@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import framework.content as content
+from framework import content
 from framework.subsystems import section
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
@@ -130,7 +130,14 @@ class Navigation(content.Content):
         return list_ul(self.section.path, hierarchy, classes)
 
     def view_manage(self, item=None, params=None):
-        return template.snippet('nav-manage', {'section_path': self.section.path, 'section_has_siblings': self.section.has_siblings})
+        params = {
+                  'section': self.section,
+                  'content_type': self.name,
+                  'content': self.__class__.__name__.lower(),
+                  'template_namespace': self.template_namespace,
+                  'container_namespace': self.container_namespace,
+                  }
+        return template.snippet('nav-manage', params)
 
 def get_values(request):
         path = request.get('path').replace('/', '-').replace(' ', '-').lower()

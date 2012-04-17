@@ -21,7 +21,7 @@ from google.appengine.ext import db
 
 from django.utils.html import strip_tags
 
-import framework.content as content
+from framework import content
 from framework.subsystems.forms import form, control, textareacontrol
 
 class Text(content.Content):

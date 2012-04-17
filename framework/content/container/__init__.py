@@ -21,7 +21,7 @@ import os, importlib
 
 from google.appengine.ext import db
 
-import framework.content as content
+from framework import content
 from framework.subsystems import permission
 from framework.subsystems.forms import form, control, selectcontrol
 

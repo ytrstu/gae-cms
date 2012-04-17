@@ -1,6 +1,14 @@
-<div class="admin"><h2>Navigation administration</h2><ul>
-	<li><a href="/{{ section_path }}/navigation/edit">Edit this section</a></li>
-	<li><a href="/{{ section_path }}/navigation/create">Create new section</a></li>{% if section_has_siblings %}
-    <li><a href="/{{ section_path }}/navigation/reorder">Reorder section</a></li>{% endif %}
-    <li><a href="/{{ section_path }}/navigation/manage">Manage sections</a></li>
-</ul></div>
+<span class="yui3-menu-label">
+    <a href="#section-options-{{ unique }}">Section</a>
+    <a href="#section-options-{{ unique }}" class="yui3-menu-toggle">Section Options</a>
+</span>
+<div id="section-options-{{ unique }}" class="yui3-menu">
+    <div class="yui3-menu-content">
+        <ul>
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/edit">Edit</a></li>
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/create">Create</a></li>{% if section.has_siblings %}
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/reorder">Reorder</a></li>{% endif %}
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ section.path }}/navigation/manage">Manage</a></li>
+        </ul>
+    </div>
+</div>
