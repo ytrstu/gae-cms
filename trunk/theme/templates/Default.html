@@ -10,7 +10,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">{% if section.keywords %}
 		<meta name="keywords" content="{{ section.keywords }}">{% endif %}{% if section.description %}
 		<meta name="description" content="{{ section.description }}">{% endif %}
-		<meta name="generator" content="GAE-CMS {{ VERSION }}">
+		<meta name="generator" content="GAE-CMS {{ CONSTANTS.VERSION }}">
 	</head>
 	<body class="{{ section.classes|joinby:" " }}">
 		<div class="user-bar">{% if user %}<a href="{{ section.logout_url }}">Sign out</a>{% else %}<a href="{{ section.login_url }}">Sign in</a>{% endif %}</div>
@@ -27,12 +27,7 @@
 			{{ section|view:"GLOBAL, footer, Text, default"|safe }}
 		</div>
 		{% if user %}
-			<div class="slingbar user">
-				Welcome {{ user.email }}
-				{% if is_admin %}
-					{{ section|view:"GLOBAL, slingbar, Navigation, manage, 0, horizontal"|safe }}
-				{% endif %}
-			</div>
+			{{ section|view:"GLOBAL, slingbar, User, slingbar"|safe }}
 		{% endif %}
 	</body>
 </html>

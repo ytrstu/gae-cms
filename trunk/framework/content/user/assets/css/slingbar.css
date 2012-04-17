@@ -1,0 +1,8 @@
+.slingbar {
+	position: fixed;
+	top: 0;
+	width: 100%;
+}
+.slingbar .yui3-menu {
+	visibility: hidden; /* Prevent flicker on load, javascript will make visible when ready */
+}

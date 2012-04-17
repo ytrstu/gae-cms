@@ -34,7 +34,6 @@ from django.template.loader import render_to_string
 def html(section, main=''):
     params = {
         'CONSTANTS': settings.CONSTANTS,
-        'VERSION': os.environ['CURRENT_VERSION_ID'],
         'user': users.get_current_user(),
         'is_admin': permission.is_admin(section.path),
         'section': section,
