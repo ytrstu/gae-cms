@@ -40,6 +40,6 @@ handlers:
 
 - url: /(.*\.(css|js))
   script: compressor.app
-  
+
 - url: /.*
   script: router.app

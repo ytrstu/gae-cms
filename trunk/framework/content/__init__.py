@@ -105,17 +105,17 @@ def get(section_path, namespace):
                 return item
     return None
 
-def namespace_exists(namespace):
+def get_content(namespace):
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
         concrete = getattr(m, content_type.title())
         try:
-            concrete.gql("WHERE namespace=:1 LIMIT 1", namespace)[0]
+            item = concrete.gql("WHERE namespace=:1 LIMIT 1", namespace)[0]
         except:
             pass
         else:
-            return True
-    return False
+            return item
+    return None
 
 def get_all_content_types():
     content_types = []
