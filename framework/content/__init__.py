@@ -86,12 +86,11 @@ class Content(db.Model):
         return template.snippet('content-permissions', params)
 
     def update(self):
-        key = self.put()
-        cache.delete(CACHE_KEY_PREPEND + self.namespace)
-        return key
+        cache.delete(CACHE_KEY_PREPEND + ((self.section_path + '.') if self.scope == SCOPE_LOCAL else '') + self.namespace)
+        return self.put()
 
 def get(section_path, namespace):
-    item = cache.get(CACHE_KEY_PREPEND + namespace)
+    item = cache.get(CACHE_KEY_PREPEND + ((section_path + '.') if section_path else '') + namespace)
     if item: return item
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
@@ -102,9 +101,21 @@ def get(section_path, namespace):
             except:
                 pass
             else:
-                cache.set(CACHE_KEY_PREPEND + section_path + '.' + namespace, item)
+                cache.set(CACHE_KEY_PREPEND + ((section_path + '.') if scope == SCOPE_LOCAL else '') + namespace, item)
                 return item
     return None
+
+def namespace_exists(namespace):
+    for content_type in get_all_content_types():
+        m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
+        concrete = getattr(m, content_type.title())
+        try:
+            concrete.gql("WHERE namespace=:1 LIMIT 1", namespace)[0]
+        except:
+            pass
+        else:
+            return True
+    return False
 
 def get_all_content_types():
     content_types = []
@@ -115,7 +126,4 @@ def get_all_content_types():
 
 def content_key(scope, section_path, content_type, namespace):
     if not namespace: raise Exception('namespace is required')
-    path = scope.upper() + '.' + namespace
-    if scope.upper() != SCOPE_GLOBAL:
-        path = section_path + '.' + path
-    return db.Key.from_path(content_type.title(), path)
+    return db.Key.from_path(content_type.title(), ((section_path + '.') if scope == SCOPE_LOCAL else '') + namespace)

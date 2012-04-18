@@ -49,13 +49,13 @@ class Container(content.Content):
         ret = '<h2>Add content</h2>'
         content_view = self.section.handler.request.get('content_view') if self.section.handler.request.get('content_view') else ''
         namespace = self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() if self.section.handler.request.get('namespace') else '' 
-        if self.section.handler.request.get('submit') and not self.section.handler.request.get('content_view'):
+        if self.section.handler.request.get('submit') and not content_view:
             ret += '<div class="status error">Content is required</div>'
-        elif self.section.handler.request.get('submit') and not self.section.handler.request.get('namespace'):
+        elif self.section.handler.request.get('submit') and not namespace:
             ret += '<div class="status error">Namespace is required</div>'
-        elif self.section.handler.request.get('submit') and self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() in item.namespaces:
-            # TODO: This should actually check section/site wide?
-            ret += '<div class="status error">Selected namespace already exists in this container</div>'
+        elif self.section.handler.request.get('submit') and content.namespace_exists(namespace):
+            ret += '<div class="status error">Selected namespace already exists</div>'
+            # TODO: Give the option of adding another view to this existing content if content_tyes are the same
         elif self.section.handler.request.get('submit'):
             rank = int(self.section.path_params[0])
             content_type, view = content_view.split('.')
