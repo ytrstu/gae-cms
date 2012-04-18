@@ -53,19 +53,18 @@ class Container(content.Content):
             ret += '<div class="status error">Content is required</div>'
         elif self.section.handler.request.get('submit') and not self.section.handler.request.get('namespace'):
             ret += '<div class="status error">Namespace is required</div>'
-        elif self.section.handler.request.get('submit') and self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() in item.namespaces:
-            # TODO: This should actually check section/site wide?
-            ret += '<div class="status error">Selected namespace already exists in this container</div>'
+        elif self.section.handler.request.get('submit') and content.get(self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower()):
+            ret += '<div class="status error">Selected namespace already exists</div>'
+            # TODO: Give the option of adding view into existing content if content_types are the same
         elif self.section.handler.request.get('submit'):
             rank = int(self.section.path_params[0])
             content_type, view = content_view.split('.')
-            # TODO: Ensure that all of the previous actually exist
             m = importlib.import_module('framework.content.' + content_type)
             for v in getattr(m, content_type.title())().views:
                 if v[0] == view and v[2]:
                     contentmod = getattr(m, content_type.title())().init(self)
                     getattr(contentmod, 'get_else_create')(item.scope, self.section.path, content_type, namespace, self.namespace)
-                    item.content_keys.insert(rank, str(content.content_key(item.scope, self.section.path, content_type, namespace)))
+                    item.content_keys.insert(rank, str(content.content_key(content_type, namespace)))
                     item.namespaces.insert(rank, namespace)
                     item.content_types.insert(rank, content_type)
                     item.content_views.insert(rank, view)
