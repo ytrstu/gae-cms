@@ -22,6 +22,7 @@ from google.appengine.ext import db
 from django.utils.html import strip_tags
 
 from framework import content
+from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 
 class Text(content.Content):
@@ -65,12 +66,13 @@ class Text(content.Content):
         return ret
 
     def view_default(self, item, params):
-        ret = ''
+        items = []
         for i in range(len(item.titles)):
-            ret += '<div class="context text default">'
-            if item.titles[i]:
-                ret += '<h2>' + item.titles[i] + '</h2>'
-            if item.bodies[i]:
-                ret += item.bodies[i]
-            ret += '</div>'
-        return ret
+            items.append([item.titles[i], item.bodies[i]])
+        params = {
+                  'section': self.section,
+                  'content_type': self.name,
+                  'namespace': self.namespace,
+                  'items': items,
+                  }
+        return template.snippet('text-tabs', params)
