@@ -45,7 +45,7 @@ class Content(db.Model):
     views = [] # Format: [[view_id, view_string, display_in_outer], ...]
 
     def __unicode__(self):
-        item = get(self.section.path_namespace)
+        item = get(self.section.path, self.section.path_namespace)
         if not item: raise Exception('NotFound')
         return getattr(self, 'action_%s' % self.section.path_action)(item)
 
@@ -54,9 +54,9 @@ class Content(db.Model):
         return self
 
     def get_else_create(self, scope, section_path, content_type, namespace, container_namespace=None):
-        item = get(namespace)
+        item = get(section_path, namespace)
         if not item:
-            self.__init__(parent=content_key(content_type, namespace),
+            self.__init__(parent=content_key(scope, section_path, content_type, namespace),
                           scope=scope,
                           section_path=section_path if scope != SCOPE_GLOBAL else None,
                           namespace=namespace,
@@ -90,19 +90,20 @@ class Content(db.Model):
         cache.delete(CACHE_KEY_PREPEND + self.namespace)
         return key
 
-def get(namespace):
+def get(section_path, namespace):
     item = cache.get(CACHE_KEY_PREPEND + namespace)
     if item: return item
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
         concrete = getattr(m, content_type.title())
-        try:
-            item = concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(content_type, namespace))[0]
-        except:
-            pass
-        else:
-            cache.set(CACHE_KEY_PREPEND + namespace, item)
-            return item
+        for scope in SCOPE_GLOBAL, SCOPE_LOCAL:
+            try:
+                item = concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(scope, section_path, content_type, namespace))[0]
+            except:
+                pass
+            else:
+                cache.set(CACHE_KEY_PREPEND + section_path + '.' + namespace, item)
+                return item
     return None
 
 def get_all_content_types():
@@ -112,5 +113,9 @@ def get_all_content_types():
             content_types.append(name)
     return content_types
 
-def content_key(content_type, namespace):
-    return db.Key.from_path(content_type.title(), namespace)
+def content_key(scope, section_path, content_type, namespace):
+    if not namespace: raise Exception('namespace is required')
+    path = scope.upper() + '.' + namespace
+    if scope.upper() != SCOPE_GLOBAL:
+        path = section_path + '.' + path
+    return db.Key.from_path(content_type.title(), path)
