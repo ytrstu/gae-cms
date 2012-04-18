@@ -62,8 +62,9 @@ def html(section, main=''):
         html = html.replace('</head>', '\t' + linkrel + '\n\t</head>', 1)
 
     if section.yuijs or section.js:
-        script = '<script type="text/javascript" src="/' + section.yuijs + section.js + '.js"></script>'
-        html = html.replace('</head>', '\t' + script + '\n\t</head>', 1)
+        script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + '.js'})
+        #script = '<script type="text/javascript" src="/' + section.yuijs + section.js + '.js"></script>'
+        html = html.replace('</head>', '\t' + script.replace('\t', '').replace('\n', '') + '\n\t</head>', 1)
 
     return html.strip()
 

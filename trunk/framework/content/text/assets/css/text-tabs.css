@@ -1,6 +1,6 @@
 /* The following only works on Firefox to prevent flicker */
-.text-tabs div.yui-content div {
-	display: none;
+.text-tabs {
+	visibility: hidden;
 }
 /* Remove flicker on load as per Dave Glass blog posting (does not work): http://new.davglass.com/files/yui/tab6/ */
 /*div.yui-content div {

@@ -10,6 +10,6 @@ YUI().use("node-menunav", function(Y) {
 
 	    }, "#" + i.get('id'));
 
-	});
+	}).setStyle('visibility','visible');
 
 });
