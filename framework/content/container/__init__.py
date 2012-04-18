@@ -48,18 +48,42 @@ class Container(content.Content):
     def action_add(self, item):
         ret = '<h2>Add content</h2>'
         content_view = self.section.handler.request.get('content_view') if self.section.handler.request.get('content_view') else ''
-        namespace = self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() if self.section.handler.request.get('namespace') else '' 
+        namespace = self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() if self.section.handler.request.get('namespace') else ''
+        if namespace:
+            existing_content = content.get_content(namespace)
+            existing_content_type = existing_content.__class__.__name__.lower() if existing_content else None
+            # TODO: Ensure that the following actually exist
+            rank = int(self.section.path_params[0])
+            content_type, view = content_view.split('.')
         if self.section.handler.request.get('submit') and not content_view:
             ret += '<div class="status error">Content is required</div>'
         elif self.section.handler.request.get('submit') and not namespace:
             ret += '<div class="status error">Namespace is required</div>'
-        elif self.section.handler.request.get('submit') and content.namespace_exists(namespace):
-            ret += '<div class="status error">Selected namespace already exists</div>'
-            # TODO: Give the option of adding another view to this existing content if content_tyes are the same
+        elif self.section.handler.request.get('submit') and existing_content_type:
+            
+            if existing_content_type != content_type:
+                ret += '<div class="status error">Selected namespace already exists for a different type of content</div>'
+            else:
+                if existing_content.scope == content.SCOPE_LOCAL and not permission.is_admin(existing_content.section_path):
+                    ret += '<div class="status error">Selected namespace already exists for content that you are not permitted to manage</div>'
+                elif self.section.handler.request.get('confirm'):
+                    item.content_keys.insert(rank, str(existing_content.key()))
+                    item.namespaces.insert(rank, namespace)
+                    item.content_types.insert(rank, content_type)
+                    item.content_views.insert(rank, view)
+                    item.update()
+                    ret += str(existing_content)
+                    raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+                else:
+                    ret += '<div class="status progress">Selected namespace already exists, continue to add a view to this existing content</div>'
+                    f = form(self.section.full_path)
+                    f.add_control(control('hidden', 'content_view', content_view))
+                    f.add_control(control('hidden', 'namespace', namespace))
+                    f.add_control(control('hidden', 'confirm', '1'))
+                    f.add_control(control('submit', 'submit', 'Confirm'))
+                    ret += unicode(f)
+                    return ret
         elif self.section.handler.request.get('submit'):
-            rank = int(self.section.path_params[0])
-            content_type, view = content_view.split('.')
-            # TODO: Ensure that all of the previous actually exist
             m = importlib.import_module('framework.content.' + content_type)
             for v in getattr(m, content_type.title())().views:
                 if v[0] == view and v[2]:
@@ -84,7 +108,7 @@ class Container(content.Content):
         f = form(self.section.full_path)
         f.add_control(selectcontrol('content_view', content_views, content_view, 'Content'))
         f.add_control(control('text', 'namespace', namespace, 'Namespace'))
-        f.add_control(control('submit', 'submit'))
+        f.add_control(control('submit', 'submit', 'Submit'))
         ret += unicode(f)
         return ret
 
