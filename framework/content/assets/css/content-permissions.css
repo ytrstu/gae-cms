@@ -1,5 +1,7 @@
 .content-permissions {
 	margin: 0.5em 0;
+	visibility: hidden; /* Prevent flicker on load, javascript will make visible when ready */
+	height: 1.5em;
 }
 .content-permissions .yui3-menu {
 	visibility: hidden; /* Prevent flicker on load, javascript will make visible when ready */

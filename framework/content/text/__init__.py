@@ -75,4 +75,4 @@ class Text(content.Content):
                   'namespace': self.namespace,
                   'items': items,
                   }
-        return template.snippet('text-tabs', params)
+        return template.snippet('text-tabs', params) if items else ''

@@ -3,8 +3,8 @@
 {% if items|length == 1 %}
 
 	<div class="context text default">
-		{% if items.0.0 %}<h2>{{ items.0.0 }}</h2>{% endif %}
-		{{ items.0.1 }}
+		{% if items.0.0 %}<h2>{{ items.0.0|safe }}</h2>{% endif %}
+		{{ items.0.1|safe }}
 	</div>
 
 {% else %}
@@ -18,12 +18,12 @@
 <div id="{{ unique }}" class="text-tabs">
     <ul>
         {% for item in items %}
-        	<li><a href="#i{{ forloop.counter }}">{% if item.0 %}{{ item.0 }}{% else %}-{% endif %}</a></li>
+        	<li><a href="#i{{ forloop.counter }}">{% if item.0 %}{{ item.0|safe }}{% else %}-{% endif %}</a></li>
         {% endfor %}
     </ul>
     <div>
         {% for item in items %}
-        	<div id="i{{ forloop.counter }}">{{ item.1 }}</div>
+        	<div id="i{{ forloop.counter }}">{{ item.1|safe }}</div>
         {% endfor %}
     </div>
 </div>
