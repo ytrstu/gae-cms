@@ -24,6 +24,7 @@ from google.appengine.api import urlfetch
 
 from framework.subsystems import cache
 from framework.subsystems import utils
+from framework.subsystems.utils.cssmin import cssmin
 import settings
 
 class Compressor(webapp2.RequestHandler):
@@ -46,14 +47,14 @@ class Compressor(webapp2.RequestHandler):
                     yui_parts = [(yui_version + x.replace('_', '/') + '-min' + extension) for x in yui_parts]
                     result = urlfetch.fetch(yui_absolute + '&'.join(yui_parts))
                     if result.status_code == 200:
-                        contents += result.content + '\n\n'
+                        contents += result.content
                     else:
                         webapp2.abort(404)
                 filenames = [(x + extension) for x in local_path.split('_')]
                 if len(filenames) != len(utils.unique_list(filenames)):
                     webapp2.abort(404)
                 files = utils.file_search(filenames)
-                contents += ('\n'.join([open(f, 'r').read() for f in files])).strip()
+                contents += (''.join([cssmin(open(f, 'r').read()) for f in files])).strip()
                 cache.set(path + extension, contents)
 
             content_type = 'application/javascript' if extension == '.js' else 'text/css'
