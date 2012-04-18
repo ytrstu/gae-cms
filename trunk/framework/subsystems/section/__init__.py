@@ -58,7 +58,7 @@ class Section(db.Model):
         return template.html(self, self.get_action() if self.path_action else self.get_main_container_view())
 
     def get_action(self):
-        item = content.get(self.path_namespace)
+        item = content.get(self.path, self.path_namespace)
         if not item:
             raise Exception('BadRequest', self.path_namespace, self.path_action)
         elif not permission.perform_action(item, self.path, self.path_action):
