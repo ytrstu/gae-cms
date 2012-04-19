@@ -34,8 +34,7 @@ SCOPE_LOCAL = 'LOCAL'
 
 class Content(db.Model):
 
-    scope = db.StringProperty(choices=[SCOPE_GLOBAL, SCOPE_LOCAL])
-    section_path = db.StringProperty(default=None)
+    section_path = db.StringProperty(default=None) # None means GLOBAL
     namespace = db.StringProperty()
     container_namespace = db.StringProperty(default=None)
 
@@ -46,28 +45,11 @@ class Content(db.Model):
     views = [] # Format: [[view_id, view_string, display_in_outer], ...]
 
     def __unicode__(self):
-        item = get(self.section.path, self.section.path_namespace)
-        if not item: raise Exception('NotFound')
-        return getattr(item.init(self.section), 'action_%s' % self.section.path_action)()
+        return getattr(self, 'action_%s' % self.section.path_action)()
 
     def init(self, section):
         self.section = section
         return self
-
-    def get_else_create(self, scope, section_path, content_type, namespace, container_namespace=None):
-        item = get(section_path, namespace)
-        if not item:
-            self.__init__(parent=content_key(scope, section_path, content_type, namespace),
-                          scope=scope,
-                          section_path=section_path if scope != SCOPE_GLOBAL else None,
-                          namespace=namespace,
-                          container_namespace=container_namespace,
-                          )
-            self.put()
-            item = self
-        elif item.__class__.__name__ != content_type:
-            raise Exception('Selected namespace already exists for a different type of content')
-        return item
 
     def get_manage_links(self):
         allowed = []
@@ -86,47 +68,76 @@ class Content(db.Model):
         return template.snippet('content-permissions', params)
 
     def update(self):
-        cache.delete(CACHE_KEY_PREPEND + self.namespace)
+        cache.delete(CACHE_KEY_PREPEND + str(content_key(self.__class__.__name__, self.section_path, self.namespace)))
         return self.put()
 
     def unique_identifier(self):
-        return self.section.path + '_' + self.__class__.__name__.lower() + (('_' + self.container_namespace if self.container_namespace else '')) + '_' + self.namespace + '_' + str(datetime.datetime.now().microsecond)
+        return self.section.path + '-' + self.__class__.__name__.lower() + (('-' + self.container_namespace if self.container_namespace else '')) + '-' + self.namespace + '-' + str(datetime.datetime.now().microsecond)
 
-def get(section_path, namespace):
-    item = cache.get(CACHE_KEY_PREPEND + namespace)
+    def view(self, view, params=None):
+        if not permission.view_content(self, self.section, view):
+            raise Exception('You do not have permission to view this content')
+        view = getattr(self, 'view_' + view)(params)
+        return self.get_manage_links() + view
+
+def get_else_create(section_path, content_type, namespace, container_namespace=None):
+    item = get(content_type, section_path, namespace)
+    if not item:
+        m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+        concrete = getattr(m, content_type)
+        item = concrete(parent=content_key(content_type, section_path, namespace),
+                        section_path=section_path,
+                        namespace=namespace,
+                        container_namespace=container_namespace,
+                        )
+        item.put()
+    return item
+
+def get(content_type, section_path, namespace):
+    item = cache.get(CACHE_KEY_PREPEND + str(content_key(content_type, section_path, namespace)))
     if item: return item
-    for content_type in get_all_content_types():
-        m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
-        concrete = getattr(m, content_type.title())
-        for scope in SCOPE_GLOBAL, SCOPE_LOCAL:
-            try:
-                item = concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(scope, section_path, content_type, namespace))[0]
-            except:
-                pass
-            else:
-                cache.set(CACHE_KEY_PREPEND + namespace, item)
-                return item
-    return None
+    m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+    concrete = getattr(m, content_type)
+    try:
+        item = concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(content_type, section_path, namespace))[0]
+        cache.set(CACHE_KEY_PREPEND + str(content_key(content_type, section_path, namespace)), item)
+        return item
+    except:
+        return None
 
-def get_content(namespace):
+def get_local_then_global(section_path, namespace):
     for content_type in get_all_content_types():
-        m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
-        concrete = getattr(m, content_type.title())
+        item = cache.get(CACHE_KEY_PREPEND + str(content_key(content_type, section_path, namespace)))
+        if item: return item
+        item = cache.get(CACHE_KEY_PREPEND + str(content_key(content_type, None, namespace)))
+        if item: return item
+    for content_type in get_all_content_types():
+        m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+        concrete = getattr(m, content_type)
         try:
-            item = concrete.gql("WHERE namespace=:1 LIMIT 1", namespace)[0]
+            item = concrete.gql("WHERE section_path IN :1 AND namespace=:2 LIMIT 1", [section_path, None], namespace)[0]
+            cache.set(CACHE_KEY_PREPEND + str(content_key(content_type, item.section_path, namespace)), item)
+            return item
         except:
             pass
-        else:
-            return item
+    return None
+
+def get_by_namespace(namespace):
+    for content_type in get_all_content_types():
+        m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+        concrete = getattr(m, content_type)
+        try:
+            return concrete.gql("WHERE namespace=:1 LIMIT 1", namespace)[0]
+        except:
+            pass
     return None
 
 def get_all_content_types():
     content_types = []
     for name in os.listdir('framework/content'):
         if os.path.isdir('framework/content/' + name) and os.path.isfile('framework/content/' + name + '/__init__.py'):
-            content_types.append(name)
+            content_types.append(name.title())
     return content_types
 
-def content_key(scope, section_path, content_type, namespace):
-    if not namespace: raise Exception('namespace is required')
-    return db.Key.from_path(content_type.title(), ((section_path + '.') if scope == SCOPE_LOCAL else '') + namespace)
+def content_key(content_type, section_path, namespace):
+    return db.Key.from_path(content_type, ((section_path + '.') if section_path else '') + namespace)
