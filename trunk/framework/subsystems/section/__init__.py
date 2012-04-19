@@ -58,28 +58,16 @@ class Section(db.Model):
         return template.html(self, self.get_action() if self.path_action else self.get_main_container_view())
 
     def get_action(self):
-        item = content.get(self.path, self.path_namespace)
+        item = content.get_local_then_global(self.path, self.path_namespace)
         if not item:
-            raise Exception('BadRequest', self.path_namespace, self.path_action)
+            raise Exception('NotFound')
         elif not permission.perform_action(item, self.path, self.path_action):
             raise Exception('Forbidden', self.path, self.path_namespace, self.path_action, self.path_params)
         return item.init(self)
 
-    def get_view(self, scope, namespace, content_type, view, params=None):
-        m = importlib.import_module('framework.content.' + content_type.lower())
-        contentmod = getattr(m, content_type)(scope=scope, section_path=self.path, namespace=namespace).init(self)
-        item = getattr(contentmod, 'get_else_create')(scope, self.path, content_type, namespace).init(self)
-
-        if not permission.view_content(item, self, view):
-            print view
-            raise Exception('You do not have permission to view this content')
-
-        manage = getattr(item, 'get_manage_links')()
-        view = getattr(item, 'view_' + view)(params)
-        return manage + view
-
     def get_main_container_view(self):
-        return self.get_view(content.SCOPE_LOCAL, MAIN_CONTAINER_NAMESPACE, 'Container', 'default')
+        item = content.get_else_create(self.path, 'Container', MAIN_CONTAINER_NAMESPACE)
+        return item.init(self).view('default')
 
 def section_key(path):
     return db.Key.from_path('Section', path)

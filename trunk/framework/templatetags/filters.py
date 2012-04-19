@@ -46,7 +46,9 @@ def view(section, param_string):
             raise Exception('Invalid character " " for namespace')
         elif namespace == MAIN_CONTAINER_NAMESPACE:
             raise Exception('"%s" is a reserved namespace' % MAIN_CONTAINER_NAMESPACE)
-        return section.get_view(scope, namespace, content_type, view, params)
+        item = content.get_else_create(section.path if scope == content.SCOPE_LOCAL else None, content_type, namespace)
+
+        return item.init(section).view(view, params)
     except Exception as inst:
         error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
         return '<div class="status error">Error: View "%s" does not exist: %s</div>' % (view, error)
