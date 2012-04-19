@@ -1,10 +1,10 @@
 {% load filters %}
 
-{{ section|css:"slingbar.css" }}
-{{ section|yuijs:"yui/yui.js" }}
-{{ section|js:"slingbar.js" }}
+{{ content.section|css:"slingbar.css" }}
+{{ content.section|yuijs:"yui/yui.js" }}
+{{ content.section|js:"slingbar.js" }}
 
-{% captureas unique %}{{ section.path }}-{{ content_type }}-{{ namespace }}{% endcaptureas %}
+{% captureas unique %}{{ content.unique_identifier }}{% endcaptureas %}
 
 <div id="{{ unique }}" class="slingbar yui3-menu yui3-menu-horizontal yui3-splitbuttonnav">
     <div class="yui3-menu-content">
@@ -22,7 +22,7 @@
                     </div>
                 </div>
             </li>
-            {% if is_admin %}<li>{{ section|view:"GLOBAL, navigation, Navigation, manage"|safe }}</li>{% endif %}
+            {% if is_admin %}<li>{{ content.section|view:"GLOBAL, navigation, Navigation, manage"|safe }}</li>{% endif %}
         </ul>
     </div>
 </div>

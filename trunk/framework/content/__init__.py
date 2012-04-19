@@ -19,6 +19,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import os
+import datetime
 
 from google.appengine.ext import db
 
@@ -47,7 +48,7 @@ class Content(db.Model):
     def __unicode__(self):
         item = get(self.section.path, self.section.path_namespace)
         if not item: raise Exception('NotFound')
-        return getattr(self, 'action_%s' % self.section.path_action)(item)
+        return getattr(item.init(self.section), 'action_%s' % self.section.path_action)()
 
     def init(self, section):
         self.section = section
@@ -64,33 +65,35 @@ class Content(db.Model):
                           )
             self.put()
             item = self
+        elif item.__class__.__name__ != content_type:
+            raise Exception('Selected namespace already exists for a different type of content')
         return item
 
-    def get_manage_links(self, item):
+    def get_manage_links(self):
         allowed = []
         for action in self.actions:
-            if action[2] and permission.perform_action(item, self.section.path, action[0]):
+            if action[2] and permission.perform_action(self, self.section.path, action[0]):
                 allowed.append(action)
-        if permission.is_admin(self.section.path) and item.container_namespace:
+        if permission.is_admin(self.section.path) and self.container_namespace:
             pass
         elif len(allowed) == 0:
             return ''
         params = {
-                  'section': self.section,
-                  'content_type': self.name,
-                  'namespace': item.namespace,
-                  'container_namespace': item.container_namespace,
+                  'content': self,
                   'can_manage': permission.is_admin(self.section.path),
                   'allowed_actions': allowed,
                   }
         return template.snippet('content-permissions', params)
 
     def update(self):
-        cache.delete(CACHE_KEY_PREPEND + ((self.section_path + '.') if self.scope == SCOPE_LOCAL else '') + self.namespace)
+        cache.delete(CACHE_KEY_PREPEND + self.namespace)
         return self.put()
 
+    def unique_identifier(self):
+        return self.section.path + '_' + self.__class__.__name__.lower() + (('_' + self.container_namespace if self.container_namespace else '')) + '_' + self.namespace + '_' + str(datetime.datetime.now().microsecond)
+
 def get(section_path, namespace):
-    item = cache.get(CACHE_KEY_PREPEND + ((section_path + '.') if section_path else '') + namespace)
+    item = cache.get(CACHE_KEY_PREPEND + namespace)
     if item: return item
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type, globals(), locals(), [content_type])
@@ -101,7 +104,7 @@ def get(section_path, namespace):
             except:
                 pass
             else:
-                cache.set(CACHE_KEY_PREPEND + ((section_path + '.') if scope == SCOPE_LOCAL else '') + namespace, item)
+                cache.set(CACHE_KEY_PREPEND + namespace, item)
                 return item
     return None
 

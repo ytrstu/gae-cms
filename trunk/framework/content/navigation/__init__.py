@@ -40,7 +40,7 @@ class Navigation(content.Content):
         ['expanding_hierarchy', 'Entire hierarchy with only the trail to the current section and its children expanded', True],
     ]
 
-    def action_create(self, item=None):
+    def action_create(self):
         ret = '<h2>Create new section</h2>'
         if self.section.handler.request.get('submit'):
             path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
@@ -53,7 +53,7 @@ class Navigation(content.Content):
         ret += get_form(self.section.full_path, '', self.section.path)
         return ret
 
-    def action_edit(self, item=None):
+    def action_edit(self):
         ret = '<h2>Edit section "%s"</h2>' % self.section.path
         if self.section.handler.request.get('submit'):
             path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
@@ -66,7 +66,7 @@ class Navigation(content.Content):
         ret += get_form(self.section.full_path, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
-    def action_reorder(self, item=None):
+    def action_reorder(self):
         siblings = section.get_siblings(self.section.path)
         if not len(siblings) > 1: raise Exception('BadRequest')
         if self.section.handler.request.get('submit'):
@@ -86,13 +86,13 @@ class Navigation(content.Content):
         f.add_control(control('submit', 'submit'))
         return '<h2>Reorder section "%s"</h2>%s' % (self.section.path, unicode(f))
 
-    def action_manage(self, item=None):
+    def action_manage(self):
         ret = '<h2>Manage sections</h2>'
         ret += list_ul(self.section.path, section.get_top_level(), 'manage', True)
         self.section.css.append('nav-manage.css')
         return ret
 
-    def view_nth_level_only(self, item=None, params=None):
+    def view_nth_level_only(self, params=None):
         n = int(params[0]) if params else 0
         classes = 'nth-level ' + ('horizontal' if not params or len(params) < 2 else params[1])
         hierarchy = section.get_top_level()
@@ -108,7 +108,7 @@ class Navigation(content.Content):
         self.section.css.append('nav-nth-level.css')
         return list_ul(self.section.path, parents_only, classes)
 
-    def view_expanding_hierarchy(self, item=None, params=None):
+    def view_expanding_hierarchy(self, params=None):
         n = int(params[0]) if params else 0
         classes = 'expanding-hierarchy ' + ('vertical' if not params or len(params) < 2 else params[1])
         hierarchy = section.get_top_level()
@@ -127,13 +127,8 @@ class Navigation(content.Content):
         self.section.css.append('nav-expanding-hierarchy.css')
         return list_ul(self.section.path, hierarchy, classes)
 
-    def view_manage(self, item=None, params=None):
-        params = {
-                  'section': self.section,
-                  'content_type': self.name,
-                  'namespace': self.namespace,
-                  }
-        return template.snippet('nav-manage', params)
+    def view_manage(self, params=None):
+        return template.snippet('nav-manage', { 'content': self })
 
 def get_values(request):
         path = request.get('path').replace('/', '-').replace(' ', '-').lower()

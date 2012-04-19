@@ -68,14 +68,14 @@ class Section(db.Model):
     def get_view(self, scope, namespace, content_type, view, params=None):
         m = importlib.import_module('framework.content.' + content_type.lower())
         contentmod = getattr(m, content_type)(scope=scope, section_path=self.path, namespace=namespace).init(self)
-        item = getattr(contentmod, 'get_else_create')(scope, self.path, content_type, namespace)
+        item = getattr(contentmod, 'get_else_create')(scope, self.path, content_type, namespace).init(self)
 
         if not permission.view_content(item, self, view):
             print view
             raise Exception('You do not have permission to view this content')
 
-        manage = getattr(contentmod, 'get_manage_links')(item)
-        view = getattr(contentmod, 'view_' + view)(item, params)
+        manage = getattr(item, 'get_manage_links')()
+        view = getattr(item, 'view_' + view)(params)
         return manage + view
 
     def get_main_container_view(self):
