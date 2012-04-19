@@ -45,7 +45,7 @@ class Container(content.Content):
         ['default', 'Default', False],
     ]
 
-    def action_add(self, item):
+    def action_add(self):
         ret = '<h2>Add content</h2>'
         content_view = self.section.handler.request.get('content_view') if self.section.handler.request.get('content_view') else ''
         namespace = self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() if self.section.handler.request.get('namespace') else ''
@@ -60,18 +60,17 @@ class Container(content.Content):
         elif self.section.handler.request.get('submit') and not namespace:
             ret += '<div class="status error">Namespace is required</div>'
         elif self.section.handler.request.get('submit') and existing_content_type:
-            
             if existing_content_type != content_type:
                 ret += '<div class="status error">Selected namespace already exists for a different type of content</div>'
             else:
                 if existing_content.scope == content.SCOPE_LOCAL and not permission.is_admin(existing_content.section_path):
                     ret += '<div class="status error">Selected namespace already exists for content that you are not permitted to manage</div>'
                 elif self.section.handler.request.get('confirm'):
-                    item.content_keys.insert(rank, str(existing_content.key()))
-                    item.namespaces.insert(rank, namespace)
-                    item.content_types.insert(rank, content_type)
-                    item.content_views.insert(rank, view)
-                    item.update()
+                    self.content_keys.insert(rank, str(existing_content.key()))
+                    self.namespaces.insert(rank, namespace)
+                    self.content_types.insert(rank, content_type)
+                    self.content_views.insert(rank, view)
+                    self.update()
                     ret += str(existing_content)
                     raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
                 else:
@@ -88,12 +87,12 @@ class Container(content.Content):
             for v in getattr(m, content_type.title())().views:
                 if v[0] == view and v[2]:
                     contentmod = getattr(m, content_type.title())().init(self)
-                    getattr(contentmod, 'get_else_create')(item.scope, self.section.path, content_type, namespace, self.namespace)
-                    item.content_keys.insert(rank, str(content.content_key(item.scope, self.section.path, content_type, namespace)))
-                    item.namespaces.insert(rank, namespace)
-                    item.content_types.insert(rank, content_type)
-                    item.content_views.insert(rank, view)
-                    item.update()
+                    getattr(contentmod, 'get_else_create')(self.scope, self.section.path, content_type, namespace, self.namespace)
+                    self.content_keys.insert(rank, str(content.content_key(self.scope, self.section.path, content_type, namespace)))
+                    self.namespaces.insert(rank, namespace)
+                    self.content_types.insert(rank, content_type)
+                    self.content_views.insert(rank, view)
+                    self.update()
                     break
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         content_views = [['', '']]
@@ -112,15 +111,15 @@ class Container(content.Content):
         ret += unicode(f)
         return ret
 
-    def view_default(self, item, params):
+    def view_default(self, params):
         ret = ''
         add_action = self.actions[0]
         can_add = permission.perform_action(self, self.section.path, add_action[0])
         if can_add:
             self.section.css.append('container.css')
             add_link = '<a class="container add" href="/' + self.section.path + '/' + self.namespace + '/' + add_action[0] + '/%d">' + add_action[1] + '</a>'
-        for i in range(len(item.content_types)):
+        for i in range(len(self.content_types)):
             if can_add: ret += add_link % i
-            ret += self.section.get_view(item.scope, item.namespaces[i], item.content_types[i].title(), item.content_views[i], params=None)
-        if can_add: ret += add_link % len(item.content_types)
+            ret += self.section.get_view(self.scope, self.namespaces[i], self.content_types[i].title(), self.content_views[i], params=None)
+        if can_add: ret += add_link % len(self.content_types)
         return ret

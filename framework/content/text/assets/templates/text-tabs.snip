@@ -1,28 +1,26 @@
 {% load filters %}
 
-{% if items|length == 1 %}
+{% if content.items|length == 1 %}
 
 	<div class="context text default">
-		{% if items.0.0 %}<h2>{{ items.0.0|safe }}</h2>{% endif %}
-		{{ items.0.1|safe }}
+		{% if content.items.0.0 %}<h2>{{ content.items.0.0|safe }}</h2>{% endif %}
+		{{ content.items.0.1|safe }}
 	</div>
 
 {% else %}
 
-	{{ section|css:"text-tabs.css" }}
-	{{ section|yuijs:"yui/yui.js" }}
-	{{ section|js:"text-tabs.js" }}
+	{{ content.section|css:"text-tabs.css" }}
+	{{ content.section|yuijs:"yui/yui.js" }}
+	{{ content.section|js:"text-tabs.js" }}
 
-	{% captureas unique %}{{ section.path }}-{{ content_type }}-{{ namespace }}{% endcaptureas %}
-
-<div id="{{ unique }}" class="text-tabs">
+<div id="{{ content.unique_identifier }}" class="text-tabs">
     <ul>
-        {% for item in items %}
+        {% for item in content.items %}
         	<li><a href="#i{{ forloop.counter }}">{% if item.0 %}{{ item.0|safe }}{% else %}-{% endif %}</a></li>
         {% endfor %}
     </ul>
     <div>
-        {% for item in items %}
+        {% for item in content.items %}
         	<div id="i{{ forloop.counter }}">{{ item.1|safe }}</div>
         {% endfor %}
     </div>

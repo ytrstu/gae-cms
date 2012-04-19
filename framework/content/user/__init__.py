@@ -32,12 +32,9 @@ class User(content.Content):
         ['slingbar', 'Slingbar', False],
     ]
 
-    def view_slingbar(self, item, params):
+    def view_slingbar(self, params):
         params = {
-                  'section': self.section,
-                  'content_type': self.name,
-                  'namespace': self.namespace,
-                  'can_manage': permission.is_admin(self.section.path),
+                  'content': self,
                   'user': users.get_current_user(),
                   'is_admin': permission.is_admin(self.section.path),
                   }

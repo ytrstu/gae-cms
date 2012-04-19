@@ -40,39 +40,33 @@ class Text(content.Content):
         ['default', 'Default - multiple items are tabbed', True],
     ]
 
-    def action_edit(self, item):
+    def action_edit(self):
         if self.section.handler.request.get('submit'):
             i = 0
-            item.titles = []
-            item.bodies = []
+            self.titles = []
+            self.bodies = []
             while self.section.handler.request.get('title' + unicode(i)) or self.section.handler.request.get('body' + unicode(i)):
                 title = strip_tags(self.section.handler.request.get('title' + unicode(i))).strip()
                 body = self.section.handler.request.get('body' + unicode(i)).strip()
                 if title or body:
-                    item.titles.append(title)
-                    item.bodies.append(body)
+                    self.titles.append(title)
+                    self.bodies.append(body)
                 i += 1
-            item.update()
+            self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         ret = '<h2>Edit text</h2>'
         f = form(self.section.full_path)
-        for i in range(len(item.titles)):
-            f.add_control(control('text', 'title' + unicode(i), item.titles[i], 'Title', 60))
-            f.add_control(textareacontrol('body' + unicode(i), item.bodies[i], 'Body', 100, 10))
-        f.add_control(control('text', 'title' + unicode(len(item.titles)), '', 'Title', 60))
-        f.add_control(textareacontrol('body' + unicode(len(item.bodies)), '', 'Body', 100, 10))
+        for i in range(len(self.titles)):
+            f.add_control(control('text', 'title' + unicode(i), self.titles[i], 'Title', 60))
+            f.add_control(textareacontrol('body' + unicode(i), self.bodies[i], 'Body', 100, 10))
+        f.add_control(control('text', 'title' + unicode(len(self.titles)), '', 'Title', 60))
+        f.add_control(textareacontrol('body' + unicode(len(self.bodies)), '', 'Body', 100, 10))
         f.add_control(control('submit', 'submit'))
         ret += unicode(f)
         return ret
 
-    def view_default(self, item, params):
-        items = []
-        for i in range(len(item.titles)):
-            items.append([item.titles[i], item.bodies[i]])
-        params = {
-                  'section': self.section,
-                  'content_type': self.name,
-                  'namespace': self.namespace,
-                  'items': items,
-                  }
-        return template.snippet('text-tabs', params) if items else ''
+    def view_default(self, params):
+        self.items = []
+        for i in range(len(self.titles)):
+            self.items.append([self.titles[i], self.bodies[i]])
+        return template.snippet('text-tabs', { 'content': self }) if self.items else ''
