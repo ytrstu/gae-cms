@@ -106,6 +106,25 @@ class Container(content.Content):
         ret += unicode(f)
         return ret
 
+    def action_delete(self):
+        ret = '<h2>Delete content</h2>'
+        rank = int(self.section.path_params[0])
+        if self.section.handler.request.get('submit'):
+            item = content.get(self.content_types[rank], self.content_paths[rank] if self.content_paths[rank] else None, self.content_namespaces[rank]).init(self.section)
+            if item.container_namespace == self.namespace and self.content_namespaces.count(item.namespace) == 1:
+                item.remove()
+            self.content_types.pop(rank)
+            self.content_paths.pop(rank)
+            self.content_namespaces.pop(rank)
+            self.content_views.pop(rank)
+            self.update()
+            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+        ret += '<div class="status progress">Are you sure you wish to delete content "%s" and all associated data?</div>' % self.content_namespaces[rank]
+        f = form(self.section.full_path)
+        f.add_control(control('submit', 'submit', 'Confirm'))
+        ret += unicode(f)
+        return ret
+
     def view_default(self, params):
         ret = ''
         add_action = self.actions[0]
@@ -116,6 +135,6 @@ class Container(content.Content):
         for i in range(len(self.content_namespaces)):
             if can_add: ret += add_link % i
             item = content.get(self.content_types[i], self.content_paths[i] if self.content_paths[i] else None, self.content_namespaces[i]).init(self.section)
-            ret += item.view(self.content_views[i], params=None)
+            ret += item.view(self.content_views[i], params=None, container_namespace=self.namespace, rank=i)
         if can_add: ret += add_link % len(self.content_namespaces)
         return ret
