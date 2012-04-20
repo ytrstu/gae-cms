@@ -58,9 +58,9 @@ class Text(content.Content):
         f = form(self.section.full_path)
         for i in range(len(self.titles)):
             f.add_control(control('text', 'title' + unicode(i), self.titles[i], 'Title', 60))
-            f.add_control(textareacontrol('body' + unicode(i), self.bodies[i], 'Body', 100, 10))
+            f.add_control(textareacontrol('body' + unicode(i), self.bodies[i], 'Body', 100, 10, section_for_rte=self.section))
         f.add_control(control('text', 'title' + unicode(len(self.titles)), '', 'Title', 60))
-        f.add_control(textareacontrol('body' + unicode(len(self.bodies)), '', 'Body', 100, 10))
+        f.add_control(textareacontrol('body' + unicode(len(self.bodies)), '', 'Body', 100, 10, section_for_rte=self.section))
         f.add_control(control('submit', 'submit'))
         ret += unicode(f)
         return ret
