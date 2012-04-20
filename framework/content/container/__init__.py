@@ -110,8 +110,10 @@ class Container(content.Content):
         ret = '<h2>Delete content</h2>'
         rank = int(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
-            item = content.get(self.content_types[rank], self.content_paths[rank] if self.content_paths[rank] else None, self.content_namespaces[rank]).init(self.section)
-            if item.container_namespace == self.namespace and self.content_namespaces.count(item.namespace) == 1:
+            item = content.get(self.content_types[rank], self.content_paths[rank] if self.content_paths[rank] else None, self.content_namespaces[rank])
+            if item:
+                item = item.init(self.section)
+            if item and item.container_namespace == self.namespace and self.content_namespaces.count(item.namespace) == 1:
                 item.remove()
             self.content_types.pop(rank)
             self.content_paths.pop(rank)
@@ -134,7 +136,10 @@ class Container(content.Content):
             add_link = '<a class="container add" href="/' + self.section.path + '/' + self.namespace + '/' + add_action[0] + '/%d">' + add_action[1] + '</a>'
         for i in range(len(self.content_namespaces)):
             if can_add: ret += add_link % i
-            item = content.get(self.content_types[i], self.content_paths[i] if self.content_paths[i] else None, self.content_namespaces[i]).init(self.section)
-            ret += item.view(self.content_views[i], params=None, container_namespace=self.namespace, rank=i)
+            item = content.get(self.content_types[i], self.content_paths[i] if self.content_paths[i] else None, self.content_namespaces[i])
+            if not item:
+                ret += self.get_manage_links(self.namespace, i) + '<div class="status error">Content does not exist</div>'
+            else:
+                ret += item.init(self.section).view(self.content_views[i], params=None, container_namespace=self.namespace, rank=i)
         if can_add: ret += add_link % len(self.content_namespaces)
         return ret

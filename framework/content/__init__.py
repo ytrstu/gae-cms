@@ -56,7 +56,7 @@ class Content(db.Model):
         for action in self.actions:
             if action[2] and permission.perform_action(self, self.section.path, action[0]):
                 allowed.append(action)
-        if permission.is_admin(self.section.path) and self.container_namespace:
+        if permission.is_admin(self.section.path) and container_namespace:
             pass
         elif len(allowed) == 0:
             return ''
