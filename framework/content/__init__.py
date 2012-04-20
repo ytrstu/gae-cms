@@ -51,7 +51,7 @@ class Content(db.Model):
         self.section = section
         return self
 
-    def get_manage_links(self):
+    def get_manage_links(self, container_namespace=None, rank=None):
         allowed = []
         for action in self.actions:
             if action[2] and permission.perform_action(self, self.section.path, action[0]):
@@ -63,6 +63,8 @@ class Content(db.Model):
         params = {
                   'content': self,
                   'can_manage': permission.is_admin(self.section.path),
+                  'container_namespace': container_namespace,
+                  'rank': rank,
                   'allowed_actions': allowed,
                   }
         return template.snippet('content-permissions', params)
@@ -71,14 +73,25 @@ class Content(db.Model):
         cache.delete(CACHE_KEY_PREPEND + str(content_key(self.__class__.__name__, self.section_path, self.namespace)))
         return self.put()
 
+    '''
+    Subclasses should overwrite this to perform any cleanup required before removing
+    '''
+    def on_remove(self):
+        pass
+
+    def remove(self):
+        cache.delete(CACHE_KEY_PREPEND + str(content_key(self.__class__.__name__, self.section_path, self.namespace)))
+        self.on_remove()
+        self.delete()
+
     def unique_identifier(self):
         return self.section.path + '-' + self.__class__.__name__.lower() + (('-' + self.container_namespace if self.container_namespace else '')) + '-' + self.namespace + '-' + str(datetime.datetime.now().microsecond)
 
-    def view(self, view, params=None):
+    def view(self, view, params=None, container_namespace=None, rank=None):
         if not permission.view_content(self, self.section, view):
             raise Exception('You do not have permission to view this content')
         view = getattr(self, 'view_' + view)(params)
-        return self.get_manage_links() + view
+        return self.get_manage_links(container_namespace, rank) + view
 
 def get_else_create(section_path, content_type, namespace, container_namespace=None):
     item = get(content_type, section_path, namespace)
