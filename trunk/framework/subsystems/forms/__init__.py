@@ -81,7 +81,7 @@ class selectcontrol(control):
             else:
                 out += '<option value="' + unicode(i[0]) + '"'
                 if self.value == i[0]: out += ' selected'
-                out += '>' + i[1] + '</option>'
+                out += '>' + unicode(i[1]) + '</option>'
         out += '</select>'
         return out
         
