@@ -87,18 +87,23 @@ class selectcontrol(control):
         
 class textareacontrol(control):
     
-    def __init__(self, name, value=None, label=None, width=None, rows=None):
+    def __init__(self, name, value=None, label=None, width=None, rows=None, section_for_rte=None):
         self.name = name
         self.value = value
         self.label = label
         self.width = width
         self.rows = rows
+        self.section_for_rte = section_for_rte
         
     def __str__(self):
+        if(self.section_for_rte):
+            self.section_for_rte.yuijs.append('yui/yui.js')
+            self.section_for_rte.js.append('rte.js')
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<textarea name="' + self.name + '" id="' + self.name + '"'
         if self.width: out += ' style="width:' + unicode(self.width) + '%"'
         if self.rows: out += ' rows="' + unicode(self.rows) + '"'
+        if(self.section_for_rte): out += ' class="rich-text-editor"'
         out += '>'
         if self.value: out += self.value
         out += '</textarea>'

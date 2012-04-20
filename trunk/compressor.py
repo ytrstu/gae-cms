@@ -54,7 +54,11 @@ class Compressor(webapp2.RequestHandler):
                 if len(filenames) != len(utils.unique_list(filenames)):
                     webapp2.abort(404)
                 files = utils.file_search(filenames)
-                contents += (''.join([cssmin(open(f, 'r').read()) for f in files])).strip()
+                if extension == '.css':
+                    contents += (''.join([cssmin(open(f, 'r').read()) for f in files])).strip()
+                else:
+                    contents += (''.join([open(f, 'r').read() for f in files])).strip()
+                    
                 cache.set(path + extension, contents)
 
             content_type = 'application/javascript' if extension == '.js' else 'text/css'
