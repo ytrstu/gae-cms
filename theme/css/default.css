@@ -63,6 +63,11 @@ input, select, textarea {
 	border: 2px solid #216600;
 	background-color: #D6FFC1;
 }
+.warning {
+	color: #A86400;
+	border: 2px solid #A86400;
+	background-color: #FFEB9E;
+}
 .traceback {
 	text-align: left;
 	color: black;
