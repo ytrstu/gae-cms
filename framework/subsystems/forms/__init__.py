@@ -97,6 +97,7 @@ class textareacontrol(control):
         
     def __str__(self):
         if(self.section_for_rte):
+            self.section_for_rte.css.append('rte.css')
             self.section_for_rte.yuijs.append('yui/yui.js')
             self.section_for_rte.js.append('rte.js')
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
