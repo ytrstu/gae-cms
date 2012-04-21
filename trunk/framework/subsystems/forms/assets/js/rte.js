@@ -25,11 +25,11 @@ YUI().use('yui2-editor', 'node', function(Y) {
 
     	var YAHOO = Y.YUI2, Dom = YAHOO.util.Dom, Event = YAHOO.util.Event;
 
-    	/* Below is from: http://developer.yahoo.com/yui/examples/editor/code_editor.html*/
+    	/* Below is from: http://developer.yahoo.com/yui/examples/editor/code_editor.html */
 
 	    var myConfig = {
 	            height: '300px',
-	            width: '600px',
+	            width: '100%',
 	            animate: true,
 	            dompath: true,
 	            focusAtStart: true
