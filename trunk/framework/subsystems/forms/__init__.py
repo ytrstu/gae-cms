@@ -20,8 +20,9 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import types
 
 class form:
-    
-    def __init__(self, action = '/'):
+
+    def __init__(self, section, action = '/'):
+        self.section = section
         self.action = action
         self.controls = []
         
@@ -29,23 +30,25 @@ class form:
         self.controls.append(control)
         
     def __unicode__(self):
+        self.section.css.append('form.css')
         out = '<form method="POST" action="' + self.action + '">'
         for c in self.controls:
             out += unicode(c)
         out += '</form>'
         return out
-        
+
 class control:
-    
-    def __init__(self, itype, name, value=None, label=None, width=None, length=None):
+
+    def __init__(self, section, itype, name, value=None, label=None, width=None, length=None):
+        self.section = section
         self.itype = itype
         self.name = name
         self.value = value
         self.label = label
         self.width = width
         self.length = length
-        
-    def __str__(self):
+
+    def __unicode__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<input type="' + self.itype + '" name="' + self.name + '" id="' + self.name + '"'
         if self.value: out += ' value="' + self.value + '"'
@@ -60,14 +63,15 @@ class control:
         return out
         
 class selectcontrol(control):
-    
-    def __init__(self, name, items=[], value=None, label=None):
+
+    def __init__(self, section, name, items=[], value=None, label=None):
+        self.section = section
         self.name = name
         self.items = items
         self.value = value
         self.label = label
-        
-    def __str__(self):
+
+    def __unicode__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<select name="' + self.name + '" id="' + self.name + '">'
         for i in self.items:
@@ -84,40 +88,42 @@ class selectcontrol(control):
                 out += '>' + unicode(i[1]) + '</option>'
         out += '</select>'
         return out
-        
+
 class textareacontrol(control):
-    
-    def __init__(self, name, value=None, label=None, width=None, rows=None, section_for_rte=None):
+
+    def __init__(self, section, name, value=None, label=None, width=None, rows=None, html=False):
+        self.section = section
         self.name = name
         self.value = value
         self.label = label
         self.width = width
         self.rows = rows
-        self.section_for_rte = section_for_rte
-        
-    def __str__(self):
-        if(self.section_for_rte):
-            self.section_for_rte.css.append('rte.css')
-            self.section_for_rte.yuijs.append('yui/yui.js')
-            self.section_for_rte.js.append('rte.js')
+        self.html = html
+
+    def __unicode__(self):
+        if(self.html):
+            self.section.css.append('rte.css')
+            self.section.yuijs.append('yui/yui.js')
+            self.section.js.append('rte.js')
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<textarea name="' + self.name + '" id="' + self.name + '"'
         if self.width: out += ' style="width:' + unicode(self.width) + '%"'
         if self.rows: out += ' rows="' + unicode(self.rows) + '"'
-        if(self.section_for_rte): out += ' class="rich-text-editor"'
+        if(self.html): out += ' class="rich-text-editor"'
         out += '>'
         if self.value: out += self.value
         out += '</textarea>'
         return out
-        
+
 class checkboxcontrol(control):
-    
-    def __init__(self, name, value=False, label=None):
+
+    def __init__(self, section, name, value=False, label=None):
+        self.section = section
         self.name = name
         self.value = value
         self.label = label
-        
-    def __str__(self):
+
+    def __unicode__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<input type="checkbox" name="' + self.name + '" id="' + self.name + '"'
         if self.value: out += ' checked'

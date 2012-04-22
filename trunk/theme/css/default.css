@@ -42,11 +42,6 @@ a {
 .ft {
 	text-align: center;
 }
-input, select, textarea {
-	margin: 0.5em 0;
-	padding: 0.5em;
-	display: block;
-}
 .status {
 	margin: 1em 0;
 	padding: 1em;

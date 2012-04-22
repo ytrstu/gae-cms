@@ -55,13 +55,13 @@ class Text(content.Content):
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         ret = '<h2>Edit text</h2>'
-        f = form(self.section.full_path)
+        f = form(self.section, self.section.full_path)
         for i in range(len(self.titles)):
-            f.add_control(control('text', 'title' + unicode(i), self.titles[i], 'Title', 60))
-            f.add_control(textareacontrol('body' + unicode(i), self.bodies[i], 'Body', 100, 10, section_for_rte=self.section))
-        f.add_control(control('text', 'title' + unicode(len(self.titles)), '', 'Title', 60))
-        f.add_control(textareacontrol('body' + unicode(len(self.bodies)), '', 'Body', 100, 10, section_for_rte=self.section))
-        f.add_control(control('submit', 'submit'))
+            f.add_control(control(self.section, 'text', 'title' + unicode(i), self.titles[i], 'Title', 60))
+            f.add_control(textareacontrol(self.section, 'body' + unicode(i), self.bodies[i], 'Body', 100, 10, html=True))
+        f.add_control(control(self.section, 'text', 'title' + unicode(len(self.titles)), '', 'Title', 60))
+        f.add_control(textareacontrol(self.section, 'body' + unicode(len(self.bodies)), '', 'Body', 100, 10, html=True))
+        f.add_control(control(self.section, 'submit', 'submit'))
         ret += unicode(f)
         return ret
 
@@ -69,4 +69,4 @@ class Text(content.Content):
         self.items = []
         for i in range(len(self.titles)):
             self.items.append([self.titles[i], self.bodies[i]])
-        return template.snippet('text-tabs', { 'content': self }) if self.items else ''
+        return template.snippet('text-default', { 'content': self }) if self.items else ''

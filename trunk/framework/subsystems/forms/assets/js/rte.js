@@ -13,23 +13,19 @@ YUI().use('yui2-editor', 'node', function(Y) {
     	/* Below is from: http://developer.yahoo.com/yui/examples/editor/code_editor.html */
 
 	    var myConfig = {
-	            height: '300px',
+	            height: '200px',
 	            width: '100%',
 	            animate: true,
-	            dompath: true,
-	            focusAtStart: false
+	            dompath: true
 	        };
 	
 	        var state = 'off';
-	        YAHOO.log('Set state to off..', 'info', 'example');
-	
-	        YAHOO.log('Create the Editor..', 'info', 'example');
 	        var myEditor = new YAHOO.widget.Editor(i.get('id'), myConfig);
 	        myEditor.on('toolbarLoaded', function() {
 	            var codeConfig = {
 	                type: 'push', label: 'Edit HTML Code', value: 'editcode'
 	            };
-	            YAHOO.log('Create the (editcode) Button', 'info', 'example');
+
 	            this.toolbar.addButtonToGroup(codeConfig, 'insertitem');
 	            
 	            this.toolbar.on('editcodeClick', function() {
@@ -39,8 +35,7 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	                if (state == 'on') {
 	                    state = 'off';
 	                    this.toolbar.set('disabled', false);
-	                    YAHOO.log('Show the Editor', 'info', 'example');
-	                    YAHOO.log('Inject the HTML from the textarea into the editor', 'info', 'example');
+
 	                    this.setEditorHTML(ta.value);
 	                    if (!this.browser.ie) {
 	                        this._setDesignMode('on');
@@ -52,9 +47,7 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	                    this._focusWindow();
 	                } else {
 	                    state = 'on';
-	                    YAHOO.log('Show the Code Editor', 'info', 'example');
 	                    this.cleanHTML();
-	                    YAHOO.log('Save the Editors HTML', 'info', 'example');
 	                    Dom.addClass(iframe, 'editor-hidden');
 	                    Dom.removeClass(ta, 'editor-hidden');
 	                    this.toolbar.set('disabled', true);
@@ -67,7 +60,6 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	            }, this, true);
 	
 	            this.on('cleanHTML', function(ev) {
-	                YAHOO.log('cleanHTML callback fired..', 'info', 'example');
 	                this.get('element').value = ev.html;
 	            }, this, true);
 	            
@@ -80,7 +72,6 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	                this.setStyle('top', '');
 	                this.setStyle('left', '');
 	                this.setStyle('position', '');
-
 	                this.addClass('editor-hidden');
 	            }, this, true);
 	            

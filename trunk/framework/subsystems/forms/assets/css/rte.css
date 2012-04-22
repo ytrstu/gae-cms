@@ -1,3 +1,6 @@
+.yui-editor-container {
+	margin: 0.5em 0;
+}
 .editor-hidden {
     visibility: hidden;
     top: -9999px;
