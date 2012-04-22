@@ -28,7 +28,7 @@ from framework.subsystems.forms import form, control, textareacontrol
 class Text(content.Content):
 
     titles = db.StringListProperty()
-    bodies = db.StringListProperty()
+    bodies = db.ListProperty(item_type=db.Text)
 
     name = 'Text'
     author = 'Imran Somji'
@@ -46,7 +46,7 @@ class Text(content.Content):
             raise Exception('BadRequest', 'Text item out of range')
         if self.section.handler.request.get('submit'):
             self.titles.insert(rank, self.section.handler.request.get('title'))
-            self.bodies.insert(rank, self.section.handler.request.get('body'))
+            self.bodies.insert(rank, db.Text(self.section.handler.request.get('body')))
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         elif not self.section.path_params and len(self.titles) > 0:
