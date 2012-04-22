@@ -13,7 +13,7 @@
 	{{ content.section|yuijs:"yui/yui.js" }}
 	{{ content.section|js:"text-tabs.js" }}
 
-<div id="{{ content.unique_identifier }}" class="text-tabs">
+<div id="{{ content.unique_identifier }}-tabs" class="text-tabs">
     <ul>
         {% for item in content.items %}
         	<li><a href="#i{{ forloop.counter }}">{% if item.0 %}{{ item.0|safe }}{% else %}-{% endif %}</a></li>
