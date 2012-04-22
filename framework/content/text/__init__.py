@@ -41,26 +41,33 @@ class Text(content.Content):
     ]
 
     def action_edit(self):
+        rank = int(self.section.path_params[0]) if self.section.path_params else 0
+        if rank > len(self.titles) or rank < 0:
+            raise Exception('BadRequest', 'Text item out of range')
         if self.section.handler.request.get('submit'):
-            i = 0
-            self.titles = []
-            self.bodies = []
-            while self.section.handler.request.get('title' + unicode(i)) or self.section.handler.request.get('body' + unicode(i)):
-                title = strip_tags(self.section.handler.request.get('title' + unicode(i))).strip()
-                body = self.section.handler.request.get('body' + unicode(i)).strip()
-                if title or body:
-                    self.titles.append(title)
-                    self.bodies.append(body)
-                i += 1
+            self.titles.insert(rank, self.section.handler.request.get('title'))
+            self.bodies.insert(rank, self.section.handler.request.get('body'))
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+        elif not self.section.path_params and len(self.titles) > 0:
+            self.section.css.append('text-edit.css')
+            ret = '<h2>Select item</h2>'
+            for i in range(len(self.titles)):
+                ret += '<div class="text edit item">'
+                ret += '<a class="edit item" href="' + self.section.full_path + '/' + str(i) + '">Edit</a>'
+                if len(self.titles) > 1:
+                    ret += '<a class="reorder item" href="' + self.section.full_path + '/' + str(i) + '">Reorder</a>'
+                ret += '<a class="delete item" href="' + self.section.full_path + '/' + str(i) + '">Delete</a>'
+                if self.titles[i]: ret += '<h3>' + self.titles[i] + '</h3>'
+                ret += self.bodies[i] + '</div>'
+            ret += '<a class="add item" href="' + self.section.full_path + '/' + str(len(self.titles)) + '">Add</a>'
+            return ret
+        title = self.titles[rank] if len(self.titles) > rank else ''
+        body = self.bodies[rank] if len(self.bodies) > rank else ''
         ret = '<h2>Edit text</h2>'
         f = form(self.section, self.section.full_path)
-        for i in range(len(self.titles)):
-            f.add_control(control(self.section, 'text', 'title' + unicode(i), self.titles[i], 'Title', 60))
-            f.add_control(textareacontrol(self.section, 'body' + unicode(i), self.bodies[i], 'Body', 100, 10, html=True))
-        f.add_control(control(self.section, 'text', 'title' + unicode(len(self.titles)), '', 'Title', 60))
-        f.add_control(textareacontrol(self.section, 'body' + unicode(len(self.bodies)), '', 'Body', 100, 10, html=True))
+        f.add_control(control(self.section, 'text', 'title', title, 'Title', 60))
+        f.add_control(textareacontrol(self.section, 'body', body, 'Body', 100, 10, html=True))
         f.add_control(control(self.section, 'submit', 'submit'))
         ret += unicode(f)
         return ret
