@@ -1,0 +1,8 @@
+.text.edit.item {
+	margin: 1em 0;
+	padding: 1em;
+	border: 2px solid black;
+}
+.text.edit.item a.item {
+	display: block;
+}
