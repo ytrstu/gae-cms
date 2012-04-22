@@ -45,8 +45,12 @@ class Text(content.Content):
         if rank > len(self.titles) or rank < 0:
             raise Exception('BadRequest', 'Text item out of range')
         if self.section.handler.request.get('submit'):
-            self.titles.insert(rank, self.section.handler.request.get('title'))
-            self.bodies.insert(rank, db.Text(self.section.handler.request.get('body')))
+            if rank == len(self.titles):
+                self.titles.append(self.section.handler.request.get('title'))
+                self.bodies.append(db.Text(self.section.handler.request.get('body')))
+            else:
+                self.titles[rank] = self.section.handler.request.get('title')
+                self.bodies[rank] = db.Text(self.section.handler.request.get('body'))
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         elif not self.section.path_params and len(self.titles) > 0:
