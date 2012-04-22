@@ -6,24 +6,9 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	 * */
 
     Y.one('body').addClass('yui-skin-sam'); // For skinning
-
     var YAHOO = Y.YUI2, Dom = YAHOO.util.Dom, Event = YAHOO.util.Event;
 
-    var myConfig = {
-
-        height: '300px',
-
-        width: '600px',
-
-        dompath: true,
-
-        focusAtStart: false
-
-    };
-
     Y.all('.rich-text-editor').each(function(i) {
-
-    	var YAHOO = Y.YUI2, Dom = YAHOO.util.Dom, Event = YAHOO.util.Event;
 
     	/* Below is from: http://developer.yahoo.com/yui/examples/editor/code_editor.html */
 
@@ -32,7 +17,7 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	            width: '100%',
 	            animate: true,
 	            dompath: true,
-	            focusAtStart: true
+	            focusAtStart: false
 	        };
 	
 	        var state = 'off';
@@ -95,10 +80,17 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	                this.setStyle('top', '');
 	                this.setStyle('left', '');
 	                this.setStyle('position', '');
-	
+
 	                this.addClass('editor-hidden');
 	            }, this, true);
+	            
+	            YAHOO.util.Event.on(window, 'load', YAHOO.util.Event.on(this.get('parentNode'), 'submit', function(ev, editor) {
+				    editor.cleanHTML();
+				    return true;
+				}, this, true));
+
 	        }, myEditor, true);
+
 	        myEditor.render();
 
     });
