@@ -10,7 +10,7 @@
     <div class="yui3-menu-content">
         <ul>
         	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/edit">Edit</a></li>
-        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/create">Create</a></li>{% if section.has_siblings %}
+        	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/create">Create</a></li>{% if content.section.has_siblings %}
         	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/reorder">Reorder</a></li>{% endif %}
         	<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/manage">Manage</a></li>
         </ul>
