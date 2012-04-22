@@ -38,4 +38,4 @@ class User(content.Content):
                   'user': users.get_current_user(),
                   'is_admin': permission.is_admin(self.section.path),
                   }
-        return template.snippet('slingbar', params)
+        return template.snippet('user-slingbar', params)

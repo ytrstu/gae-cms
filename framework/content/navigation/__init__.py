@@ -50,7 +50,7 @@ class Navigation(content.Content):
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not is_default else ''))
-        ret += get_form(self.section.full_path, '', self.section.path)
+        ret += get_form(self.section, '', self.section.path)
         return ret
 
     def action_edit(self):
@@ -63,7 +63,7 @@ class Navigation(content.Content):
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
-        ret += get_form(self.section.full_path, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
+        ret += get_form(self.section, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
     def action_reorder(self):
@@ -74,7 +74,7 @@ class Navigation(content.Content):
             if self.section.rank != new_rank:
                 section.update_section_rank(self.section, new_rank)
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-        f = form(self.section.full_path)
+        f = form(self.section, self.section.full_path)
         items = [[0, 'At the top']]
         adder = 1
         for item, _ in siblings:
@@ -82,8 +82,8 @@ class Navigation(content.Content):
                 items.append([item['rank'] + adder, 'After ' + item['path']])
             else:
                 adder = 0
-        f.add_control(selectcontrol('rank', items, self.section.rank, 'Position'))
-        f.add_control(control('submit', 'submit'))
+        f.add_control(selectcontrol(self.section, 'rank', items, self.section.rank, 'Position'))
+        f.add_control(control(self.section, 'submit', 'submit'))
         return '<h2>Reorder section "%s"</h2>%s' % (self.section.path, unicode(f))
 
     def action_manage(self):
@@ -128,7 +128,7 @@ class Navigation(content.Content):
         return list_ul(self.section.path, hierarchy, classes)
 
     def view_manage(self, params=None):
-        return template.snippet('nav-manage', { 'content': self })
+        return template.snippet('navigation-manage', { 'content': self })
 
 def get_values(request):
         path = request.get('path').replace('/', '-').replace(' ', '-').lower()
@@ -143,19 +143,19 @@ def get_values(request):
         new_window = request.get('new_window') != ''
         return path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window
 
-def get_form(action, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
-    f = form(action)
-    f.add_control(control('text', 'path', path, 'Path'))
-    f.add_control(control('text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
-    f.add_control(control('text', 'name', name if name else '', 'Name', 30))
-    f.add_control(control('text', 'title', title if title else '', 'Title', 60))
-    f.add_control(textareacontrol('keywords', keywords if keywords else '', 'Keywords', 60, 5))
-    f.add_control(textareacontrol('description', description if description else '', 'Description', 60, 5))
-    f.add_control(checkboxcontrol('is_private', is_private, 'Is private'))
-    if not is_default: f.add_control(checkboxcontrol('is_default', is_default, 'Is default'))
-    f.add_control(control('text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
-    f.add_control(checkboxcontrol('new_window', new_window, 'New window'))
-    f.add_control(control('submit', 'submit'))
+def get_form(section, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
+    f = form(section, section.full_path)
+    f.add_control(control(section, 'text', 'path', path, 'Path'))
+    f.add_control(control(section, 'text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
+    f.add_control(control(section, 'text', 'name', name if name else '', 'Name', 30))
+    f.add_control(control(section, 'text', 'title', title if title else '', 'Title', 60))
+    f.add_control(textareacontrol(section, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
+    f.add_control(textareacontrol(section, 'description', description if description else '', 'Description', 60, 5))
+    f.add_control(checkboxcontrol(section, 'is_private', is_private, 'Is private'))
+    if not is_default: f.add_control(checkboxcontrol(section, 'is_default', is_default, 'Is default'))
+    f.add_control(control(section, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
+    f.add_control(checkboxcontrol(section, 'new_window', new_window, 'New window'))
+    f.add_control(control(section, 'submit', 'submit'))
     return unicode(f)
 
 def set_ancestry(path, items):

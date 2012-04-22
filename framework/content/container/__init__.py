@@ -75,11 +75,11 @@ class Container(content.Content):
                     raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
                 else:
                     ret += '<div class="status progress">Selected namespace already exists, continue to add a view to this existing content</div>'
-                    f = form(self.section.full_path)
-                    f.add_control(control('hidden', 'content_view', content_view))
-                    f.add_control(control('hidden', 'namespace', namespace))
-                    f.add_control(control('hidden', 'confirm', '1'))
-                    f.add_control(control('submit', 'submit', 'Confirm'))
+                    f = form(self.section, self.section.full_path)
+                    f.add_control(control(self.section, 'hidden', 'content_view', content_view))
+                    f.add_control(control(self.section, 'hidden', 'namespace', namespace))
+                    f.add_control(control(self.section, 'hidden', 'confirm', '1'))
+                    f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
                     ret += unicode(f)
                     return ret
         elif self.section.handler.request.get('submit'):
@@ -99,10 +99,10 @@ class Container(content.Content):
                     views.append([content_type + '.' + v[0], v[1]])
             if views:
                 content_views.append([content_type, views])
-        f = form(self.section.full_path)
-        f.add_control(selectcontrol('content_view', content_views, content_view, 'Content'))
-        f.add_control(control('text', 'namespace', namespace, 'Namespace'))
-        f.add_control(control('submit', 'submit', 'Submit'))
+        f = form(self.section, self.section.full_path)
+        f.add_control(selectcontrol(self.section, 'content_view', content_views, content_view, 'Content'))
+        f.add_control(control(self.section, 'text', 'namespace', namespace, 'Namespace'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         ret += unicode(f)
         return ret
 
@@ -126,8 +126,8 @@ class Container(content.Content):
             ret += '<div class="status warning">Are you sure you wish to delete content "%s" and all associated data?</div>' % self.content_namespaces[rank]
         else:
             ret += '<div class="status warning">Are you sure you wish to delete this view for content "%s"?</div>' % self.content_namespaces[rank]
-        f = form(self.section.full_path)
-        f.add_control(control('submit', 'submit', 'Confirm'))
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
         ret += unicode(f)
         return ret
 
@@ -144,12 +144,12 @@ class Container(content.Content):
             self.content_views.insert(new_rank, self.content_views.pop(rank))
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-        f = form(self.section.full_path)
+        f = form(self.section, self.section.full_path)
         ranks = []
         for i in range(len(self.content_namespaces)):
             ranks.append([i, i])
-        f.add_control(selectcontrol('new_rank', ranks, rank, 'Rank'))
-        f.add_control(control('submit', 'submit', 'Submit'))
+        f.add_control(selectcontrol(self.section, 'new_rank', ranks, rank, 'Rank'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         ret += unicode(f)
         return ret
 
