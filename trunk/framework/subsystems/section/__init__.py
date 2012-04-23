@@ -42,8 +42,8 @@ class Section(db.Model):
     parent_path = db.StringProperty()
     title = db.StringProperty()
     name = db.StringProperty()
-    keywords = db.StringProperty()
-    description = db.StringProperty()
+    keywords = db.TextProperty()
+    description = db.TextProperty()
     rank = db.IntegerProperty(default = 0)
     is_private = db.BooleanProperty(default=False)
     is_default = db.BooleanProperty(default=False)
@@ -218,24 +218,46 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
     parent_path = parent_path.replace('/', '-').replace(' ', '-').strip().lower() if parent_path else None
 
     if old.is_default:
-        is_default=True # Cannot change the default page except if another page is promoted
+        # Cannot change the default page except if another page is promoted
+        is_default = True
     elif not old.is_default and is_default:
         old_default = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
         if old_default.path != old.path:
-            old_default.is_default=False
+            old_default.is_default = False
             old_default.put()
 
+    can_path_exist(path, parent_path, old.path)
+
     if old.path != path:
-        can_path_exist(path, parent_path, old.path)
+
         for child in Section.gql("WHERE parent_path=:1", old.path):
             child.parent_path = path
             child.put()
+
+        for content_type in content.get_all_content_types():
+            m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+            concrete = getattr(m, content_type)
+            items = concrete.gql("WHERE section_path=:1", old.path)
+            for i in items:
+                # Have to remove and reenter content since the key will change
+                n = i.clone(parent=content.content_key(content_type, path, i.namespace), section_path=path)
+                i.delete()
+                n.put()
+
+            if content_type == 'Container':
+                items = concrete.gql("") # This is pretty inefficient but then so is doing WHERE old.path IN content_paths and I believe we avoid subquery limitations
+                for i in items:
+                    if old.path in i.content_paths:
+                        i.content_paths = [path if x == old.path else x for x in i.content_paths]
+                        i.update()
+
         new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()
         new.put()
         cache.delete(CACHE_KEY)
         return new
-    elif old.parent_path != parent_path and can_path_exist(path, parent_path, old.path):
+    elif old.parent_path != parent_path:
+
         max_rank = 0
         for item, _ in get_children(parent_path):
             if item['rank'] <= max_rank: max_rank = item['rank'] + 1

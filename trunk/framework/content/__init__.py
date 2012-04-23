@@ -90,6 +90,12 @@ class Content(db.Model):
         self.on_remove()
         self.delete()
 
+    def clone(self, **extra_args):
+        klass = self.__class__
+        props = dict((k, v.__get__(self, klass)) for k, v in klass.properties().iteritems())
+        props.update(extra_args)
+        return klass(**props)
+
     def unique_identifier(self):
         return self.section.path + '-' + self.__class__.__name__.lower() + (('-' + self.container_namespace if self.container_namespace else '')) + '-' + self.namespace + '-' + str(datetime.datetime.now().microsecond)
 
