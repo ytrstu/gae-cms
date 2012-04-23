@@ -17,13 +17,15 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import random
+
 from google.appengine.ext import db
 
 from django.utils.html import strip_tags
 
 from framework import content
 from framework.subsystems import template
-from framework.subsystems.forms import form, control, textareacontrol
+from framework.subsystems.forms import form, control, selectcontrol, textareacontrol
 
 class Text(content.Content):
 
@@ -34,50 +36,93 @@ class Text(content.Content):
     author = 'Imran Somji'
 
     actions = [
+        ['add', 'Add', False],
         ['edit', 'Edit', True],
+        ['reorder', 'Reorder', False],
+        ['delete', 'Delete', False],
     ]
     views = [
-        ['default', 'Default - multiple items are tabbed', True],
+        ['default', 'Default - Multiple items in tabs', True],
+        ['random', 'Random', True],
     ]
 
-    def action_edit(self):
+    def action_add(self):
         rank = int(self.section.path_params[0]) if self.section.path_params else 0
         if rank > len(self.titles) or rank < 0:
             raise Exception('BadRequest', 'Text item out of range')
-        if self.section.handler.request.get('submit'):
-            if rank == len(self.titles):
-                self.titles.append(self.section.handler.request.get('title'))
-                self.bodies.append(db.Text(self.section.handler.request.get('body')))
-            else:
-                self.titles[rank] = self.section.handler.request.get('title')
-                self.bodies[rank] = db.Text(self.section.handler.request.get('body'))
+        elif self.section.handler.request.get('submit'):
+            self.titles.insert(rank, self.section.handler.request.get('title'))
+            self.bodies.insert(rank, db.Text(self.section.handler.request.get('body')))
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-        elif not self.section.path_params and len(self.titles) > 0:
-            self.section.css.append('text-edit.css')
-            ret = '<h2>Select item</h2>'
+        return '<h2>Add text</h2>' + get_form(self.section, '', '')
+
+    def action_edit(self):
+        if not self.titles: return self.action_add()
+        rank = int(self.section.path_params[0]) if self.section.path_params else 0
+        if rank > len(self.titles) - 1 or rank < 0:
+            raise Exception('BadRequest', 'Text item out of range')
+        elif self.section.handler.request.get('submit'):
+            self.titles[rank] = self.section.handler.request.get('title')
+            self.bodies[rank] = db.Text(self.section.handler.request.get('body'))
+            self.update()
+            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+        elif not self.section.path_params and self.titles:
+            self.items = []
             for i in range(len(self.titles)):
-                ret += '<div class="text edit item">'
-                ret += '<a class="edit item" href="' + self.section.full_path + '/' + str(i) + '">Edit</a>'
-                if len(self.titles) > 1:
-                    ret += '<a class="reorder item" href="' + self.section.full_path + '/' + str(i) + '">Reorder</a>'
-                ret += '<a class="delete item" href="' + self.section.full_path + '/' + str(i) + '">Delete</a>'
-                if self.titles[i]: ret += '<h3>' + self.titles[i] + '</h3>'
-                ret += self.bodies[i] + '</div>'
-            ret += '<a class="add item" href="' + self.section.full_path + '/' + str(len(self.titles)) + '">Add</a>'
-            return ret
-        title = self.titles[rank] if len(self.titles) > rank else ''
-        body = self.bodies[rank] if len(self.bodies) > rank else ''
-        ret = '<h2>Edit text</h2>'
+                self.items.append([self.titles[i], self.bodies[i]])
+            return template.snippet('text-edit-multiple', { 'content': self })
+        return '<h2>Edit text</h2>' + get_form(self.section, self.titles[rank], self.bodies[rank])
+
+    def action_reorder(self):
+        rank = int(self.section.path_params[0]) if self.section.path_params else 0
+        if rank > len(self.titles) - 1 or rank < 0:
+            raise Exception('BadRequest', 'Text item out of range')
+        if self.section.handler.request.get('submit'):
+            new_rank = int(self.section.handler.request.get('new_rank'))
+            if new_rank > len(self.titles) - 1 or rank < 0:
+                raise Exception('BadRequest', 'Reorder rank out of range')
+            self.titles.insert(new_rank, self.titles.pop(rank))
+            self.bodies.insert(new_rank, self.bodies.pop(rank))
+            self.update()
+            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         f = form(self.section, self.section.full_path)
-        f.add_control(control(self.section, 'text', 'title', title, 'Title', 60))
-        f.add_control(textareacontrol(self.section, 'body', body, 'Body', 100, 10, html=True))
-        f.add_control(control(self.section, 'submit', 'submit'))
-        ret += unicode(f)
-        return ret
+        ranks = []
+        for i in range(len(self.titles)):
+            ranks.append([i, i])
+        f.add_control(selectcontrol(self.section, 'new_rank', ranks, rank, 'Rank'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
+        return '<h2>Reorder text</h2>' + unicode(f)
+
+    def action_delete(self):
+        rank = int(self.section.path_params[0]) if self.section.path_params else 0
+        if rank > len(self.titles) - 1 or rank < 0:
+            raise Exception('BadRequest', 'Text item out of range')
+        if self.section.handler.request.get('submit'):
+            self.titles.pop(rank)
+            self.bodies.pop(rank)
+            self.update()
+            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
+        return '<div class="status warning">Are you sure you wish to delete item %d?</div>%s' % (rank + 1, unicode(f))
 
     def view_default(self, params):
         self.items = []
         for i in range(len(self.titles)):
             self.items.append([self.titles[i], self.bodies[i]])
         return template.snippet('text-default', { 'content': self }) if self.items else ''
+
+    def view_random(self, params):
+        if not self.titles: return ''
+        i = random.randint(0, len(self.titles) - 1)
+        ret = '<h2>%s</h2>' % self.titles[i] if self.titles[i] else ''
+        ret += self.bodies[i]
+        return ret
+
+def get_form(section, title, body):
+    f = form(section, section.full_path)
+    f.add_control(control(section, 'text', 'title', title, 'Title', 60))
+    f.add_control(textareacontrol(section, 'body', body, 'Body', 100, 10, html=True))
+    f.add_control(control(section, 'submit', 'submit'))
+    return unicode(f)

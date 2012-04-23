@@ -107,7 +107,6 @@ class Container(content.Content):
         return ret
 
     def action_delete(self):
-        ret = '<h2>Delete content</h2>'
         rank = int(self.section.path_params[0])
         item = content.get(self.content_types[rank], self.content_paths[rank] if self.content_paths[rank] else None, self.content_namespaces[rank])
         is_original_content = item and item.container_namespace == self.namespace and item.section_path == self.section_path and self.content_namespaces.count(item.namespace) == 1
@@ -123,18 +122,16 @@ class Container(content.Content):
             self.update()
             raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
         if is_original_content:
-            ret += '<div class="status warning">Are you sure you wish to delete content "%s" and all associated data?</div>' % self.content_namespaces[rank]
+            message = '<div class="status warning">Are you sure you wish to delete content "%s" and all associated data?</div>' % self.content_namespaces[rank]
         else:
-            ret += '<div class="status warning">Are you sure you wish to delete this view for content "%s"?</div>' % self.content_namespaces[rank]
+            message = '<div class="status warning">Are you sure you wish to delete this view for content "%s"?</div>' % self.content_namespaces[rank]
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
-        ret += unicode(f)
-        return ret
+        return '<h2>Delete content</h2>%s%s' % (message, unicode(f))
 
     def action_reorder(self):
         if not len(self.content_namespaces) > 1:
             raise Exception('BadRequest', 'Cannot reorder content without multiple content contained')
-        ret = '<h2>Reorder content</h2>'
         rank = int(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
             new_rank = int(self.section.handler.request.get('new_rank'))
@@ -150,8 +147,7 @@ class Container(content.Content):
             ranks.append([i, i])
         f.add_control(selectcontrol(self.section, 'new_rank', ranks, rank, 'Rank'))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
-        ret += unicode(f)
-        return ret
+        return '<h2>Reorder content</h2>%s' % unicode(f)
 
     def view_default(self, params):
         ret = ''
