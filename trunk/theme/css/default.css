@@ -32,16 +32,7 @@ a {
 	color: #444;
 	margin: 0;
 }
-.hd {
-	background: url(/theme/images/sprite.png) 0 12px no-repeat;
-	margin: 0.5em 0.95em 0 0.95em;
-}
-.bd {
-	margin: 0.8em;
-}
-.ft {
-	text-align: center;
-}
+
 .status {
 	margin: 1em 0;
 	padding: 1em;
