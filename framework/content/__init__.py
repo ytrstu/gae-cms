@@ -79,18 +79,24 @@ class Content(db.Model):
         cache.delete(CACHE_KEY_PREPEND + str(content_key(self.__class__.__name__, self.section_path, self.namespace)))
         return self.put()
 
-    '''
-    Subclasses should overwrite this to perform any cleanup required before removing
-    '''
     def on_remove(self):
+        '''
+        Subclasses should overwrite this to perform any cleanup required before removing
+        '''
         pass
 
     def remove(self):
+        '''
+        Calling this method makes sure cache is cleaned up as well as any subclass level cleanup before deleting
+        '''
         cache.delete(CACHE_KEY_PREPEND + str(content_key(self.__class__.__name__, self.section_path, self.namespace)))
         self.on_remove()
         self.delete()
 
     def clone(self, **extra_args):
+        '''
+        Adapted from: http://stackoverflow.com/a/2712401
+        '''
         klass = self.__class__
         props = dict((k, v.__get__(self, klass)) for k, v in klass.properties().iteritems())
         props.update(extra_args)

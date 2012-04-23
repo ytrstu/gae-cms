@@ -245,7 +245,8 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
                 n.put()
 
             if content_type == 'Container':
-                items = concrete.gql("") # This is pretty inefficient but then so is doing WHERE old.path IN content_paths and I believe we avoid subquery limitations
+                # The following line is pretty inefficient but then so is doing "WHERE old.path IN content_paths" and I believe we avoid subquery limitations
+                items = concrete.gql("")
                 for i in items:
                     if old.path in i.content_paths:
                         i.content_paths = [path if x == old.path else x for x in i.content_paths]
