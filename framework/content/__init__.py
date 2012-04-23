@@ -51,7 +51,7 @@ class Content(db.Model):
         self.section = section
         return self
 
-    def get_manage_links(self, container_namespace=None, rank=None, total_ranks=None):
+    def get_manage_links(self, view, container_namespace=None, rank=None, total_ranks=None):
         allowed = []
         for action in self.actions:
             if action[2] and permission.perform_action(self, self.section.path, action[0]):
@@ -60,8 +60,13 @@ class Content(db.Model):
             pass
         elif len(allowed) == 0:
             return ''
+        for v in self.views:
+            if v[0] == view:
+                view = v[1]
+                break
         params = {
                   'content': self,
+                  'view': view,
                   'can_manage': permission.is_admin(self.section.path),
                   'container_namespace': container_namespace,
                   'rank': rank,
@@ -91,8 +96,8 @@ class Content(db.Model):
     def view(self, view, params=None, container_namespace=None, rank=None, total_ranks=None):
         if not permission.view_content(self, self.section, view):
             raise Exception('You do not have permission to view this content')
-        view = getattr(self, 'view_' + view)(params)
-        return self.get_manage_links(container_namespace, rank, total_ranks) + view
+        view_str = getattr(self, 'view_' + view)(params)
+        return self.get_manage_links(view, container_namespace, rank, total_ranks) + view_str
 
 def get_else_create(section_path, content_type, namespace, container_namespace=None):
     item = get(content_type, section_path, namespace)
