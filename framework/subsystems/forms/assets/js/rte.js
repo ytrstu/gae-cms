@@ -76,7 +76,9 @@ YUI().use('yui2-editor', 'node', function(Y) {
 	            }, this, true);
 	            
 	            YAHOO.util.Event.on(window, 'load', YAHOO.util.Event.on(this.get('parentNode'), 'submit', function(ev, editor) {
-				    editor.cleanHTML();
+	            	if(state == 'off') {
+					    editor.cleanHTML();
+	            	}
 				    return true;
 				}, this, true));
 
