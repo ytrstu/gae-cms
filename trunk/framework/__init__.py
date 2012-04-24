@@ -1,6 +1,9 @@
 """
-GAE-Python-CMS: Python-based CMS designed for Google AppEngine
-Copyright (C) 2012  Imran Somji
+@org: GAE-CMS.COM
+@description: Python-based CMS designed for Google App Engine
+@(c): gae-cms.com 2012
+@author: Imran Somji
+@license: GNU GPL v2
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
