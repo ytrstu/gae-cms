@@ -63,6 +63,11 @@ def joinby(value, arg):
     return arg.join(value)
 
 @register.filter
+def bodyclass(section, args):
+    [section.classes.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
+
+@register.filter
 def yuicss(section, args):
     [section.yuicss.append(x.strip('/ ')) for x in args.split(',')]
     return ''
