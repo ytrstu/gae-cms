@@ -41,7 +41,12 @@ def html(section, main=''):
         'section': section,
         'main': main,
     }
-    html = render_to_string('Default.html', params)
+
+    html = render_to_string('outer.html', params)
+    body = render_to_string('default-body.snip', params).strip()
+    html = html.replace('<body></body>',
+                        '<body class="%s">%s</body>' % (' '.join(section.classes), body),
+                        1)
 
     section.css = section.css + section.themecss
     section.js = section.js + section.themejs
@@ -59,14 +64,14 @@ def html(section, main=''):
     if section.yuijs: section.yuijs = '___yui___' + section.yuijs
     if section.js: section.js = '___local___' + section.js
 
-    if section.yuicss or section.css:
-        linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + '.css">'
-        html = html.replace('</head>', '\t' + linkrel + '\n\t</head>', 1)
+    linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + '.css">' if section.yuicss or section.css else ''
+    script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + '.js'}) if section.yuijs or section.js else ''
+    analytics = snippet('analytics', {'GOOGLE_ANALYTICS_UA': settings.CONSTANTS['GOOGLE_ANALYTICS_UA']}) if settings.CONSTANTS['GOOGLE_ANALYTICS_UA'] else ''
 
-    if section.yuijs or section.js:
-        script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + '.js'})
-        #script = '<script type="text/javascript" src="/' + section.yuijs + section.js + '.js"></script>'
-        html = html.replace('</head>', '\t' + script.replace('\t', '').replace('\n', '') + '\n\t</head>', 1)
+    header_includes = linkrel + script.replace('\t', '').replace('\n', '') + analytics.replace('\t', '').replace('\n', '')
+
+    if header_includes:
+        html = html.replace('</head>', '\t' + header_includes + '\n\t</head>', 1)
 
     return html.strip()
 

@@ -8,6 +8,13 @@ h1, h2, h3, h4, h5, h6 {
 a {
 	color: #0000CC;
 }
+blockquote {
+	background-color: #E5ECF9;
+	padding: 0.5em;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+}
 
 /* Header elements */
 
@@ -62,14 +69,4 @@ a {
 }
 .mn {
 	width: 100%;
-}
-
-/* Extras */
-
-.sd .content.text.single {
-	background-color: #E5ECF9;
-	padding: 0.5em;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
 }

@@ -34,6 +34,7 @@ for d in utils.dir_search(['templates']):
 
 CONSTANTS = {
              'VERSION': os.environ['CURRENT_VERSION_ID'],
+             'GOOGLE_ANALYTICS_UA': 'UA-31160226-1',
              'SITE_HEADER': 'gae-cms',
              'SITE_SUB_HEADER': 'Python-based Content Management System for Google App Engine',
              }
