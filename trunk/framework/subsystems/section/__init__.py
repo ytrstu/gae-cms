@@ -104,7 +104,7 @@ def get_section(handler, full_path):
 
     section.yuicss = []
     section.themecss = []
-    section.css = []
+    section.css = ['core.css']
     section.yuijs = []
     section.themejs = []
     section.js = []
@@ -252,13 +252,17 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
                         i.content_paths = [path if x == old.path else x for x in i.content_paths]
                         i.update()
 
-        new = Section(parent=section_key(path), path=path, parent_path=parent_path, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
+        new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()
         new.put()
         cache.delete(CACHE_KEY)
         return new
     elif old.parent_path != parent_path:
 
+        # Rerank old's siblings to account for its removal by pushing it to the end of the old sibling list
+        update_section_rank(old, len(get_siblings(old.path)))
+
+        # Make it the last of its new siblings
         max_rank = 0
         for item, _ in get_children(parent_path):
             if item['rank'] <= max_rank: max_rank = item['rank'] + 1

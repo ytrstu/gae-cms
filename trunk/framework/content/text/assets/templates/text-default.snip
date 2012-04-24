@@ -1,6 +1,6 @@
 {% if content.items|length == 1 %}
 
-	<div class="content text default">
+	<div class="content text single default">
 		{% if content.items.0.0 %}<h2>{{ content.items.0.0|safe }}</h2>{% endif %}
 		{{ content.items.0.1|safe }}
 	</div>
@@ -15,7 +15,7 @@
 
 	{% captureas unique %}{{ content.unique_identifier }}-text-tabs{% endcaptureas %}
 
-	<div id="{{ unique }}" class="content text default tabs">
+	<div id="{{ unique }}" class="content text tabs default">
 	    <ul>
 	        {% for item in content.items %}
 	        	<li><a href="#{{ unique }}-i{{ forloop.counter }}">{% if item.0 %}{{ item.0|safe }}{% else %}-{% endif %}</a></li>

@@ -1,3 +1,5 @@
+/* Base styles */
+
 h1, h2, h3, h4, h5, h6 {
 	padding: 0.2em;
 	background-color: #EBEFF9;
@@ -6,6 +8,9 @@ h1, h2, h3, h4, h5, h6 {
 a {
 	color: #0000CC;
 }
+
+/* Header elements */
+
 .user-bar {
 	text-align: right;
 	border-bottom: 1px solid #C9D7F1;
@@ -33,32 +38,38 @@ a {
 	margin: 0;
 }
 
-.status {
-	margin: 1em 0;
-	padding: 1em;
+/* Header/footer */
+
+.hd {
+	background: url(/theme/images/sprite.png) 0 12px no-repeat;
+	margin: 0.5em 0.95em 0 0.95em;
+}
+.ft {
 	text-align: center;
-	font-weight: bold;
+	padding: 0 0.8em;
 }
-.error {
-	color: #B51800;
-	border: 2px solid #B51800;
-	background-color: #FFA496;
+
+/* Main layout: http://yuiblog.com/sandbox/yui/3.2.0pr1/examples/cssgrids/cssgrids-fluid.html */
+
+.bd {
+	margin: 0.8em;
+    padding-left: 250px; /* "left col" width */ 
 }
-.progress {
-	color: #216600;
-	border: 2px solid #216600;
-	background-color: #D6FFC1;
+.sd {
+    margin-left: -250px; /* "left col" width */
+    width: 240px;
+    margin-right: 10px;
 }
-.warning {
-	color: #A86400;
-	border: 2px solid #A86400;
-	background-color: #FFEB9E;
+.mn {
+	width: 100%;
 }
-.traceback {
-	text-align: left;
-	color: black;
-	background-color: #FFFADB;
-	padding: 1em;
-	margin: 1em 0;
-	border: 1px solid black;
+
+/* Extras */
+
+.sd .content.text.single {
+	background-color: #E5ECF9;
+	padding: 0.5em;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 }
