@@ -118,7 +118,7 @@ class Text(content.Content):
         i = random.randint(0, len(self.titles) - 1)
         ret = '<h2>%s</h2>' % self.titles[i] if self.titles[i] else ''
         ret += self.bodies[i]
-        return ret
+        return '<div class="content text single random">%s</div>' % ret
 
 def get_form(section, title, body):
     f = form(section, section.full_path)
