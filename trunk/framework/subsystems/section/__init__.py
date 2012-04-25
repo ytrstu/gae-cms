@@ -26,6 +26,7 @@ from google.appengine.ext import db
 from google.appengine.api import users
 
 from framework import content
+from framework.content.configuration import Configuration
 from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems import permission
@@ -114,6 +115,16 @@ def get_section(handler, full_path):
     section.logout_url = users.create_logout_url('/' + section.path if not section.is_default else '')
     section.login_url = users.create_login_url('/' + section.path if not section.is_default else '')
     section.has_siblings = len(get_siblings(section.path)) > 1
+
+    section.configuration = content.get('Configuration', None, 'configuration')
+    if not section.configuration:
+        section.configuration = Configuration(parent=content.content_key('Configuration', None, 'configuration'),
+                                              namespace = 'configuration',
+                                              SITE_HEADER = 'gae-cms',
+                                              SITE_SUB_HEADER = 'Python-based Content Management System for Google App Engine',
+                                              )
+        section.configuration.put()
+    section.configuration = vars(section.configuration)['_entity']
 
     return section
 

@@ -20,8 +20,6 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
-
 from framework.subsystems import utils
 
 DEBUG = True
@@ -31,10 +29,3 @@ INSTALLED_APPS = ('framework',)
 TEMPLATE_DIRS = []
 for d in utils.dir_search(['templates']):
     TEMPLATE_DIRS.append(d)
-
-CONSTANTS = {
-             'VERSION': os.environ['CURRENT_VERSION_ID'],
-             'GOOGLE_ANALYTICS_UA': 'UA-4548827-2',
-             'SITE_HEADER': 'gae-cms',
-             'SITE_SUB_HEADER': 'Python-based Content Management System for Google App Engine',
-             }

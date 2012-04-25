@@ -20,21 +20,22 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os
+
 from google.appengine.api import memcache
-import settings
 
 """
 We wrap memcache to ensure new keys on each deployment
 """
 
 def get(key):
-    return memcache.Client().get(settings.CONSTANTS['VERSION'] + '_' + key)
+    return memcache.Client().get(os.environ['CURRENT_VERSION_ID'] + '_' + key)
 
 def set(key, val):
-    return memcache.Client().set(settings.CONSTANTS['VERSION'] + '_' + key, val)
+    return memcache.Client().set(os.environ['CURRENT_VERSION_ID'] + '_' + key, val)
 
 def delete(key):
-    return memcache.Client().delete(settings.CONSTANTS['VERSION'] + '_' + key)
+    return memcache.Client().delete(os.environ['CURRENT_VERSION_ID'] + '_' + key)
 
 def flush_all():
     return memcache.Client().flush_all()

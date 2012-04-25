@@ -24,7 +24,6 @@ import os
 
 from google.appengine.api import users
 
-import settings
 from framework.subsystems import permission
 from framework.subsystems import utils
 
@@ -35,7 +34,7 @@ from django.template.loader import render_to_string
 
 def html(section, main=''):
     params = {
-        'CONSTANTS': settings.CONSTANTS,
+        'VERSION': os.environ['CURRENT_VERSION_ID'],
         'user': users.get_current_user(),
         'is_admin': permission.is_admin(section.path),
         'section': section,
@@ -66,7 +65,7 @@ def html(section, main=''):
 
     linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + '.css">' if section.yuicss or section.css else ''
     script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + '.js'}) if section.yuijs or section.js else ''
-    analytics = snippet('analytics', {'GOOGLE_ANALYTICS_UA': settings.CONSTANTS['GOOGLE_ANALYTICS_UA']}) if settings.CONSTANTS['GOOGLE_ANALYTICS_UA'] else ''
+    analytics = snippet('analytics', {'GOOGLE_ANALYTICS_UA': section.configuration['GOOGLE_ANALYTICS_UA']}) if section.configuration['GOOGLE_ANALYTICS_UA'] else ''
 
     header_includes = linkrel + script.replace('\t', '').replace('\n', '') + analytics.replace('\t', '').replace('\n', '')
 
