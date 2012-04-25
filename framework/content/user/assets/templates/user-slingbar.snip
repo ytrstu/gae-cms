@@ -22,7 +22,10 @@
                     </div>
                 </div>
             </li>
-            {% if is_admin %}<li>{{ content.section|view:"GLOBAL, navigation, Navigation, manage"|safe }}</li>{% endif %}
+            {% if is_admin %}
+            	<li>{{ content.section|view:"GLOBAL, navigation, Navigation, manage"|safe }}</li>
+            	<li>{{ content.section|view:"GLOBAL, configuration, Configuration, manage"|safe }}</li>
+            {% endif %}
         </ul>
     </div>
 </div>
