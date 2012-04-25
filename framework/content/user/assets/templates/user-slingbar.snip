@@ -23,8 +23,9 @@
                 </div>
             </li>
             {% if is_admin %}
-            	<li>{{ content.section|view:"GLOBAL, navigation, Navigation, manage"|safe }}</li>
-            	<li>{{ content.section|view:"GLOBAL, configuration, Configuration, manage"|safe }}</li>
+            	<li>{{ content.section|view:"GLOBAL, navigation, Navigation, menu"|safe }}</li>
+            	<li>{{ content.section|view:"GLOBAL, configuration, Configuration, menu"|safe }}</li>
+            	<li>{{ content.section|view:"GLOBAL, files, Files, menu"|safe }}</li>
             {% endif %}
         </ul>
     </div>

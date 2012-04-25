@@ -39,7 +39,7 @@ class Configuration(content.Content):
         ['edit', 'Edit', False],
     ]
     views = [
-        ['manage', 'Manage configuration', False],
+        ['menu', 'Configuration menu', False],
     ]
 
     def action_edit(self):
@@ -56,5 +56,5 @@ class Configuration(content.Content):
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '<h2>Edit configuration</h2>%s' % unicode(f)
 
-    def view_manage(self, params=None):
-        return template.snippet('configuration-manage', { 'content': self })
+    def view_menu(self, params=None):
+        return template.snippet('configuration-menu', { 'content': self })

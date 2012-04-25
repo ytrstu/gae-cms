@@ -37,7 +37,7 @@ class Navigation(content.Content):
         ['manage', 'Manage', False],
     ]
     views = [
-        ['manage', 'Manage navigation', False],
+        ['menu', 'Navigation menu', False],
         ['nth_level_only', 'nth level without any children', True],
         ['expanding_hierarchy', 'Entire hierarchy with only the trail to the current section and its children expanded', True],
     ]
@@ -129,8 +129,8 @@ class Navigation(content.Content):
         self.section.css.append('nav-expanding-hierarchy.css')
         return list_ul(self.section.path, hierarchy, classes)
 
-    def view_manage(self, params=None):
-        return template.snippet('navigation-manage', { 'content': self })
+    def view_menu(self, params=None):
+        return template.snippet('navigation-menu', { 'content': self })
 
 def get_values(request):
         path = request.get('path').replace('/', '-').replace(' ', '-').lower()
