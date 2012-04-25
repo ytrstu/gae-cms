@@ -21,7 +21,6 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import traceback
-
 import webapp2
 
 from framework.subsystems import section
@@ -37,6 +36,10 @@ class Router(webapp2.RequestHandler):
         except Exception as inst:
             if inst[0] == 'Redirect':
                 return self.redirect(str(inst[1]))
+            elif inst[0] == 'SendFileBlob':
+                response = webapp2.Response(inst[1].data)
+                if inst[1].content_type: response.content_type = str(inst[1].content_type)
+                return response
             elif inst[0] == 'NotFound':
                 err = 404
                 main = 'Page not found'

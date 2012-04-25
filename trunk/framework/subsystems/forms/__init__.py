@@ -28,13 +28,16 @@ class form:
         self.section = section
         self.action = action
         self.controls = []
-        
+        self.is_multipart = False
+
     def add_control(self, control):
+        if control.is_multipart: self.is_multipart = True
         self.controls.append(control)
-        
+
     def __unicode__(self):
         self.section.css.append('form.css')
-        out = '<form method="POST" action="' + self.action + '">'
+
+        out = '<form method="POST" action="%s"%s>' % (self.action, ' enctype="multipart/form-data"' if self.is_multipart else '')
         for c in self.controls:
             out += unicode(c)
         out += '</form>'
@@ -50,6 +53,7 @@ class control:
         self.label = label
         self.width = width
         self.length = length
+        self.is_multipart = itype == 'file'
 
     def __unicode__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
