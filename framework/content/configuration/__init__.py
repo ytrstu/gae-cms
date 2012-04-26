@@ -23,8 +23,11 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from google.appengine.ext import db
 
 from framework import content
+from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
+
+ROBOTS_TXT_CACHE_KEY = 'ROBOTS_TXT_FILE'
 
 class Configuration(content.Content):
 
@@ -49,6 +52,7 @@ class Configuration(content.Content):
             self.SITE_SUB_HEADER = self.section.handler.request.get('SITE_SUB_HEADER')
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
+            cache.delete(ROBOTS_TXT_CACHE_KEY)
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
@@ -64,6 +68,10 @@ class Configuration(content.Content):
 
 def get_robots_txt():
     try:
-        return Configuration.gql("")[0].ROBOTS_TXT
+        item = cache.get(ROBOTS_TXT_CACHE_KEY)
+        if not item:
+            item = Configuration.gql("")[0].ROBOTS_TXT
+            cache.set(ROBOTS_TXT_CACHE_KEY, item)
+        return item
     except:
         return ''
