@@ -31,7 +31,8 @@ class form:
         self.is_multipart = False
 
     def add_control(self, control):
-        if control.is_multipart: self.is_multipart = True
+        if control.__class__.__name__ == 'control' and control.itype == 'file':
+            self.is_multipart = True
         self.controls.append(control)
 
     def __unicode__(self):
@@ -53,7 +54,6 @@ class control:
         self.label = label
         self.width = width
         self.length = length
-        self.is_multipart = itype == 'file'
 
     def __unicode__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''

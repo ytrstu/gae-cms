@@ -57,7 +57,7 @@ class Text(content.Content):
             self.titles.insert(rank, self.section.handler.request.get('title'))
             self.bodies.insert(rank, db.Text(self.section.handler.request.get('body')))
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         return '<h2>Add text</h2>' + get_form(self.section, '', '')
 
     def action_edit(self):
@@ -69,7 +69,7 @@ class Text(content.Content):
             self.titles[rank] = self.section.handler.request.get('title')
             self.bodies[rank] = db.Text(self.section.handler.request.get('body'))
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         elif not self.section.path_params and self.titles:
             self.items = []
             for i in range(len(self.titles)):
@@ -88,7 +88,7 @@ class Text(content.Content):
             self.titles.insert(new_rank, self.titles.pop(rank))
             self.bodies.insert(new_rank, self.bodies.pop(rank))
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         ranks = []
         for i in range(len(self.titles)):
@@ -105,7 +105,7 @@ class Text(content.Content):
             self.titles.pop(rank)
             self.bodies.pop(rank)
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
         return '<div class="status warning">Are you sure you wish to delete item %d?</div>%s' % (rank + 1, unicode(f))

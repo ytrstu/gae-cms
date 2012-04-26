@@ -172,5 +172,24 @@ def get_all_content_types():
             content_types.append(name.title())
     return content_types
 
+def rename_section_paths(old, new):
+    for content_type in get_all_content_types():
+        m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+        concrete = getattr(m, content_type)
+        items = concrete.gql("WHERE section_path=:1", old)
+        for i in items:
+            # Have to remove and reenter content since the key will change
+            n = i.clone(parent=content_key(content_type, new, i.namespace), section_path=new)
+            i.delete()
+            n.put()
+
+        if content_type == 'Container':
+            # The following line is pretty inefficient but then so is doing "WHERE old path IN content_paths" and I believe we avoid subquery limitations
+            items = concrete.gql("")
+            for i in items:
+                if old in i.content_paths:
+                    i.content_paths = [new if x == old else x for x in i.content_paths]
+                    i.update()
+
 def content_key(content_type, section_path, namespace):
     return db.Key.from_path(content_type, ((section_path + '.') if section_path else '') + namespace)

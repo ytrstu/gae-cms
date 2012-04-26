@@ -97,6 +97,7 @@ def get_section(handler, full_path):
     section.handler = handler
 
     section.full_path = full_path
+    section.action_redirect_path = '/' + (path if not section.is_default else '')
     section.path_namespace = path_namespace
     section.path_action = path_action
     section.path_params = path_params
@@ -247,23 +248,7 @@ def update_section(old, path, parent_path, name, title, keywords, description, i
             child.parent_path = path
             child.put()
 
-        for content_type in content.get_all_content_types():
-            m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
-            concrete = getattr(m, content_type)
-            items = concrete.gql("WHERE section_path=:1", old.path)
-            for i in items:
-                # Have to remove and reenter content since the key will change
-                n = i.clone(parent=content.content_key(content_type, path, i.namespace), section_path=path)
-                i.delete()
-                n.put()
-
-            if content_type == 'Container':
-                # The following line is pretty inefficient but then so is doing "WHERE old.path IN content_paths" and I believe we avoid subquery limitations
-                items = concrete.gql("")
-                for i in items:
-                    if old.path in i.content_paths:
-                        i.content_paths = [path if x == old.path else x for x in i.content_paths]
-                        i.update()
+        content.rename_section_paths(old.path, path)
 
         new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()

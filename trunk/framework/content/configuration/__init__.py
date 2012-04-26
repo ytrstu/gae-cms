@@ -48,7 +48,7 @@ class Configuration(content.Content):
             self.SITE_SUB_HEADER = self.section.handler.request.get('SITE_SUB_HEADER')
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'SITE_HEADER', self.SITE_HEADER, 'Site header'))
         f.add_control(control(self.section, 'text', 'SITE_SUB_HEADER', self.SITE_SUB_HEADER, 'Site sub-header'))
