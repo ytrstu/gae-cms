@@ -31,7 +31,7 @@ import settings
 class Router(webapp2.RequestHandler):
     def get(self, path):
         if path == '/robots.txt':
-            return webapp2.Response(get_robots_txt())
+            return webapp2.Response(template.txt(get_robots_txt()))
         try:
             response = webapp2.Response(unicode(section.get_section(self, path)))
             response.headers['Connection'] = 'Keep-Alive'
