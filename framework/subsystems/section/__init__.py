@@ -35,7 +35,7 @@ import settings
 
 FIRST_RUN_HOME_PATH = 'home'
 FORBIDDEN_EXTENSIONS = ['css', 'js']
-FORBIDDEN_PATHS = ['favicon.ico']
+FORBIDDEN_PATHS = ['favicon.ico', 'robots.txt']
 MAIN_CONTAINER_NAMESPACE = 'main'
 CACHE_KEY = 'SECTION_HIERARCHY'
 

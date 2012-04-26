@@ -25,10 +25,13 @@ import webapp2
 
 from framework.subsystems import section
 from framework.subsystems import template
+from framework.content.configuration import get_robots_txt
 import settings
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
+        if path == '/robots.txt':
+            return webapp2.Response(get_robots_txt())
         try:
             response = webapp2.Response(unicode(section.get_section(self, path)))
             response.headers['Connection'] = 'Keep-Alive'

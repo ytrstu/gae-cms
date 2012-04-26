@@ -24,13 +24,14 @@ from google.appengine.ext import db
 
 from framework import content
 from framework.subsystems import template
-from framework.subsystems.forms import form, control
+from framework.subsystems.forms import form, control, textareacontrol
 
 class Configuration(content.Content):
 
     SITE_HEADER = db.StringProperty()
     SITE_SUB_HEADER = db.StringProperty()
     GOOGLE_ANALYTICS_UA = db.StringProperty()
+    ROBOTS_TXT = db.TextProperty()
 
     name = 'Configuration'
     author = 'Imran Somji'
@@ -47,14 +48,22 @@ class Configuration(content.Content):
             self.SITE_HEADER = self.section.handler.request.get('SITE_HEADER')
             self.SITE_SUB_HEADER = self.section.handler.request.get('SITE_SUB_HEADER')
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
+            self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
             self.update()
-            raise Exception('Redirect', self.action_redirect_path)
+            raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
-        f.add_control(control(self.section, 'text', 'SITE_HEADER', self.SITE_HEADER, 'Site header'))
-        f.add_control(control(self.section, 'text', 'SITE_SUB_HEADER', self.SITE_SUB_HEADER, 'Site sub-header'))
+        f.add_control(control(self.section, 'text', 'SITE_HEADER', self.SITE_HEADER, 'Site header', 50))
+        f.add_control(control(self.section, 'text', 'SITE_SUB_HEADER', self.SITE_SUB_HEADER, 'Site sub-header', 50))
         f.add_control(control(self.section, 'text', 'GOOGLE_ANALYTICS_UA', self.GOOGLE_ANALYTICS_UA, 'Google analytics UA'))
+        f.add_control(textareacontrol(self.section, 'ROBOTS_TXT', self.ROBOTS_TXT, 'robots.txt', 90, 5))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '<h2>Edit configuration</h2>%s' % unicode(f)
 
     def view_menu(self, params=None):
         return template.snippet('configuration-menu', { 'content': self })
+
+def get_robots_txt():
+    try:
+        return Configuration.gql("")[0].ROBOTS_TXT
+    except:
+        return ''
