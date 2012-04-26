@@ -75,7 +75,7 @@ class Container(content.Content):
                     self.content_views.insert(rank, view)
                     self.update()
                     ret += str(existing_content)
-                    raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+                    raise Exception('Redirect', self.section.action_redirect_path)
                 else:
                     ret += '<div class="status progress">Selected namespace already exists, continue to add a view to this existing content</div>'
                     f = form(self.section, self.section.full_path)
@@ -92,7 +92,7 @@ class Container(content.Content):
             self.content_namespaces.insert(rank, namespace)
             self.content_views.insert(rank, view)
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         content_views = [['', '']]
         for content_type in content.get_all_content_types():
             m = importlib.import_module('framework.content.' + content_type.lower())
@@ -123,7 +123,7 @@ class Container(content.Content):
             self.content_namespaces.pop(rank)
             self.content_views.pop(rank)
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         if is_original_content:
             message = '<div class="status warning">Are you sure you wish to delete content "%s" and all associated data?</div>' % self.content_namespaces[rank]
         else:
@@ -143,7 +143,7 @@ class Container(content.Content):
             self.content_namespaces.insert(new_rank, self.content_namespaces.pop(rank))
             self.content_views.insert(new_rank, self.content_views.pop(rank))
             self.update()
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         ranks = []
         for i in range(len(self.content_namespaces)):

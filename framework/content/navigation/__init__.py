@@ -22,6 +22,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from framework import content
 from framework.subsystems import section
+from framework.subsystems import permission
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
@@ -75,7 +76,7 @@ class Navigation(content.Content):
             new_rank = int(self.section.handler.request.get('rank'))
             if self.section.rank != new_rank:
                 section.update_section_rank(self.section, new_rank)
-            raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
+            raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         items = [[0, 'At the top']]
         adder = 1
@@ -130,7 +131,7 @@ class Navigation(content.Content):
         return list_ul(self.section.path, hierarchy, classes)
 
     def view_menu(self, params=None):
-        return template.snippet('navigation-menu', { 'content': self })
+        return template.snippet('navigation-menu', { 'content': self, 'is_admin': permission.is_admin(self.section.path) })
 
 def get_values(request):
         path = request.get('path').replace('/', '-').replace(' ', '-').lower()

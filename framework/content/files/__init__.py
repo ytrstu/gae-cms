@@ -32,8 +32,8 @@ CACHE_KEY_PREPEND = 'FILE_'
 
 class Files(content.Content):
 
-    filenames = db.StringListProperty()
     keys = db.StringListProperty()
+    filenames = db.StringListProperty()
 
     name = 'Files'
     author = 'Imran Somji'
@@ -41,24 +41,36 @@ class Files(content.Content):
     actions = [
         ['add', 'Add', False],
         ['get', 'Get', False],
+        ['delete', 'Delete', False],
+        ['manage', 'Manage', False],
     ]
     views = [
         ['menu', 'File menu', False],
     ]
 
+    def on_delete(self):
+        for i in range(len(self.filenames)):
+            # This can be done more efficently
+            data = self.get_file(self.filenames[i])
+            cache.delete(CACHE_KEY_PREPEND + self.keys[i])
+            data.delete()
+            del self.keys[i]
+            del self.filenames[i]
+        self.update()
+
     def action_add(self):
         ret = '<h2>Add file</h2>'
         if self.section.handler.request.get('submit'):
             filename = self.section.handler.request.POST['data'].filename.replace(' ', '_')
-            content_type = self.section.handler.request.POST['data'].type
-            data = db.Blob(self.section.handler.request.get('data'))
-            if filename not in self.filenames:
-                key = File(filename=filename, data=data, content_type=content_type).put()
-                self.filenames.append(filename)
+            if not self.get_file(filename):
+                content_type = self.section.handler.request.POST['data'].type
+                data = db.Blob(self.section.handler.request.get('data'))
+                key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
                 self.keys.append(str(key))
+                self.filenames.append(filename)
                 self.update()
-                raise Exception('Redirect', '/' + (self.section.path if not self.section.is_default else ''))
-            ret += '<div class="status error">A file with the same name already exists</div>'
+                raise Exception('Redirect', self.section.action_redirect_path)
+            ret += '<div class="status error">A file with the same name already exists for this section</div>'
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'file', 'data', label='Data'))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
@@ -68,13 +80,43 @@ class Files(content.Content):
         if not self.section.path_params or len(self.section.path_params) != 1:
             raise Exception('NotFound')
         filename = self.section.path_params[0]
-        data = cache.get(CACHE_KEY_PREPEND + filename)
+        data = self.get_file(filename)
         if not data:
-            i = self.filenames.index(filename)
-            if i < 0: raise Exception('NotFound')
-            data = File.gql("WHERE filename=:1 LIMIT 1", filename)[0]
-            cache.set(CACHE_KEY_PREPEND + filename, data)
+            raise Exception('NotFound')
         raise Exception('SendFileBlob', data)
+
+    def action_delete(self):
+        if not self.section.path_params or len(self.section.path_params) != 1:
+            raise Exception('NotFound')
+        filename = self.section.path_params[0]
+        if self.section.handler.request.get('submit'):
+            data = self.get_file(filename)
+            if not data:
+                raise Exception('NotFound')
+            index = self.filenames.index(filename)
+            cache.delete(CACHE_KEY_PREPEND + self.keys[index])
+            data.delete()
+            del self.keys[index]
+            del self.filenames[index]
+            self.update()
+            raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
+        return '<div class="status warning">Are you sure you wish to delete file "%s" from "%s"?</div>%s' % (filename, self.section.path, unicode(f))
+
+    def action_manage(self):
+        return template.snippet('files-manage', { 'content': self })
 
     def view_menu(self, params=None):
         return template.snippet('files-menu', { 'content': self })
+
+    def get_file(self, filename):
+        item = None
+        try:
+            key = self.keys[self.filenames.index(filename)]
+            item = cache.get(CACHE_KEY_PREPEND + key)
+            if not item:
+                item = File.get(key)
+                cache.set(CACHE_KEY_PREPEND + key, item)
+        finally:
+            return item
