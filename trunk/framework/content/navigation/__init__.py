@@ -35,6 +35,7 @@ class Navigation(content.Content):
         ['create', 'Create', False],
         ['edit', 'Edit', False],
         ['reorder', 'Reorder', False],
+        ['delete', 'Delete', False],
         ['manage', 'Manage', False],
     ]
     views = [
@@ -48,7 +49,7 @@ class Navigation(content.Content):
         if self.section.handler.request.get('submit'):
             path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
             try:
-                section.create_section(self.section.handler, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
+                section.create_section(path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
@@ -88,6 +89,18 @@ class Navigation(content.Content):
         f.add_control(selectcontrol(self.section, 'rank', items, self.section.rank, 'Position'))
         f.add_control(control(self.section, 'submit', 'submit'))
         return '<h2>Reorder section "%s"</h2>%s' % (self.section.path, unicode(f))
+
+    def action_delete(self):
+        if self.section.handler.request.get('submit'):
+            try:
+                section.delete_section(self.section)
+            except Exception as inst:
+                return '<div class="status error">%s</div>' %  unicode(inst[0])
+            else:
+                raise Exception('Redirect', '/')
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
+        return '<div class="status warning">Delete section "%s" and all containing original content?</div>%s' % (self.section.path, unicode(f))
 
     def action_manage(self):
         ret = '<h2>Manage sections</h2>'
@@ -197,9 +210,13 @@ def list_li(path, items, manage=False):
     return li
 
 def get_manage_links(item):
-    ret = '<a href="/' + item['path'] + '/navigation/edit" class="edit" title="Edit">[Edit</a><a href="/' + item['path'] + '/navigation/create" class="subsection" title="Create subsection">, Create subsection</a>'
+    ret = '<a href="/' + item['path'] + '/navigation/edit" class="edit" title="Edit">Edit</a><a href="/' + item['path'] + '/navigation/create" class="subsection" title="Create subsection">, Create subsection</a>'
     if len(section.get_siblings(item['path'])) > 1:
-        ret += '<a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder]</a>'
+        ret += '<a href="/' + item['path'] + '/navigation/reorder" class="reorder" title="Reorder">, Reorder</a>'
     else:
-        ret += '<span class="reorder-disabled" title="Not reorderable, has no siblings">, Not reorderable]</span>'
+        ret += '<span class="reorder-disabled" title="Not reorderable, has no siblings">, Not reorderable</span>'
+    if not item['is_default'] and not section.get_children(item['path']):
+        ret += '<a href="/' + item['path'] + '/navigation/delete" class="delete" title="Delete">, Delete]</a>'
+    else:
+        ret += '<span class="delete-disabled" title="Not deletable, either default or has children">, Not deletable]</span>'
     return ret

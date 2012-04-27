@@ -51,7 +51,7 @@ class Container(content.Content):
     def action_add(self):
         ret = '<h2>Add content</h2>'
         content_view = self.section.handler.request.get('content_view') if self.section.handler.request.get('content_view') else ''
-        namespace = self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').lower() if self.section.handler.request.get('namespace') else ''
+        namespace = self.section.handler.request.get('namespace').replace('/', '-').replace(' ', '-').replace('.', '-').lower() if self.section.handler.request.get('namespace') else ''
         if namespace:
             existing_content = content.get_by_namespace(namespace)
             existing_content_type = existing_content.__class__.__name__ if existing_content else None

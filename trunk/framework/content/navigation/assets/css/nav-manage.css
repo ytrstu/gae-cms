@@ -10,7 +10,7 @@
 	padding-top: 5px;
 	padding-bottom: 5px;
 }
-.navigation.manage a.edit, .navigation.manage a.subsection, .navigation.manage a.reorder, .navigation.manage span.reorder-disabled {
+.navigation.manage a.edit, .navigation.manage a.subsection, .navigation.manage a.reorder, .navigation.manage span.reorder-disabled, .navigation.manage a.delete, .navigation.manage span.delete-disabled {
 	background: url(/theme/images/sprite.png) 0 -587px no-repeat;
 	width: 14px;
 	display: block;
@@ -26,5 +26,12 @@
 	background-position: 0 -748px;
 }
 .navigation.manage span.reorder-disabled {
+	background-color: #CCC;
+}
+.navigation.manage a.delete, .navigation.manage span.delete-disabled {
+	background-position: 0 -138px;
+	width: 16px;
+}
+.navigation.manage span.delete-disabled {
 	background-color: #CCC;
 }
