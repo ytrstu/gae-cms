@@ -105,7 +105,7 @@ class Content(db.Model):
         return klass(**props)
 
     def unique_identifier(self):
-        return self.section.path + '-' + self.__class__.__name__.lower() + (('-' + self.container_namespace if self.container_namespace else '')) + '-' + self.namespace + '-' + str(datetime.datetime.now().microsecond)
+        return 'gae-cms-' + self.section.path + '-' + self.__class__.__name__.lower() + (('-' + self.container_namespace if self.container_namespace else '')) + '-' + self.namespace + '-' + str(datetime.datetime.now().microsecond)
 
     def view(self, view, params=None, container_namespace=None, rank=None, total_ranks=None):
         if not permission.view_content(self, self.section, view):

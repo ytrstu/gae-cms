@@ -90,7 +90,7 @@ def get_section(handler, full_path):
             raise Exception('NotFound') # The default page with no action should only be accessible from root
     except:
         if not get_top_level():
-            section = create_section(handler, path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
+            section = create_section(path=FIRST_RUN_HOME_PATH, name='Home', title='GAE-CMS', is_default=True, force=True)
         else:
             raise Exception('NotFound', path, path_action, path_params)
 
@@ -116,6 +116,7 @@ def get_section(handler, full_path):
     section.logout_url = users.create_logout_url('/' + section.path if not section.is_default else '')
     section.login_url = users.create_login_url('/' + section.path if not section.is_default else '')
     section.has_siblings = len(get_siblings(section.path)) > 1
+    section.has_children = len(get_children(section.path)) > 0
 
     section.configuration = content.get('Configuration', None, 'configuration')
     if not section.configuration:
@@ -205,7 +206,7 @@ def can_path_exist(path, parent_path, old_path=None):
         raise Exception('Parent path does not exist')
     return True
 
-def create_section(handler, path, parent_path=None, name='', title='', keywords='', description='', is_private=False, is_default=False, redirect_to='', new_window=False, force=False):
+def create_section(path, parent_path=None, name='', title='', keywords='', description='', is_private=False, is_default=False, redirect_to='', new_window=False, force=False):
     path = path.replace('/', '-').replace(' ', '-').strip().lower() if path else None
     parent_path = parent_path.replace('/', '-').replace(' ', '-').strip().lower() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
@@ -290,3 +291,10 @@ def update_section_rank(section, new_rank):
             sibling.rank = new_rank
         sibling.put()
     cache.delete(CACHE_KEY)
+
+def delete_section(section):
+    if section.is_default:
+        raise Exception('Cannot delete default page')
+    if get_children(section.path):
+        raise Exception('Cannot delete a page with children without reparenting them first')
+    # TODO: Delete section and all of it's original content
