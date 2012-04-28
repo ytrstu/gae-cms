@@ -294,7 +294,9 @@ def update_section_rank(section, new_rank):
 
 def delete_section(section):
     if section.is_default:
-        raise Exception('Cannot delete default page')
-    if get_children(section.path):
+        raise Exception('Cannot delete default page without appointing another page first')
+    elif get_children(section.path):
         raise Exception('Cannot delete a page with children without reparenting them first')
-    # TODO: Delete section and all of it's original content
+    content.delete_section_path_content(section.path)
+    cache.delete(CACHE_KEY)
+    section.delete()
