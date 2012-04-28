@@ -103,7 +103,7 @@ class Container(content.Content):
             if views:
                 content_views.append([content_type, views])
         f = form(self.section, self.section.full_path)
-        f.add_control(selectcontrol(self.section, 'content_view', content_views, content_view, 'Content'))
+        f.add_control(selectcontrol(self.section, 'content_view', content_views, content_view, 'Content type'))
         f.add_control(control(self.section, 'text', 'namespace', namespace, 'Namespace'))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         ret += unicode(f)

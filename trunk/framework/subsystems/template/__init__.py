@@ -74,11 +74,11 @@ def html(section, main=''):
 
     return html.strip()
 
-def txt(text):
+def get(content):
     '''
-    Only necessary so that the DJANGO_SETTINGS_MODULE environment gets initialised
+    Only necessary so that the DJANGO_SETTINGS_MODULE environment gets initialized
     '''
-    return render_to_string('text.snip', {'text': text})
+    return str(render_to_string('blank.snip', {'content': content}))
 
 def snippet(filename, params=None):
     return render_to_string(filename + '.snip', params).strip()
