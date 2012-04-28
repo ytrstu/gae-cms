@@ -25,17 +25,22 @@ import webapp2
 
 from framework.subsystems import section
 from framework.subsystems import template
-from framework.content.configuration import get_robots_txt
+from framework.content import configuration
 import settings
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
-        if path == '/robots.txt':
-            return webapp2.Response(template.txt(get_robots_txt()))
         try:
-            response = webapp2.Response(unicode(section.get_section(self, path)))
-            response.headers['Connection'] = 'Keep-Alive'
-            return response
+            if path == '/robots.txt':
+                return webapp2.Response(template.get(configuration.get_robots_txt()))
+            elif path == '/favicon.ico':
+                response = webapp2.Response(template.get('') + configuration.get_favicon_ico())
+                response.content_type = 'image/x-icon'
+                return response
+            else:
+                response = webapp2.Response(unicode(section.get_section(self, path)))
+                response.headers['Connection'] = 'Keep-Alive'
+                return response
         except Exception as inst:
             if inst[0] == 'Redirect':
                 return self.redirect(str(inst[1]))

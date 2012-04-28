@@ -28,6 +28,7 @@ from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 
 ROBOTS_TXT_CACHE_KEY = 'ROBOTS_TXT_FILE'
+FAVICON_ICO_CACHE_KEY = 'FAVICON_ICO_FILE'
 
 class Configuration(content.Content):
 
@@ -71,7 +72,19 @@ def get_robots_txt():
         item = cache.get(ROBOTS_TXT_CACHE_KEY)
         if not item:
             item = Configuration.gql("")[0].ROBOTS_TXT
+            if not item: raise Exception('robots.txt not set')
             cache.set(ROBOTS_TXT_CACHE_KEY, item)
         return item
     except:
         return ''
+
+def get_favicon_ico():
+    # TODO: Enable admin to set this file via Configuration
+    try:
+        item = cache.get(FAVICON_ICO_CACHE_KEY)
+        if not item:
+            item = file('theme/images/favicon.ico', 'r').read()
+            cache.set(FAVICON_ICO_CACHE_KEY, item)
+        return item
+    except:
+        raise Exception('NotFound')

@@ -32,15 +32,12 @@ libraries:
   version: 1.2
 
 handlers:
-- url: /favicon.ico
-  static_files: theme/images/favicon.ico
-  upload: theme/images/favicon.ico
-
-- url: /theme/images
-  static_dir: theme/images
+- url: /theme/images/sprite.png
+  static_files: theme/images/sprite.png
+  upload: theme/images/sprite.png
   expiration: 30d
 
-- url: /(.*\.(css|js))
+- url: /([^./]+\.(css|js))
   script: compressor.app
 
 - url: /.*
