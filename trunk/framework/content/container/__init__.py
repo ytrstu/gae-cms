@@ -163,7 +163,7 @@ class Container(content.Content):
             if can_add: ret += add_link % i
             item = content.get(self.content_types[i], self.content_paths[i] if self.content_paths[i] else None, self.content_namespaces[i])
             if not item:
-                ret += self.get_manage_links(self.namespace, i) + '<div class="status error">Content does not exist</div>'
+                ret += self.get_manage_links(self.content_views[i], self.namespace, i) + '<div class="status error">Content for this view was deleted</div>'
             else:
                 ret += item.init(self.section).view(self.content_views[i], params=None, container_namespace=self.namespace, rank=i, total_ranks=len(self.content_namespaces))
         if can_add: ret += add_link % len(self.content_namespaces)

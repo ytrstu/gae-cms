@@ -191,5 +191,12 @@ def rename_section_paths(old, new):
                     i.content_paths = [new if x == old else x for x in i.content_paths]
                     i.update()
 
+def delete_section_path_content(path):
+    for content_type in get_all_content_types():
+        m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
+        concrete = getattr(m, content_type)
+        items = concrete.gql("WHERE section_path=:1", path)
+        for i in items: i.remove()
+
 def content_key(content_type, section_path, namespace):
     return db.Key.from_path(content_type, ((section_path + '.') if section_path else '') + namespace)
