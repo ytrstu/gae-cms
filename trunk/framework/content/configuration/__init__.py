@@ -24,6 +24,7 @@ from google.appengine.ext import db
 
 from framework import content
 from framework.subsystems import cache
+from framework.subsystems.file import File
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 
@@ -36,6 +37,7 @@ class Configuration(content.Content):
     SITE_SUB_HEADER = db.StringProperty()
     GOOGLE_ANALYTICS_UA = db.StringProperty()
     ROBOTS_TXT = db.TextProperty()
+    FAVICON_ICO = db.ReferenceProperty(reference_class=File)
 
     name = 'Configuration'
     author = 'Imran Somji'
@@ -54,12 +56,21 @@ class Configuration(content.Content):
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
             cache.delete(ROBOTS_TXT_CACHE_KEY)
+            if self.section.handler.request.get('FAVICON_ICO'):
+                data = db.Blob(self.section.handler.request.get('FAVICON_ICO'))
+                if self.FAVICON_ICO:
+                    self.FAVICON_ICO.data = data
+                else:
+                    self.FAVICON_ICO = File(filename='favicon.ico', content_type='image/x-icon', data=data)
+                self.FAVICON_ICO.put()
+                cache.delete(FAVICON_ICO_CACHE_KEY)
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'SITE_HEADER', self.SITE_HEADER, 'Site header', 50))
         f.add_control(control(self.section, 'text', 'SITE_SUB_HEADER', self.SITE_SUB_HEADER, 'Site sub-header', 50))
         f.add_control(control(self.section, 'text', 'GOOGLE_ANALYTICS_UA', self.GOOGLE_ANALYTICS_UA, 'Google analytics UA'))
+        f.add_control(control(self.section, 'file', 'FAVICON_ICO', label='favicon.ico'))
         f.add_control(textareacontrol(self.section, 'ROBOTS_TXT', self.ROBOTS_TXT, 'robots.txt', 90, 5))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '<h2>Edit configuration</h2>%s' % unicode(f)
@@ -79,12 +90,15 @@ def get_robots_txt():
         return ''
 
 def get_favicon_ico():
-    # TODO: Enable admin to set this file via Configuration
-    try:
-        item = cache.get(FAVICON_ICO_CACHE_KEY)
-        if not item:
-            item = file('theme/images/favicon.ico', 'r').read()
-            cache.set(FAVICON_ICO_CACHE_KEY, item)
-        return item
-    except:
-        raise Exception('NotFound')
+    favicon = cache.get(FAVICON_ICO_CACHE_KEY)
+    if not favicon:
+        item = Configuration.gql("")[0]
+        favicon = item.FAVICON_ICO
+        if not favicon:
+            data = file('framework/content/configuration/assets/images/favicon.ico', 'r').read()
+            favicon = File(filename='favicon.ico', content_type='image/x-icon', data=data)
+            favicon.put()
+            item.FAVICON_ICO = favicon
+            item.update()
+    cache.set(FAVICON_ICO_CACHE_KEY, favicon)
+    raise Exception('SendFileBlob', favicon)
