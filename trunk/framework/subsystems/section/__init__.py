@@ -113,6 +113,8 @@ def get_section(handler, full_path):
     section.themejs = []
     section.js = []
 
+    section.viewport = None
+
     section.logout_url = users.create_logout_url('/' + section.path if not section.is_default else '')
     section.login_url = users.create_login_url('/' + section.path if not section.is_default else '')
     section.has_siblings = len(get_siblings(section.path)) > 1

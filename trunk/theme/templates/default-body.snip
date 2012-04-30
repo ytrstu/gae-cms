@@ -3,6 +3,11 @@
 {{ section|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/cssgrids.css" }}
 {{ section|themecss:"default.css" }}
 
+{% if section|is_mobile %}
+	{{ section|themecss:"default-mobile.css" }}
+	{{ section|viewport:"320" }}
+{% endif %}
+
 <div class="user-bar">{% if user %}<a href="{{ section.logout_url }}">Sign out</a>{% else %}<a href="{{ section.login_url }}">Sign in</a>{% endif %}</div>
 <div class="hd">
 	<h1 class="site-header main"><a href="/">{{ section.configuration.SITE_HEADER }}</a></h1>
