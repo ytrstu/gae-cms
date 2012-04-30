@@ -1,1 +1,7 @@
-/* TODO: Make mobile friendly */
+.bd {
+	padding: 0;
+}
+.sd {
+	width: 100%;
+	margin: 0;
+}
