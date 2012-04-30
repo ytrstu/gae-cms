@@ -3,7 +3,7 @@
 {{ section|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/cssgrids.css" }}
 {{ section|themecss:"default.css" }}
 
-{% if section|is_mobile %}
+{% if section|mobile_ua %}
 	{{ section|themecss:"default-mobile.css" }}
 	{{ section|viewport:"320" }}
 {% endif %}

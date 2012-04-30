@@ -131,17 +131,17 @@ mobile_uas = [
 mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone', 'Android' ]
 
 @register.filter
-def is_mobile(section):
+def mobile_ua(section):
     ua = section.handler.request.user_agent.lower()[0:4]
 
     if (ua in mobile_uas):
-        return True
+        return ua
     else:
         for hint in mobile_ua_hints:
             if section.handler.request.user_agent.find(hint) > 0:
-                return True
+                return hint
 
-    return False
+    return None
 
 @register.filter
 def viewport(section, args):
