@@ -34,9 +34,7 @@ class Router(webapp2.RequestHandler):
             if path == '/robots.txt':
                 return webapp2.Response(template.get(configuration.get_robots_txt()))
             elif path == '/favicon.ico':
-                response = webapp2.Response(template.get('') + configuration.get_favicon_ico())
-                response.content_type = 'image/x-icon'
-                return response
+                return webapp2.Response(configuration.get_favicon_ico())
             else:
                 response = webapp2.Response(unicode(section.get_section(self, path)))
                 response.headers['Connection'] = 'Keep-Alive'
