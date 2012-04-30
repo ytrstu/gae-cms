@@ -128,7 +128,7 @@ mobile_uas = [
     'wapr','webc','winw','winw','xda','xda-'
     ]
 
-mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone' ]
+mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone', 'Android' ]
 
 @register.filter
 def is_mobile(section):
