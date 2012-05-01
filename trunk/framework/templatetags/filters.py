@@ -73,13 +73,13 @@ def yuicss(section, args):
     return ''
 
 @register.filter
-def themecss(section, args):
-    [section.themecss.append(x.strip('/ ')) for x in args.split(',')]
+def css(section, args):
+    [section.css.append(x.strip('/ ')) for x in args.split(',')]
     return ''
 
 @register.filter
-def css(section, args):
-    [section.css.append(x.strip('/ ')) for x in args.split(',')]
+def localthemecss(section, args):
+    [section.localthemecss.append(x.strip('/ ')) for x in args.split(',')]
     return ''
 
 @register.filter
@@ -89,6 +89,11 @@ def yuijs(section, args):
 
 @register.filter
 def js(section, args):
+    [section.js.append(x.strip('/ ')) for x in args.split(',')]
+    return ''
+
+@register.filter
+def localthemejs(section, args):
     [section.js.append(x.strip('/ ')) for x in args.split(',')]
     return ''
 

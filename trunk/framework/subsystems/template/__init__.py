@@ -31,6 +31,9 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
+from django.template import TemplateDoesNotExist
+
+DEFAULT_LOCAL_THEME = 'Google Code'
 
 def html(section, main=''):
     params = {
@@ -41,14 +44,17 @@ def html(section, main=''):
         'main': main,
     }
 
-    html = render_to_string('outer.html', params)
-    body = render_to_string('default-body.snip', params).strip()
-    html = html.replace('<body></body>',
-                        '<body class="%s">%s</body>' % (' '.join(section.classes), body),
-                        1)
+    try:
+        body = render_to_string((section.theme if section.theme else DEFAULT_LOCAL_THEME) + '.body', params).strip()
+    except TemplateDoesNotExist:
+        body = render_to_string(DEFAULT_LOCAL_THEME + '.body', params).strip()
 
-    section.css = section.css + section.themecss
-    section.js = section.js + section.themejs
+    html = render_to_string('outer.html', params).replace('<body></body>',
+                                                          '<body class="%s">%s</body>' % (' '.join(section.classes), body),
+                                                          1)
+
+    section.css = section.css + section.localthemecss
+    section.js = section.js + section.localthemejs
 
     section.yuicss, section.css, section.yuijs, section.js = (utils.unique_list(x) for x in [section.yuicss, section.css, section.yuijs, section.js])
 

@@ -1,0 +1,14 @@
+/* Adapted from: http://yuiblog.com/sandbox/yui/3.2.0pr1/examples/cssgrids/cssgrids-fluid.html */
+
+.bd {
+	margin: 0.8em;
+    padding-right: 250px; /* "right col" width */ 
+}
+.sd {
+    margin-right: -250px; /* "right col" width */
+    width: 240px;
+    margin-left: 10px;
+}
+.mn {
+	width: 100%;
+}
