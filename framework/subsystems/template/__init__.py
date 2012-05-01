@@ -63,7 +63,7 @@ def html(section, main=''):
     if section.yuijs: section.yuijs = '___yui___' + section.yuijs
     if section.js: section.js = '___local___' + section.js
 
-    viewport = '<meta name="viewport" content="width=' + section.viewport + '">' if section.viewport else ''
+    viewport = '<meta name="viewport" content="' + section.viewport_content + '">' if section.viewport_content else ''
     linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + '.css">' if section.yuicss or section.css else ''
     script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + '.js'}) if section.yuijs or section.js else ''
     analytics = snippet('analytics', {'GOOGLE_ANALYTICS_UA': section.configuration['GOOGLE_ANALYTICS_UA']}) if section.configuration['GOOGLE_ANALYTICS_UA'] else ''

@@ -30,6 +30,7 @@ from framework.content.configuration import Configuration
 from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems import permission
+from framework.subsystems import utils
 
 import settings
 
@@ -113,7 +114,8 @@ def get_section(handler, full_path):
     section.themejs = []
     section.js = []
 
-    section.viewport = None
+    section.viewport_content = None
+    section.mobile_ua = utils.mobile_ua(section)
 
     section.logout_url = users.create_logout_url('/' + section.path if not section.is_default else '')
     section.login_url = users.create_login_url('/' + section.path if not section.is_default else '')
