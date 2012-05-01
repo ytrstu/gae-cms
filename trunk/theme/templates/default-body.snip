@@ -1,11 +1,13 @@
 {% load filters %}
 
-{{ section|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css,cssgrids/cssgrids.css" }}
+{{ section|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css" }}
 {{ section|themecss:"default.css" }}
 
 {% if section.mobile_ua %}
 	{{ section|themecss:"default-mobile.css" }}
 	{{ section|viewport_content:"width=240, initial-scale=1.0" }}
+{% else %}
+	{{ section|yuicss:"cssgrids/cssgrids.css" }}
 {% endif %}
 
 <div class="user-bar">{% if user %}<a href="{{ section.logout_url }}">Sign out</a>{% else %}<a href="{{ section.login_url }}">Sign in</a>{% endif %}</div>
