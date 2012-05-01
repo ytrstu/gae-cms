@@ -50,7 +50,7 @@ mobile_uas = [
     'wapr','webc','winw','winw','xda','xda-'
     ]
 
-mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone', 'Android' ]
+mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone', 'Mobile' ]
 
 def mobile_ua(section):
     ua = section.handler.request.user_agent.lower()[0:4]
@@ -61,7 +61,6 @@ def mobile_ua(section):
         for hint in mobile_ua_hints:
             if section.handler.request.user_agent.find(hint) > 0:
                 return hint
-
     return None
 
 def file_search(search):
