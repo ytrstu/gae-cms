@@ -5,7 +5,7 @@
 
 {% if section.mobile_ua %}
 	{{ section|themecss:"default-mobile.css" }}
-	{{ section|viewport_content:"width=device-width, initial-scale=1.0" }}
+	{{ section|viewport_content:"width=240, initial-scale=1.0" }}
 {% endif %}
 
 <div class="user-bar">{% if user %}<a href="{{ section.logout_url }}">Sign out</a>{% else %}<a href="{{ section.login_url }}">Sign in</a>{% endif %}</div>
