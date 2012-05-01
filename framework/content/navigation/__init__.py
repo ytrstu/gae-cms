@@ -47,9 +47,9 @@ class Navigation(content.Content):
     def action_create(self):
         ret = '<h2>Create new section</h2>'
         if self.section.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
+            path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
             try:
-                section.create_section(path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
+                section.create_section(path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
@@ -60,14 +60,14 @@ class Navigation(content.Content):
     def action_edit(self):
         ret = '<h2>Edit section "%s"</h2>' % self.section.path
         if self.section.handler.request.get('submit'):
-            path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
+            path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window = get_values(self.section.handler.request)
             try:
-                section.update_section(self.section, path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window)
+                section.update_section(self.section, path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window)
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
                 raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
-        ret += get_form(self.section, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
+        ret += get_form(self.section, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.theme, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
     def action_reorder(self):
@@ -153,25 +153,29 @@ def get_values(request):
         title = request.get('title')
         keywords = request.get('keywords')
         description = request.get('description')
+        theme = request.get('theme')
         is_private = request.get('is_private') != ''
         is_default = request.get('is_default') != ''
         redirect_to = request.get('redirect_to')
         new_window = request.get('new_window') != ''
-        return path, parent_path, name, title, keywords, description, is_private, is_default, redirect_to, new_window
+        return path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window
 
-def get_form(section, path, parent_path, name=None, title=None, keywords=None, description=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
-    f = form(section, section.full_path)
-    f.add_control(control(section, 'text', 'path', path, 'Path'))
-    f.add_control(control(section, 'text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
-    f.add_control(control(section, 'text', 'name', name if name else '', 'Name', 30))
-    f.add_control(control(section, 'text', 'title', title if title else '', 'Title', 60))
-    f.add_control(textareacontrol(section, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
-    f.add_control(textareacontrol(section, 'description', description if description else '', 'Description', 60, 5))
-    f.add_control(checkboxcontrol(section, 'is_private', is_private, 'Is private'))
-    if not is_default: f.add_control(checkboxcontrol(section, 'is_default', is_default, 'Is default'))
-    f.add_control(control(section, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
-    f.add_control(checkboxcontrol(section, 'new_window', new_window, 'New window'))
-    f.add_control(control(section, 'submit', 'submit'))
+def get_form(s, path, parent_path, name=None, title=None, keywords=None, description=None, theme=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
+    f = form(s, s.full_path)
+    f.add_control(control(s, 'text', 'path', path, 'Path'))
+    f.add_control(control(s, 'text', 'parent_path', parent_path if parent_path else '', 'Parent path'))
+    f.add_control(control(s, 'text', 'name', name if name else '', 'Name', 30))
+    f.add_control(control(s, 'text', 'title', title if title else '', 'Title', 60))
+    f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
+    f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
+    local_themes = ['Google Code', 'Google Code - Reverse'] # TODO: Get these automatically by reading directory
+    local_themes = [[x, x] for x in local_themes]
+    f.add_control(selectcontrol(s, 'theme', [['Local', local_themes]], theme if theme else template.DEFAULT_LOCAL_THEME, 'Theme'))
+    f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
+    if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))
+    f.add_control(control(s, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
+    f.add_control(checkboxcontrol(s, 'new_window', new_window, 'New window'))
+    f.add_control(control(s, 'submit', 'submit'))
     return unicode(f)
 
 def set_ancestry(path, items):

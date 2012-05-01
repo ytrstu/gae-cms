@@ -53,7 +53,10 @@ mobile_uas = [
 mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone', 'Mobile' ]
 
 def mobile_ua(section):
-    ua = section.handler.request.user_agent.lower()[0:4]
+    try:
+        ua = section.handler.request.user_agent.lower()[0:4]
+    except:
+        return None
 
     if (ua in mobile_uas):
         return ua
