@@ -34,6 +34,36 @@ def unique_list(seq, idfun=None):
         result.append(item)
     return result
 
+'''
+Adapted from: http://mobiforge.com/developing/story/build-a-mobile-and-desktop-friendly-application-django-15-minutes
+'''
+
+mobile_uas = [
+    'w3c ','acs-','alav','alca','amoi','audi','avan','benq','bird','blac',
+    'blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno',
+    'ipaq','java','jigs','kddi','keji','leno','lg-c','lg-d','lg-g','lge-',
+    'maui','maxo','midp','mits','mmef','mobi','mot-','moto','mwbp','nec-',
+    'newt','noki','palm','pana','pant','phil','play','port','prox',
+    'qwap','sage','sams','sany','sch-','sec-','send','seri','sgh-','shar',
+    'sie-','siem','smal','smar','sony','sph-','symb','t-mo','teli','tim-',
+    'tosh','tsm-','upg1','upsi','vk-v','voda','wap-','wapa','wapi','wapp',
+    'wapr','webc','winw','winw','xda','xda-'
+    ]
+
+mobile_ua_hints = [ 'SymbianOS', 'Opera Mobi', 'iPhone', 'Android' ]
+
+def mobile_ua(section):
+    ua = section.handler.request.user_agent.lower()[0:4]
+
+    if (ua in mobile_uas):
+        return ua
+    else:
+        for hint in mobile_ua_hints:
+            if section.handler.request.user_agent.find(hint) > 0:
+                return hint
+
+    return None
+
 def file_search(search):
     files = []
     for dirpath, _, filenames in os.walk('.'):
