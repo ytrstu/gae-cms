@@ -25,6 +25,7 @@
             {% if is_admin %}
             	<li>{{ content.section|view:"GLOBAL, navigation, Navigation, menu"|safe }}</li>
             	<li>{{ content.section|view:"GLOBAL, configuration, Configuration, menu"|safe }}</li>
+            	<li>{{ content.section|view:"GLOBAL, themes, Themes, menu"|safe }}</li>
             {% endif %}
         </ul>
     </div>
