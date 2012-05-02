@@ -34,7 +34,7 @@ def view_section(section):
 
 def perform_action(content, path, path_action):
     for action in content.actions:
-        if path_action == action[0]: return is_admin(path) # TODO: Check if actually has permission
+        if path_action == action[0]: return action[3] or is_admin(path) # TODO: Check if actually has permission
     raise Exception('NotFound')
 
 def view_content(content, section, view_id):

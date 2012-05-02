@@ -39,10 +39,10 @@ class Files(content.Content):
     author = 'Imran Somji'
 
     actions = [
-        ['add', 'Add', False],
-        ['get', 'Get', False],
-        ['delete', 'Delete', False],
-        ['manage', 'Manage', False],
+        ['add', 'Add', False, False],
+        ['get', 'Get', False, True],
+        ['delete', 'Delete', False, False],
+        ['manage', 'Manage', False, False],
     ]
     views = [
         ['menu', 'File menu', False],

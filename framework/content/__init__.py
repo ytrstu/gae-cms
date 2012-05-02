@@ -43,7 +43,7 @@ class Content(db.Model):
     name = 'Base Content'
     author = 'Imran Somji'
 
-    actions = [] # Format: [[action_id, action_string, display_in_outer], ...]
+    actions = [] # Format: [[action_id, action_string, display_in_outer, permit_by_default], ...]
     views = [] # Format: [[view_id, view_string, display_in_outer], ...]
 
     def __unicode__(self):

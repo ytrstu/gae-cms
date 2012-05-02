@@ -43,7 +43,7 @@ class Configuration(content.Content):
     author = 'Imran Somji'
 
     actions = [
-        ['edit', 'Edit', False],
+        ['edit', 'Edit', False, False],
     ]
     views = [
         ['menu', 'Configuration menu', False],

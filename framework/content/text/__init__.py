@@ -39,10 +39,10 @@ class Text(content.Content):
     author = 'Imran Somji'
 
     actions = [
-        ['add', 'Add', False],
-        ['edit', 'Edit', True],
-        ['reorder', 'Reorder', False],
-        ['delete', 'Delete', False],
+        ['add', 'Add', False, False],
+        ['edit', 'Edit', True, False],
+        ['reorder', 'Reorder', False, False],
+        ['delete', 'Delete', False, False],
     ]
     views = [
         ['default', 'Default - Multiple items in tabs', True],
