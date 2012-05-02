@@ -147,8 +147,8 @@ class Navigation(content.Content):
         return template.snippet('navigation-menu', { 'content': self, 'is_admin': permission.is_admin(self.section.path) })
 
 def get_values(request):
-        path = request.get('path').replace('/', '-').replace(' ', '-').lower()
-        parent_path = request.get('parent_path').replace('/', '-').replace(' ', '-').lower()
+        path = request.get('path').replace('/', '-').replace(' ', '-')
+        parent_path = request.get('parent_path').replace('/', '-').replace(' ', '-')
         name = request.get('name')
         title = request.get('title')
         keywords = request.get('keywords')
@@ -168,9 +168,8 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(control(s, 'text', 'title', title if title else '', 'Title', 60))
     f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
-    local_themes = ['Google Code', 'Google Code - Reverse'] # TODO: Get these automatically by reading directory
-    local_themes = [[x, x] for x in local_themes]
-    f.add_control(selectcontrol(s, 'theme', [['Local', local_themes]], theme if theme else template.DEFAULT_LOCAL_THEME, 'Theme'))
+    local_themes = ['Local', [[x, x] for x in template.get_local_themes()]]
+    f.add_control(selectcontrol(s, 'theme', [local_themes], theme if theme else template.DEFAULT_LOCAL_THEME, 'Theme'))
     f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))
     f.add_control(control(s, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
