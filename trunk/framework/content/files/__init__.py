@@ -32,7 +32,7 @@ CACHE_KEY_PREPEND = 'FILE_'
 
 class Files(content.Content):
 
-    keys = db.StringListProperty()
+    file_keys = db.StringListProperty()
     filenames = db.StringListProperty()
 
     name = 'Files'
@@ -52,9 +52,9 @@ class Files(content.Content):
         for i in range(len(self.filenames)):
             # This can be done more efficently
             data = self.get_file(self.filenames[i])
-            cache.delete(CACHE_KEY_PREPEND + self.keys[i])
+            cache.delete(CACHE_KEY_PREPEND + self.file_keys[i])
             data.delete()
-            del self.keys[i]
+            del self.file_keys[i]
             del self.filenames[i]
         self.update()
 
@@ -66,7 +66,7 @@ class Files(content.Content):
                 content_type = self.section.handler.request.POST['data'].type
                 data = db.Blob(self.section.handler.request.get('data'))
                 key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
-                self.keys.append(str(key))
+                self.file_keys.append(str(key))
                 self.filenames.append(filename)
                 self.update()
                 raise Exception('Redirect', self.section.action_redirect_path)
@@ -94,9 +94,9 @@ class Files(content.Content):
             if not data:
                 raise Exception('NotFound')
             index = self.filenames.index(filename)
-            cache.delete(CACHE_KEY_PREPEND + self.keys[index])
+            cache.delete(CACHE_KEY_PREPEND + self.file_keys[index])
             data.delete()
-            del self.keys[index]
+            del self.file_keys[index]
             del self.filenames[index]
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
@@ -113,7 +113,7 @@ class Files(content.Content):
     def get_file(self, filename):
         item = None
         try:
-            key = self.keys[self.filenames.index(filename)]
+            key = self.file_keys[self.filenames.index(filename)]
             item = cache.get(CACHE_KEY_PREPEND + key)
             if not item:
                 item = File.get(key)
