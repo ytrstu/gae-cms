@@ -40,9 +40,9 @@ class Container(content.Content):
     author = 'Imran Somji'
 
     actions = [
-        ['add', 'Add content', False],
-        ['reorder', 'Reorder', False],
-        ['delete', 'Delete', False],
+        ['add', 'Add content', False, False],
+        ['reorder', 'Reorder', False, False],
+        ['delete', 'Delete', False, False],
     ]
     views = [
         ['default', 'Default', False],

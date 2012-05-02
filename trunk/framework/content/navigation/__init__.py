@@ -32,11 +32,11 @@ class Navigation(content.Content):
     author = 'Imran Somji'
 
     actions = [
-        ['create', 'Create', False],
-        ['edit', 'Edit', False],
-        ['reorder', 'Reorder', False],
-        ['delete', 'Delete', False],
-        ['manage', 'Manage', False],
+        ['create', 'Create', False, False],
+        ['edit', 'Edit', False, False],
+        ['reorder', 'Reorder', False, False],
+        ['delete', 'Delete', False, False],
+        ['manage', 'Manage', False, False],
     ]
     views = [
         ['menu', 'Navigation menu', False],
