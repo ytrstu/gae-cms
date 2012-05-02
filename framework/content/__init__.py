@@ -138,7 +138,7 @@ def get(content_type, section_path, namespace):
     except:
         return None
 
-def get_local_then_global(section_path, namespace):
+def get_local_else_global(section_path, namespace):
     for content_type in get_all_content_types():
         item = cache.get(CACHE_KEY_PREPEND + str(content_key(content_type, section_path, namespace)))
         if item: return item
@@ -169,7 +169,9 @@ def get_all_content_types():
     content_types = []
     for name in os.listdir('framework/content'):
         if os.path.isdir('framework/content/' + name) and os.path.isfile('framework/content/' + name + '/__init__.py'):
-            content_types.append(name.title())
+            # Convert something_like_this into SomethingLikeThis
+            CapWordsName = ''.join(j.title() for j in name.split('_'))
+            content_types.append(CapWordsName)
     return content_types
 
 def rename_section_paths(old, new):

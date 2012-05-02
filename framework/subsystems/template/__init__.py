@@ -89,3 +89,11 @@ def get(content):
 
 def snippet(filename, params=None):
     return render_to_string(filename + '.snip', params).strip()
+
+def get_local_themes():
+    templates = []
+    directory = os.listdir('theme/templates')
+    for filename in directory:
+        if filename.endswith('.body'):
+            templates.append(filename[:-5])
+    return templates

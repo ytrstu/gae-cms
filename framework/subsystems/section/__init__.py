@@ -63,7 +63,7 @@ class Section(db.Model):
         return template.html(self, self.get_action() if self.path_action else self.get_main_container_view())
 
     def get_action(self):
-        item = content.get_local_then_global(self.path, self.path_namespace)
+        item = content.get_local_else_global(self.path, self.path_namespace)
         if not item:
             raise Exception('NotFound')
         elif not permission.perform_action(item, self.path, self.path_action):
@@ -74,11 +74,8 @@ class Section(db.Model):
         item = content.get_else_create(self.path, 'Container', MAIN_CONTAINER_NAMESPACE)
         return item.init(self).view('default')
 
-def section_key(path):
-    return db.Key.from_path('Section', path)
-
 def get_section(handler, full_path):
-    path_parts = full_path.strip('/').lower().split('/')
+    path_parts = full_path.strip('/').split('/')
     path = path_parts[0]
     path_namespace = path_parts[1] if len(path_parts) > 1 else None
     path_action = path_parts[2] if len(path_parts) > 2 else None
@@ -201,8 +198,6 @@ def can_path_exist(path, parent_path, old_path=None):
         raise Exception('This extension is not allowed')
     elif any(path == ext for ext in FORBIDDEN_PATHS):
         raise Exception('This path is reserved')
-    elif parent_path and is_ancestor(path, parent_path):
-        raise Exception('Path recursion detected: path is a descendant')
     elif is_ancestor(parent_path, path):
         raise Exception('Path recursion detected: path is an ancestor')
     elif old_path != path and get(path):
@@ -212,8 +207,8 @@ def can_path_exist(path, parent_path, old_path=None):
     return True
 
 def create_section(path, parent_path=None, name='', title='', keywords='', description='', theme='', is_private=False, is_default=False, redirect_to='', new_window=False, force=False):
-    path = path.replace('/', '-').replace(' ', '-').strip().lower() if path else None
-    parent_path = parent_path.replace('/', '-').replace(' ', '-').strip().lower() if parent_path else None
+    path = path.replace('/', '-').replace(' ', '-').strip() if path else None
+    parent_path = parent_path.replace('/', '-').replace(' ', '-').strip() if parent_path else None
     if not force and not can_path_exist(path, parent_path): return None
 
     if is_default:
@@ -234,8 +229,8 @@ def create_section(path, parent_path=None, name='', title='', keywords='', descr
     return section
 
 def update_section(old, path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window):
-    path = path.replace('/', '-').replace(' ', '-').strip().lower() if path else None
-    parent_path = parent_path.replace('/', '-').replace(' ', '-').strip().lower() if parent_path else None
+    path = path.replace('/', '-').replace(' ', '-').strip() if path else None
+    parent_path = parent_path.replace('/', '-').replace(' ', '-').strip() if parent_path else None
 
     if old.is_default:
         # Cannot change the default page except if another page is promoted
@@ -249,7 +244,6 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
     can_path_exist(path, parent_path, old.path)
 
     if old.path != path:
-
         for child in Section.gql("WHERE parent_path=:1", old.path):
             child.parent_path = path
             child.put()
@@ -306,3 +300,6 @@ def delete_section(section):
     content.delete_section_path_content(section.path)
     cache.delete(CACHE_KEY)
     section.delete()
+
+def section_key(path):
+    return db.Key.from_path('Section', path)

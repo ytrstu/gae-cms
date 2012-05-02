@@ -48,7 +48,7 @@ def view(section, param_string):
             raise Exception('Invalid character " " for namespace')
         elif namespace == MAIN_CONTAINER_NAMESPACE:
             raise Exception('"%s" is a reserved namespace' % MAIN_CONTAINER_NAMESPACE)
-        item = content.get_local_then_global(section.path, namespace)
+        item = content.get_local_else_global(section.path, namespace)
         if item and item.__class__.__name__ != content_type:
             raise Exception('Selected namespace already exists for a different type of content')
         elif not item:
