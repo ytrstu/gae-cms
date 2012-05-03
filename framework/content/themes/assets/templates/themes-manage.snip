@@ -1,0 +1,14 @@
+<h2>Manage themes</h2>
+
+{% if content.theme_namespaces %}
+
+	{% load filters %}
+	{{ content.section|css:"themes-manage.css" }}
+
+	<ul class="themes manage">{% for namespace in content.theme_namespaces %}
+		<li><a href="/{{ content.section.path }}/themes/edit/{{ namespace }}">{{ namespace }}</a><a href="/{{ content.section.path }}/themes/delete/{{ namespace }}" class="delete" title="Delete">[Delete]</a></li>
+	{% endfor %}</ul>
+
+{% endif %}
+
+<a href="/{{ content.section.path }}/themes/add">Add</a>
