@@ -53,7 +53,7 @@ class Navigation(content.Content):
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
-                raise Exception('Redirect', '/' + (path if not is_default else ''))
+                raise Exception('Redirect', '/' + self.section.action_redirect_path)
         ret += get_form(self.section, '', self.section.path)
         return ret
 
@@ -66,7 +66,7 @@ class Navigation(content.Content):
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
-                raise Exception('Redirect', '/' + (path if not self.section.is_default else ''))
+                raise Exception('Redirect', '/' + self.section.action_redirect_path)
         ret += get_form(self.section, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.theme, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 

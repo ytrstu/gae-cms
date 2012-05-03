@@ -46,7 +46,7 @@ class form:
 
 class control:
 
-    def __init__(self, section, itype, name, value=None, label=None, width=None, length=None):
+    def __init__(self, section, itype, name, value=None, label=None, width=None, length=None, disabled=False):
         self.section = section
         self.itype = itype
         self.name = name
@@ -54,6 +54,7 @@ class control:
         self.label = label
         self.width = width
         self.length = length
+        self.disabled = disabled
 
     def __unicode__(self):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
@@ -66,6 +67,7 @@ class control:
         elif self.itype == 'text':
             style += ' width:20%'
         if style: out += ' style="' + style.strip() + '"'
+        if self.disabled: out += ' disabled'
         out += '>'
         return out
         

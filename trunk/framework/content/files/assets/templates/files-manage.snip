@@ -9,10 +9,6 @@
 		<li><a href="/{{ content.section.path }}/files/get/{{ item }}">{{ item }}</a><a href="/{{ content.section.path }}/files/delete/{{ item }}" class="delete" title="Delete">[Delete]</a></li>
 	{% endfor %}</ul>
 
-{% else %}
-
-	<div class="status error">No files have been uploaded for this section</div>
-
 {% endif %}
 
 <a href="/{{ content.section.path }}/files/add">Add</a>

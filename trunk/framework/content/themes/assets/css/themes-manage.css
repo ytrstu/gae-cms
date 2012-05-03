@@ -1,0 +1,21 @@
+.themes.manage {
+	list-style: none;
+}
+.themes.manage ul {
+	margin-top: 0;
+	margin-bottom: 0;
+	list-style: none;
+}
+.themes.manage li {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+.themes.manage a.delete {
+	background: url(/theme/images/sprite.png) 0 -138px no-repeat;
+	width: 16px;
+	display: block;
+	text-indent: -9999px;
+	float: left;
+	padding: 1px;
+	margin-right: 0.5em;
+}
