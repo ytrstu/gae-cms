@@ -26,6 +26,6 @@ class Theme(db.Model):
 
     namespace = db.StringProperty()
     name = db.StringProperty()
-    template = db.Text()
+    body_template = db.TextProperty()
     css_files = db.ListProperty(item_type=db.Text)
     js_files = db.ListProperty(item_type=db.Text)
