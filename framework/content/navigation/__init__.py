@@ -24,6 +24,7 @@ from framework import content
 from framework.subsystems import section
 from framework.subsystems import permission
 from framework.subsystems import template
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME, get_local_themes
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
 class Navigation(content.Content):
@@ -53,7 +54,7 @@ class Navigation(content.Content):
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
-                raise Exception('Redirect', '/' + self.section.action_redirect_path)
+                raise Exception('Redirect', self.section.action_redirect_path)
         ret += get_form(self.section, '', self.section.path)
         return ret
 
@@ -66,7 +67,7 @@ class Navigation(content.Content):
             except Exception as inst:
                 ret += '<div class="status error">%s</div>' %  unicode(inst[0])
             else:
-                raise Exception('Redirect', '/' + self.section.action_redirect_path)
+                raise Exception('Redirect', self.section.action_redirect_path)
         ret += get_form(self.section, self.section.path, self.section.parent_path, self.section.name, self.section.title, self.section.keywords, self.section.description, self.section.theme, self.section.is_private, self.section.is_default, self.section.redirect_to, self.section.new_window)
         return ret
 
@@ -168,8 +169,8 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(control(s, 'text', 'title', title if title else '', 'Title', 60))
     f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
-    local_themes = ['Local', [[x, x] for x in template.get_local_themes()]]
-    f.add_control(selectcontrol(s, 'theme', [local_themes], theme if theme else template.DEFAULT_LOCAL_THEME, 'Theme'))
+    local_themes = ['Local', [[x, x] for x in get_local_themes()]]
+    f.add_control(selectcontrol(s, 'theme', [local_themes], theme if theme else DEFAULT_LOCAL_THEME, 'Theme'))
     f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))
     f.add_control(control(s, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))
