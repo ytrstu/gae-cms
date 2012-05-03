@@ -50,23 +50,35 @@ class Themes(content.Content):
     ]
 
     def on_delete(self):
-        pass
+        for i in range(len(self.theme_namespaces)):
+            # This can be done more efficiently via GQL
+            theme = self.get_theme(self.theme_namespaces[i])
+            cache.delete(CACHE_KEY_PREPEND + self.theme_namespaces[i])
+            theme.delete()
+            del self.theme_keys[i]
+            del self.theme_namespaces[i]
+        self.update()
 
     def action_add(self):
         if self.section.handler.request.get('submit'):
             message = ''
             try:
-                namespace, name, template = get_values(self.section.handler.request)
+                namespace, name, body_template = get_values(self.section.handler.request)
             except Exception as inst:
                 message = inst[0]
+                namespace = self.section.handler.request.get('namespace')
+                name = self.section.handler.request.get('name')
+                body_template = self.section.handler.request.get('body_template')
             else:
                 if not namespace:
                     message = 'Namespace is required'
                 elif namespace in self.theme_namespaces:
                     message = 'Namespace "%s" already exists' % namespace
+                elif not name:
+                    message = 'Name is required'
             if message:
-                return '<div class="status error">%s</div>%s' % (message, get_form(self.section, namespace, name, template))
-            key = Theme(namespace=namespace, name=name, template=template).put()
+                return '<div class="status error">%s</div>%s' % (message, get_form(self.section, namespace, name, body_template))
+            key = Theme(namespace=namespace, name=name, body_template=body_template).put()
             self.theme_keys.append(str(key))
             self.theme_namespaces.append(namespace)
             self.update()
@@ -83,24 +95,43 @@ class Themes(content.Content):
         message = ''
         if self.section.handler.request.get('submit'):
             try:
-                _, name, template = get_values(self.section.handler.request)
+                _, name, body_template = get_values(self.section.handler.request)
+                if not name: raise Exception('Name is required')
             except Exception as inst:
                 message = '<div class="status error">%s</div>' % inst[0]
             else:
                 theme = self.get_theme(namespace)
                 theme.name = name
-                theme.template = template
+                theme.body_template = body_template
                 theme.put()
                 self.update()
                 cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
                 raise Exception('Redirect', self.section.action_redirect_path)
-        return '%s<h2>Edit theme</h2>%s' % (message, get_form(self.section, theme.namespace, theme.name, theme.template, True))
+        return '%s<h2>Edit theme</h2>%s' % (message, get_form(self.section, theme.namespace, theme.name, theme.body_template, True))
 
     def action_get(self):
         pass
 
     def action_delete(self):
-        pass
+        if not self.section.path_params or len(self.section.path_params) != 1:
+            raise Exception('NotFound')
+        theme_namespace = self.section.path_params[0]
+        if theme_namespace not in self.theme_namespaces:
+            raise Exception('NotFound')
+        elif self.section.handler.request.get('submit'):
+            theme = self.get_theme(theme_namespace)
+            if not theme:
+                raise Exception('NotFound')
+            index = self.theme_namespaces.index(theme_namespace)
+            cache.delete(CACHE_KEY_PREPEND + self.theme_keys[index])
+            theme.delete()
+            del self.theme_keys[index]
+            del self.theme_namespaces[index]
+            self.update()
+            raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
+        return '<div class="status warning">Are you sure you wish to delete theme "%s" and all associated resources?</div>%s' % (theme_namespace, unicode(f))
 
     def action_manage(self):
         return template.snippet('themes-manage', { 'content': self })
@@ -122,18 +153,22 @@ class Themes(content.Content):
 def get_values(request):
         namespace = request.get('namespace')
         name = request.get('name')
-        template = request.get('template')
-        return namespace, name, validated_template(template)
+        body_template = request.get('body_template')
+        return namespace, name, validated_body_template(body_template)
 
-def get_form(s, namespace='', name='', template='', disable_namespace=False):
+def get_form(s, namespace='', name='', body_template='', disable_namespace=False):
     f = form(s, s.full_path)
     f.add_control(control(s, 'text', 'namespace', namespace, 'Namespace (permanent)', disabled=disable_namespace))
     f.add_control(control(s, 'text', 'name', name, 'Name', 50))
-    f.add_control(textareacontrol(s, 'template', template, 'Template', 90, 50))
+    f.add_control(textareacontrol(s, 'body_template', body_template, 'Body template', 90, 50))
     f.add_control(control(s, 'submit', 'submit', 'Submit'))
     return unicode(f)
 
-def validated_template(template):
-    if '{{ main|safe }}' not in template:
-        raise Exception('"{{ main|safe }}" is required in all templates')
-    return db.Text(template)
+def validated_body_template(body_template):
+    if '{{ main|safe }}' not in body_template:
+        raise Exception('"{{ main|safe }}" is required in the body template')
+    elif '<html>' in body_template or '</html>' in body_template:
+        raise Exception('"Body template cannot include &lt;html&gt; tags')
+    elif '<body>' in body_template or '</body>' in body_template:
+        raise Exception('"Body template cannot include &lt;body&gt; tags')
+    return body_template

@@ -50,7 +50,7 @@ class Files(content.Content):
 
     def on_delete(self):
         for i in range(len(self.filenames)):
-            # This can be done more efficently
+            # This can be done more efficiently via GQL
             data = self.get_file(self.filenames[i])
             cache.delete(CACHE_KEY_PREPEND + self.file_keys[i])
             data.delete()
