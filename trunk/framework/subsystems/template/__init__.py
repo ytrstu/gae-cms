@@ -25,6 +25,7 @@ import os
 from google.appengine.api import users
 
 from framework.subsystems import permission
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME
 from framework.subsystems import utils
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -32,8 +33,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
 from django.template import TemplateDoesNotExist
-
-DEFAULT_LOCAL_THEME = 'Google Code'
 
 def html(section, main=''):
     params = {
@@ -89,11 +88,3 @@ def get(content):
 
 def snippet(filename, params=None):
     return render_to_string(filename + '.snip', params).strip()
-
-def get_local_themes():
-    templates = []
-    directory = os.listdir('theme/templates')
-    for filename in directory:
-        if filename.endswith('.body'):
-            templates.append(filename[:-5])
-    return templates

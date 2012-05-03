@@ -20,12 +20,23 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os
+
 from google.appengine.ext import db
+
+DEFAULT_LOCAL_THEME = 'Google Code'
 
 class Theme(db.Model):
 
     namespace = db.StringProperty()
-    name = db.StringProperty()
     body_template = db.TextProperty()
     css_files = db.ListProperty(item_type=db.Text)
     js_files = db.ListProperty(item_type=db.Text)
+
+def get_local_themes():
+    templates = []
+    directory = os.listdir('theme/templates')
+    for filename in directory:
+        if filename.endswith('.body'):
+            templates.append(filename[:-5])
+    return templates

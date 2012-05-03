@@ -63,22 +63,19 @@ class Themes(content.Content):
         if self.section.handler.request.get('submit'):
             message = ''
             try:
-                namespace, name, body_template = get_values(self.section.handler.request)
+                namespace, body_template = get_values(self.section.handler.request)
             except Exception as inst:
                 message = inst[0]
                 namespace = self.section.handler.request.get('namespace')
-                name = self.section.handler.request.get('name')
                 body_template = self.section.handler.request.get('body_template')
             else:
                 if not namespace:
-                    message = 'Namespace is required'
-                elif namespace in self.theme_namespaces:
-                    message = 'Namespace "%s" already exists' % namespace
-                elif not name:
                     message = 'Name is required'
+                elif namespace in self.theme_namespaces:
+                    message = 'Name "%s" already exists' % namespace
             if message:
-                return '<div class="status error">%s</div>%s' % (message, get_form(self.section, namespace, name, body_template))
-            key = Theme(namespace=namespace, name=name, body_template=body_template).put()
+                return '<div class="status error">%s</div>%s' % (message, get_form(self.section, namespace, body_template))
+            key = Theme(namespace=namespace, body_template=body_template).put()
             self.theme_keys.append(str(key))
             self.theme_namespaces.append(namespace)
             self.update()
@@ -95,19 +92,17 @@ class Themes(content.Content):
         message = ''
         if self.section.handler.request.get('submit'):
             try:
-                _, name, body_template = get_values(self.section.handler.request)
-                if not name: raise Exception('Name is required')
+                _, body_template = get_values(self.section.handler.request)
             except Exception as inst:
                 message = '<div class="status error">%s</div>' % inst[0]
             else:
                 theme = self.get_theme(namespace)
-                theme.name = name
                 theme.body_template = body_template
                 theme.put()
                 self.update()
                 cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
                 raise Exception('Redirect', self.section.action_redirect_path)
-        return '%s<h2>Edit theme</h2>%s' % (message, get_form(self.section, theme.namespace, theme.name, theme.body_template, True))
+        return '%s<h2>Edit theme</h2>%s' % (message, get_form(self.section, theme.namespace, theme.body_template, True))
 
     def action_get(self):
         pass
@@ -152,14 +147,12 @@ class Themes(content.Content):
 
 def get_values(request):
         namespace = request.get('namespace')
-        name = request.get('name')
         body_template = request.get('body_template')
-        return namespace, name, validated_body_template(body_template)
+        return namespace, validated_body_template(body_template)
 
-def get_form(s, namespace='', name='', body_template='', disable_namespace=False):
+def get_form(s, namespace='', body_template='', disable_namespace=False):
     f = form(s, s.full_path)
-    f.add_control(control(s, 'text', 'namespace', namespace, 'Namespace (permanent)', disabled=disable_namespace))
-    f.add_control(control(s, 'text', 'name', name, 'Name', 50))
+    f.add_control(control(s, 'text', 'namespace', namespace, 'Name (permanent)', disabled=disable_namespace))
     f.add_control(textareacontrol(s, 'body_template', body_template, 'Body template', 90, 50))
     f.add_control(control(s, 'submit', 'submit', 'Submit'))
     return unicode(f)
