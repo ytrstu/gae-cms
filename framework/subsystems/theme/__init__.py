@@ -33,8 +33,10 @@ class Theme(db.Model):
 
     namespace = db.StringProperty()
     body_template = db.TextProperty()
-    css_files = db.ListProperty(item_type=db.Text)
-    js_files = db.ListProperty(item_type=db.Text)
+    css_filenames = db.StringListProperty()
+    css_contents = db.ListProperty(item_type=db.Text)
+    js_filenames = db.StringListProperty()
+    js_contents = db.ListProperty(item_type=db.Text)
 
 def get_local_themes():
     templates = []
