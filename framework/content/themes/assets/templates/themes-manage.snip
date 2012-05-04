@@ -1,14 +1,61 @@
-<h2>Manage themes</h2>
+{% load filters %}
+
+{{ content.section|yuijs:"yui/yui.js" }}
+{{ content.section|js:"themes-manage.js" }}
+
+{% captureas unique %}{{ content.unique_identifier }}-themes-manage-{{ forloop.counter0 }}{% endcaptureas %}
+
+<div id="{{ unique }}" class="themes-manage yui3-menu yui3-menu-horizontal yui3-splitbuttonnav">
+    <div class="yui3-menu-content">
+        <ul>
+            <li>
+                <span class="yui3-menu-label">
+                    <a href="#content-options-{{ unique }}">Themes</a>
+                    <a href="#content-options-{{ unique }}" class="yui3-menu-toggle">Themes Options</a>
+                </span>
+                <div id="content-options-{{ unique }}" class="yui3-menu">
+                    <div class="yui3-menu-content">
+                        <ul>
+        					<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/add">Add</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
 
 {% if content.theme_namespaces %}
 
-	{% load filters %}
 	{{ content.section|css:"themes-manage.css" }}
 
 	<ul class="themes manage">{% for namespace in content.theme_namespaces %}
-		<li><a href="/{{ content.section.path }}/themes/edit/{{ namespace }}">{{ namespace }}</a><a href="/{{ content.section.path }}/themes/delete/{{ namespace }}" class="delete" title="Delete">[Delete]</a></li>
+		<li>
+			<h3>{{ namespace }}</h3>
+			<a href="/{{ content.section.path }}/{{ content.namespace }}/edit/{{ namespace }}" class="edit" title="Edit template">[Edit</a>
+			<a href="/{{ content.section.path }}/{{ content.namespace }}/delete/{{ namespace }}" class="delete" title="Delete">, Delete]</a>
+			<ul><li><h4>CSS</h4>
+				<ul>
+					<li>
+						<a href="/{{ content.section.path }}/{{ content.namespace }}/add_css/{{ namespace }}">Add</a>
+					</li>
+				</ul>
+			</li></ul>
+			<ul><li><h4>Javascript</h4>
+				<ul>
+					<li>
+						<a href="/{{ content.section.path }}/{{ content.namespace }}/add_js/{{ namespace }}">Add</a>
+					</li>
+				</ul>
+			</li></ul>
+			<ul><li><h4>Images</h4>
+				<ul>
+					<li>
+						<a href="/{{ content.section.path }}/{{ content.namespace }}/add_image/{{ namespace }}">Add</a>
+					</li>
+				</ul>
+			</li></ul>
+		</li>
 	{% endfor %}</ul>
 
 {% endif %}
-
-<a href="/{{ content.section.path }}/themes/add">Add</a>
