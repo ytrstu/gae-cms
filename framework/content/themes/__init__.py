@@ -170,7 +170,9 @@ class Themes(content.Content):
         if self.section.handler.request.get('submit'):
             new_filename = self.section.handler.request.get('filename')
             css_content = self.section.handler.request.get('css_content')
-            if filename != new_filename and new_filename in theme.css_filenames:
+            if not new_filename:
+                message = '<div class="status error">Filename is required</div>'
+            elif filename != new_filename and new_filename in theme.css_filenames:
                 message = '<div class="status error">Filename already exists</div>'
             else:
                 theme.css_filenames.insert(index, new_filename)
