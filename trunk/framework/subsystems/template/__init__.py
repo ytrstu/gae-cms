@@ -25,31 +25,37 @@ import os
 from google.appengine.api import users
 
 from framework.subsystems import permission
-from framework.subsystems.theme import DEFAULT_LOCAL_THEME
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME, get_local_themes, get_custom_theme
 from framework.subsystems import utils
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
-from django.template import TemplateDoesNotExist
+from django.template import Template, Context, TemplateDoesNotExist
 
 def html(section, main=''):
     params = {
         'VERSION': os.environ['CURRENT_VERSION_ID'],
         'user': users.get_current_user(),
-        'is_admin': permission.is_admin(section.path),
         'section': section,
         'main': main,
     }
 
     try:
-        body = render_to_string((section.theme if section.theme else DEFAULT_LOCAL_THEME) + '.body', params).strip()
+        if not section.theme or section.theme in get_local_themes():
+            body = render_to_string((section.theme if section.theme else DEFAULT_LOCAL_THEME) + '.body', params).strip()
+        else:
+            t = get_custom_theme(section.theme)
+            if not t: raise TemplateDoesNotExist
+            body = Template(t.body_template).render(Context(params)).strip()
     except TemplateDoesNotExist:
         body = render_to_string(DEFAULT_LOCAL_THEME + '.body', params).strip()
 
+    menubar = snippet('user-menubar', {'section': section, 'user': users.get_current_user()})
+
     html = render_to_string('outer.html', params).replace('<body></body>',
-                                                          '<body class="%s">%s</body>' % (' '.join(section.classes), body),
+                                                          '<body class="%s">%s%s</body>' % (' '.join(section.classes), body, menubar),
                                                           1)
 
     section.css = section.css + section.localthemecss
@@ -84,7 +90,7 @@ def get(content):
     '''
     Only necessary so that the DJANGO_SETTINGS_MODULE environment gets initialized
     '''
-    return str(render_to_string('blank.snip', {'content': content}))
+    return str(snippet('plain', {'content': content}))
 
 def snippet(filename, params=None):
     return render_to_string(filename + '.snip', params).strip()

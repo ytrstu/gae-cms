@@ -29,6 +29,3 @@
 <div class="ft">
 	{{ section|view:"GLOBAL, footer, Text, default"|safe }}
 </div>
-{% if user %}
-	{{ section|view:"GLOBAL, slingbar, User, slingbar"|safe }}
-{% endif %}
