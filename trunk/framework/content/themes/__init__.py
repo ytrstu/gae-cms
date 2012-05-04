@@ -39,11 +39,19 @@ class Themes(content.Content):
     author = 'Imran Somji'
 
     actions = [
+        ['get', 'Get', False, True],
+        ['manage', 'Manage', False, False],
         ['add', 'Add', False, False],
         ['edit', 'Edit', False, False],
-        ['get', 'Get', False, True],
         ['delete', 'Delete', False, False],
-        ['manage', 'Manage', False, False],
+        ['add_css', 'Add CSS', False, False],
+        ['edit_css', 'Edit CSS', False, False],
+        ['delete_css', 'Delete CSS', False, False],
+        ['add_js', 'Add JS', False, False],
+        ['edit_js', 'Edit JS', False, False],
+        ['delete_js', 'Delete JS', False, False],
+        ['add_image', 'Add image', False, False],
+        ['delete_image', 'Delete CSS', False, False],
     ]
     views = [
         ['menu', 'Theme menu', False],
@@ -104,7 +112,7 @@ class Themes(content.Content):
                 self.update()
                 cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
                 raise Exception('Redirect', self.section.action_redirect_path)
-        return '%s<h2>Edit theme</h2>%s' % (message, get_form(self.section, theme.namespace, theme.body_template, True))
+        return '%s<h2>Edit template</h2>%s' % (message, get_form(self.section, theme.namespace, theme.body_template, True))
 
     def action_get(self):
         pass

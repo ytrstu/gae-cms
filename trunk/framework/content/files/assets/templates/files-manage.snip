@@ -6,7 +6,10 @@
 	{{ content.section|css:"files-manage.css" }}
 
 	<ul class="files manage">{% for item in content.filenames %}
-		<li><a href="/{{ content.section.path }}/files/get/{{ item }}">{{ item }}</a><a href="/{{ content.section.path }}/files/delete/{{ item }}" class="delete" title="Delete">[Delete]</a></li>
+		<li>
+			<a href="/{{ content.section.path }}/files/get/{{ item }}">{{ item }}</a>
+			<a href="/{{ content.section.path }}/files/delete/{{ item }}" class="delete" title="Delete">[Delete]</a>
+		</li>
 	{% endfor %}</ul>
 
 {% endif %}
