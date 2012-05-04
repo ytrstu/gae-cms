@@ -24,6 +24,9 @@ import os
 
 from google.appengine.ext import db
 
+from framework.subsystems import cache
+
+CACHE_KEY = 'CUSTOM_THEMES'
 DEFAULT_LOCAL_THEME = 'Google Code'
 
 class Theme(db.Model):
@@ -40,3 +43,15 @@ def get_local_themes():
         if filename.endswith('.body'):
             templates.append(filename[:-5])
     return templates
+
+def get_custom_themes():
+    custom_themes = cache.get(CACHE_KEY)
+    if not custom_themes:
+        custom_themes = Theme.gql("")
+        cache.set(CACHE_KEY, custom_themes)
+    return custom_themes
+
+def get_custom_theme(namespace):
+    for t in get_custom_themes():
+        if t.namespace == namespace: return t
+    return None

@@ -23,7 +23,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from google.appengine.ext import db
 
 from framework import content
-from framework.subsystems.theme import Theme
+from framework.subsystems.theme import Theme, get_local_themes
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 from framework.subsystems import cache
@@ -73,6 +73,8 @@ class Themes(content.Content):
                     message = 'Name is required'
                 elif namespace in self.theme_namespaces:
                     message = 'Name "%s" already exists' % namespace
+                elif namespace in get_local_themes():
+                    message = 'Name "%s" is already a local theme' % namespace
             if message:
                 return '<div class="status error">%s</div>%s' % (message, get_form(self.section, namespace, body_template))
             key = Theme(namespace=namespace, body_template=body_template).put()
