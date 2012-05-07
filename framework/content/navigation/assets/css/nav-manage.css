@@ -11,7 +11,7 @@
 	padding-bottom: 5px;
 }
 .navigation.manage a.edit, .navigation.manage a.subsection, .navigation.manage a.reorder, .navigation.manage span.reorder-disabled, .navigation.manage a.delete, .navigation.manage span.delete-disabled {
-	background: url(/theme/images/sprite.png) 0 -587px no-repeat;
+	background: url(/framework/assets/images/sprite.png) 0 -587px no-repeat;
 	width: 14px;
 	display: block;
 	text-indent: -9999px;

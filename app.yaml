@@ -32,9 +32,9 @@ libraries:
   version: 1.2
 
 handlers:
-- url: /theme/images/sprite.png
-  static_files: theme/images/sprite.png
-  upload: theme/images/sprite.png
+- url: /framework/assets/images/sprite.png
+  static_files: framework/assets/images/sprite.png
+  upload: framework/assets/images/sprite.png
   expiration: 30d
 
 - url: /([^./]+\.(css|js))

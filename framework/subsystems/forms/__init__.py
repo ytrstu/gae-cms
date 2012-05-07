@@ -117,7 +117,7 @@ class textareacontrol(control):
         out = ('<label for="' + self.name + '">' + self.label + '</label>') if self.label else ''
         out += '<textarea name="' + self.name + '" id="' + self.name + '"'
         if self.width: out += ' style="width:' + unicode(self.width) + '%"'
-        if self.rows: out += ' rows="' + unicode(self.rows) + '"'
+        if self.rows: out += ' rows="' + unicode(self.rows) + '" cols="20"'
         if(self.html): out += ' class="rich-text-editor"'
         out += '>'
         if self.value: out += self.value
