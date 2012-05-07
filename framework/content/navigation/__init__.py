@@ -169,9 +169,15 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(control(s, 'text', 'title', title if title else '', 'Title', 60))
     f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
-    local_themes = [[x, x] for x in get_local_themes()]
-    custom_themes = [[x.namespace, x.namespace] for x in get_custom_themes()]
-    combined_themes = [['Local', local_themes], ['Custom', custom_themes]] if custom_themes else local_themes
+    combined_themes = get_local_themes()
+    for t in get_custom_themes():
+        templates = []
+        for te in t.body_template_names:
+            templates.append([te, te])
+        combined_themes.append([t.namespace, templates])
+    #print local_themes
+    #custom_themes = [[x.namespace, x.namespace] for x in get_custom_themes()]
+    #combined_themes = [['Local', local_themes], ['Custom', custom_themes]] if custom_themes else local_themes
     f.add_control(selectcontrol(s, 'theme', combined_themes, theme if theme else DEFAULT_LOCAL_THEME, 'Theme'))
     f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))

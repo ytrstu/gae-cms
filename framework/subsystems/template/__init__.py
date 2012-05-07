@@ -25,7 +25,7 @@ import os
 from google.appengine.api import users
 
 from framework.subsystems import permission
-from framework.subsystems.theme import DEFAULT_LOCAL_THEME, get_local_themes, get_custom_theme
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME, is_local_theme, get_custom_template
 from framework.subsystems import utils
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -43,12 +43,10 @@ def html(section, main=''):
     }
 
     try:
-        if not section.theme or section.theme in get_local_themes():
+        if not section.theme or is_local_theme(section.theme):
             body = render_to_string((section.theme if section.theme else DEFAULT_LOCAL_THEME) + '.body', params).strip()
         else:
-            t = get_custom_theme(section.theme)
-            if not t: raise TemplateDoesNotExist
-            body = Template(t.body_template).render(Context(params)).strip()
+            body = Template(get_custom_template(section.theme)).render(Context(params)).strip()
     except TemplateDoesNotExist:
         body = render_to_string(DEFAULT_LOCAL_THEME + '.body', params).strip()
 

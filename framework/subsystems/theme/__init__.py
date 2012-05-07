@@ -24,7 +24,10 @@ import os
 
 from google.appengine.ext import db
 
+from django.template import TemplateDoesNotExist
+
 from framework.subsystems import cache
+from framework.subsystems import utils
 
 CACHE_KEY = 'CUSTOM_THEMES'
 DEFAULT_LOCAL_THEME = 'Google Code'
@@ -32,7 +35,8 @@ DEFAULT_LOCAL_THEME = 'Google Code'
 class Theme(db.Model):
 
     namespace = db.StringProperty()
-    body_template = db.TextProperty()
+    body_template_names = db.StringListProperty()
+    body_template_contents = db.ListProperty(item_type=db.Text)
     css_filenames = db.StringListProperty()
     css_contents = db.ListProperty(item_type=db.Text)
     js_filenames = db.StringListProperty()
@@ -40,11 +44,20 @@ class Theme(db.Model):
 
 def get_local_themes():
     templates = []
-    directory = os.listdir('theme/templates')
-    for filename in directory:
-        if filename.endswith('.body'):
-            templates.append(filename[:-5])
+    for namespace in os.listdir('./themes'):
+        template = []
+        for filename in os.listdir('./themes/' + namespace + '/templates'):
+            if filename.endswith('.body'):
+                template.append([filename[:-5], filename[:-5]])
+        templates.append([namespace, template])
     return templates
+
+def is_local_theme(t):
+    for namespace in os.listdir('./themes'):
+        for filename in os.listdir('./themes/' + namespace + '/templates'):
+            if filename.endswith('.body') and filename[:-5] == t:
+                return True
+    return False
 
 def get_custom_themes():
     custom_themes = cache.get(CACHE_KEY)
@@ -53,7 +66,11 @@ def get_custom_themes():
         cache.set(CACHE_KEY, custom_themes)
     return custom_themes
 
-def get_custom_theme(namespace):
-    for t in get_custom_themes():
-        if t.namespace == namespace: return t
-    return None
+def get_custom_template(template_name):
+    for t in Theme.gql(""):
+        try:
+            index = t.body_template_names.index(template_name)
+            return t.body_template_contents[index]
+        except:
+            pass
+    raise TemplateDoesNotExist
