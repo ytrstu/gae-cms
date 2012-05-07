@@ -27,6 +27,7 @@ from framework.subsystems.theme import Theme, get_local_themes
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 from framework.subsystems import cache
+from framework.subsystems.file import File
 
 CACHE_KEY_PREPEND = 'THEME_'
 
@@ -55,12 +56,6 @@ class Themes(content.Content):
         ['menu', 'Theme menu', False],
     ]
 
-    def action_get(self):
-        pass
-
-    def action_manage(self):
-        return template.snippet('themes-manage', { 'content': self })
-
     def on_delete(self):
         for i in range(len(self.theme_namespaces)):
             # This can be done more efficiently via GQL
@@ -70,6 +65,34 @@ class Themes(content.Content):
             del self.theme_keys[i]
             del self.theme_namespaces[i]
         self.update()
+
+    def action_get(self):
+        if not self.section.path_params or len(self.section.path_params) != 3:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        resource = self.section.path_params[1]
+        filename = self.section.path_params[2]
+        if resource == 'css':
+            filenames, contents = theme.css_filenames, theme.css_contents
+            content_type = 'text/css'
+        elif resource == 'js':
+            filenames, contents = theme.js_filenames, theme.js_contents
+            content_type = 'text/javascript'
+        elif resource == 'image':
+            pass
+        else:
+            raise Exception('NotFound')
+        try:
+            index = filenames.index(filename)
+            data = db.Blob(str(contents[index]))
+        except:
+            raise Exception('NotFound')
+        else:
+            raise Exception('SendFileBlob', File(filename=filename, content_type=content_type, data=data))
+
+    def action_manage(self):
+        themes = [self.get_theme(namespace) for namespace in self.theme_namespaces]
+        return template.snippet('themes-manage', { 'content': self, 'themes': themes })
 
     def action_add(self):
         if self.section.handler.request.get('submit'):
@@ -99,10 +122,7 @@ class Themes(content.Content):
     def action_edit(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
             raise Exception('NotFound')
-        namespace = self.section.path_params[0]
-        theme = self.get_theme(namespace)
-        if not theme:
-            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
         message = ''
         if self.section.handler.request.get('submit'):
             try:
@@ -110,7 +130,6 @@ class Themes(content.Content):
             except Exception as inst:
                 message = '<div class="status error">%s</div>' % inst[0]
             else:
-                theme = self.get_theme(namespace)
                 theme.body_template = body_template
                 theme.put()
                 self.update()
@@ -121,26 +140,17 @@ class Themes(content.Content):
     def action_delete(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
             raise Exception('NotFound')
-        theme_namespace = self.section.path_params[0]
-        if theme_namespace not in self.theme_namespaces:
-            raise Exception('NotFound')
-        elif self.section.handler.request.get('submit'):
-            theme = self.get_theme(theme_namespace)
-            if not theme:
-                raise Exception('NotFound')
-            index = self.theme_namespaces.index(theme_namespace)
-            cache.delete(CACHE_KEY_PREPEND + self.theme_keys[index])
+        theme = self.get_theme(self.section.path_params[0])
+        if self.section.handler.request.get('submit'):
+            self.theme_keys.remove(str(theme.key()))
+            self.theme_namespaces.remove(theme.namespace)
+            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
             theme.delete()
-            del self.theme_keys[index]
-            del self.theme_namespaces[index]
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
-        return '<div class="status warning">Are you sure you wish to delete theme "%s" and all associated resources?</div>%s' % (theme_namespace, unicode(f))
-
-    def view_menu(self, params=None):
-        return template.snippet('themes-menu', { 'content': self })
+        return '<div class="status warning">Are you sure you wish to delete theme "%s" and all associated resources?</div>%s' % (theme.namespace, unicode(f))
 
     def get_theme(self, namespace):
         item = None
@@ -151,40 +161,85 @@ class Themes(content.Content):
                 item = Theme.get(key)
                 cache.set(CACHE_KEY_PREPEND + key, item)
         finally:
+            if not item:
+                raise Exception('NotFound')
             return item
 
     def action_edit_css(self):
         if not self.section.path_params or len(self.section.path_params) > 2:
             raise Exception('NotFound')
         theme = self.get_theme(self.section.path_params[0])
-        if not theme:
-            raise Exception('NotFound')
         filename = self.section.path_params[1] if len(self.section.path_params) == 2 else ''
+        return self.edit_text_resource(theme, filename, theme.css_filenames, theme.css_contents)
+
+    def action_edit_js(self):
+        if not self.section.path_params or len(self.section.path_params) > 2:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        filename = self.section.path_params[1] if len(self.section.path_params) == 2 else ''
+        return self.edit_text_resource(theme, filename, theme.js_filenames, theme.js_contents)
+
+    def edit_text_resource(self, theme, filename, filenames, contents):
         if filename:
-            index = theme.css_filenames.index(filename)
-            css_content = theme.css_contents[index]
+            index = filenames.index(filename)
+            content = contents[index]
         else:
-            index = len(theme.css_filenames) if theme.css_filenames else 0
-            css_content = ''
+            index = len(filenames) if filenames else 0
+            content = ''
         message = ''
         if self.section.handler.request.get('submit'):
             new_filename = self.section.handler.request.get('filename')
-            css_content = self.section.handler.request.get('css_content')
+            content = self.section.handler.request.get('content')
             if not new_filename:
                 message = '<div class="status error">Filename is required</div>'
-            elif filename != new_filename and new_filename in theme.css_filenames:
+            elif filename != new_filename and new_filename in filenames:
                 message = '<div class="status error">Filename already exists</div>'
             else:
-                theme.css_filenames.insert(index, new_filename)
-                theme.css_contents.insert(index, db.Text(css_content))
+                if filename:
+                    filenames[index] = new_filename
+                    contents[index] = db.Text(content)
+                else:
+                    filenames.append(new_filename)
+                    contents.append(db.Text(content))
                 theme.put()
                 cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
                 raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'filename', filename, 'Filename'))
-        f.add_control(textareacontrol(self.section, 'css_content', css_content, 'CSS', 90, 50))
+        f.add_control(textareacontrol(self.section, 'content', content, 'CSS', 90, 50))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '%s<h1>Add CSS</h1>%s' % (message, unicode(f))
+
+    def action_delete_css(self):
+        if not self.section.path_params or len(self.section.path_params) != 2:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        if self.section.path_params[1] not in theme.css_filenames:
+            raise Exception('NotFound')
+        return self.delete_text_resource(theme, self.section.path_params[1], theme.css_filenames, theme.css_contents)
+
+    def action_delete_js(self):
+        if not self.section.path_params or len(self.section.path_params) != 2:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        if self.section.path_params[1] not in theme.js_filenames:
+            raise Exception('NotFound')
+        return self.delete_text_resource(theme, self.section.path_params[1], theme.js_filenames, theme.js_contents)
+
+    def delete_text_resource(self, theme, filename, filenames, contents):
+        if self.section.handler.request.get('submit'):
+            index = filenames.index(filename)
+            del filenames[index]
+            del contents[index]
+            theme.put()
+            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+            raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
+        return '<div class="status warning">Are you sure you wish to delete "%s"?</div>%s' % (filename, unicode(f))
+
+    def view_menu(self, params=None):
+        return template.snippet('themes-menu', { 'content': self })
 
 def get_values(request):
         namespace = request.get('namespace')
