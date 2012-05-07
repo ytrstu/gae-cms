@@ -206,7 +206,7 @@ class Themes(content.Content):
                 raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'filename', filename, 'Filename'))
-        f.add_control(textareacontrol(self.section, 'content', content, 'CSS', 90, 50))
+        f.add_control(textareacontrol(self.section, 'content', content, 'Content', 90, 50))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '%s<h1>Add CSS</h1>%s' % (message, unicode(f))
 
