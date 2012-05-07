@@ -43,8 +43,9 @@ class Themes(content.Content):
         ['get', 'Get', False, True],
         ['manage', 'Manage', False, False],
         ['add', 'Add', False, False],
-        ['edit', 'Edit', False, False],
         ['delete', 'Delete', False, False],
+        ['edit_body_template', 'Edit body template', False, False],
+        ['delete_body_template', 'Delete body template', False, False],
         ['edit_css', 'Edit CSS', False, False],
         ['delete_css', 'Delete CSS', False, False],
         ['edit_js', 'Edit JS', False, False],
@@ -95,47 +96,26 @@ class Themes(content.Content):
         return template.snippet('themes-manage', { 'content': self, 'themes': themes })
 
     def action_add(self):
-        if self.section.handler.request.get('submit'):
-            message = ''
-            try:
-                namespace, body_template = get_values(self.section.handler.request)
-            except Exception as inst:
-                message = inst[0]
-                namespace = self.section.handler.request.get('namespace')
-                body_template = self.section.handler.request.get('body_template')
-            else:
-                if not namespace:
-                    message = 'Name is required'
-                elif namespace in self.theme_namespaces:
-                    message = 'Name "%s" already exists' % namespace
-                elif namespace in get_local_themes():
-                    message = 'Name "%s" is already a local theme' % namespace
-            if message:
-                return '<div class="status error">%s</div>%s' % (message, get_form(self.section, namespace, body_template))
-            key = Theme(namespace=namespace, body_template=body_template).put()
-            self.theme_keys.append(str(key))
-            self.theme_namespaces.append(namespace)
-            self.update()
-            raise Exception('Redirect', self.section.action_redirect_path)
-        return '<h2>Add theme</h2>%s' % get_form(self.section)
-
-    def action_edit(self):
-        if not self.section.path_params or len(self.section.path_params) != 1:
-            raise Exception('NotFound')
-        theme = self.get_theme(self.section.path_params[0])
         message = ''
         if self.section.handler.request.get('submit'):
-            try:
-                _, body_template = get_values(self.section.handler.request)
-            except Exception as inst:
-                message = '<div class="status error">%s</div>' % inst[0]
+            namespace = self.section.handler.request.get('namespace')
+            if not namespace:
+                message = '<div class="status error">Namespace is required</div>'
+            elif namespace in self.theme_namespaces:
+                message = '<div class="status error">Namespace "%s" already exists</div>' % namespace
+            elif namespace in get_local_themes():
+                # TODO get_local_theme_namespaces
+                message = '<div class="status error">Namespace "%s" is already a local theme</div>' % namespace
             else:
-                theme.body_template = body_template
-                theme.put()
+                key = Theme(namespace=namespace).put()
+                self.theme_keys.append(str(key))
+                self.theme_namespaces.append(namespace)
                 self.update()
-                cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
                 raise Exception('Redirect', self.section.action_redirect_path)
-        return '%s<h2>Edit template</h2>%s' % (message, get_form(self.section, theme.namespace, theme.body_template, True))
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'text', 'namespace', '', 'Namespace (permanent)'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
+        return '%s<h2>Add theme</h2>%s' % (message, unicode(f))
 
     def action_delete(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
@@ -165,6 +145,19 @@ class Themes(content.Content):
                 raise Exception('NotFound')
             return item
 
+    def action_edit_body_template(self):
+        if not self.section.path_params or len(self.section.path_params) > 2:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        filename = self.section.path_params[1] if len(self.section.path_params) == 2 else ''
+        try:
+            ret = self.edit_text_resource(theme, filename, theme.body_template_names, theme.body_template_contents, True)
+        except Exception as inst:
+            if inst[0] == 'Redirect' and filename != self.section.handler.request.get('filename'):
+                pass # TODO: Modify all sections that have the same theme name
+                raise Exception(inst[0], inst[1])
+        return ret
+
     def action_edit_css(self):
         if not self.section.path_params or len(self.section.path_params) > 2:
             raise Exception('NotFound')
@@ -179,7 +172,7 @@ class Themes(content.Content):
         filename = self.section.path_params[1] if len(self.section.path_params) == 2 else ''
         return self.edit_text_resource(theme, filename, theme.js_filenames, theme.js_contents)
 
-    def edit_text_resource(self, theme, filename, filenames, contents):
+    def edit_text_resource(self, theme, filename, filenames, contents, validate_body_template=False):
         if filename:
             index = filenames.index(filename)
             content = contents[index]
@@ -195,20 +188,34 @@ class Themes(content.Content):
             elif filename != new_filename and new_filename in filenames:
                 message = '<div class="status error">Filename already exists</div>'
             else:
-                if filename:
-                    filenames[index] = new_filename
-                    contents[index] = db.Text(content)
+                try:
+                    if validate_body_template:
+                        content = validated_body_template(content)
+                except Exception as inst:
+                    message = '<div class="status error">%s</div>' % inst[0]
                 else:
-                    filenames.append(new_filename)
-                    contents.append(db.Text(content))
-                theme.put()
-                cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
-                raise Exception('Redirect', self.section.action_redirect_path)
+                    if filename:
+                        filenames[index] = new_filename
+                        contents[index] = db.Text(content)
+                    else:
+                        filenames.append(new_filename)
+                        contents.append(db.Text(content))
+                    theme.put()
+                    cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+                    raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'filename', filename, 'Filename'))
         f.add_control(textareacontrol(self.section, 'content', content, 'Content', 90, 50))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
-        return '%s<h1>Add CSS</h1>%s' % (message, unicode(f))
+        return '%s<h1>Add</h1>%s' % (message, unicode(f))
+
+    def action_delete_body_template(self):
+        if not self.section.path_params or len(self.section.path_params) != 2:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        if self.section.path_params[1] not in theme.body_template_names:
+            raise Exception('NotFound')
+        return self.delete_text_resource(theme, self.section.path_params[1], theme.body_template_names, theme.body_template_contents)
 
     def action_delete_css(self):
         if not self.section.path_params or len(self.section.path_params) != 2:
@@ -240,18 +247,6 @@ class Themes(content.Content):
 
     def view_menu(self, params=None):
         return template.snippet('themes-menu', { 'content': self })
-
-def get_values(request):
-        namespace = request.get('namespace')
-        body_template = request.get('body_template')
-        return namespace, validated_body_template(body_template)
-
-def get_form(s, namespace='', body_template='', disable_namespace=False):
-    f = form(s, s.full_path)
-    f.add_control(control(s, 'text', 'namespace', namespace, 'Name (permanent)', disabled=disable_namespace))
-    f.add_control(textareacontrol(s, 'body_template', body_template, 'Body template', 90, 50))
-    f.add_control(control(s, 'submit', 'submit', 'Submit'))
-    return unicode(f)
 
 def validated_body_template(body_template):
     if '{{ main|safe }}' not in body_template:

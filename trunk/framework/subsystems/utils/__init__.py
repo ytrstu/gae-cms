@@ -66,9 +66,9 @@ def mobile_ua(section):
                 return hint
     return None
 
-def file_search(search):
+def file_search(search, root='.'):
     files = []
-    for dirpath, _, filenames in os.walk('.'):
+    for dirpath, _, filenames in os.walk(root):
         for filename in filenames:
             if filename in search:
                 files.append(os.path.join(dirpath, filename))
@@ -78,9 +78,9 @@ def file_search(search):
             if f.endswith(os.path.sep + s): ret.append(f)
     return ret
 
-def dir_search(search):
+def dir_search(search, root='.'):
     directories = []
-    for dirpath, dirnames, _ in os.walk('.'):
+    for dirpath, dirnames, _ in os.walk(root):
         for dirname in dirnames:
             if dirname in search:
                 directories.append(os.path.join(dirpath, dirname))

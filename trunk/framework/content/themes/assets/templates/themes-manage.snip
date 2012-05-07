@@ -9,6 +9,18 @@
 			<h3>{{ theme.namespace }}</h3>
 			<a href="/{{ content.section.path }}/{{ content.namespace }}/edit/{{ theme.namespace }}" class="edit" title="Edit template">[Edit</a>
 			<a href="/{{ content.section.path }}/{{ content.namespace }}/delete/{{ theme.namespace }}" class="delete" title="Delete">, Delete]</a>
+			<ul><li><h4>Body templates</h4>
+				<ul>
+					{% for f in theme.body_template_names %}
+						<li>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/get/body_template/{{ theme.namespace }}/css/{{ f }}">{{ f }}</a>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/edit_body_template/{{ theme.namespace }}/{{ f }}" class="edit" title="Edit body template">[Edit</a>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/delete_body_template/{{ theme.namespace }}/{{ f }}" class="delete" title="Delete body template">, Delete]</a>
+						</li>
+					{% endfor %}
+					<li><a href="/{{ content.section.path }}/{{ content.namespace }}/edit_body_template/{{ theme.namespace }}">Add</a></li>
+				</ul>
+			</li></ul>
 			<ul><li><h4>CSS</h4>
 				<ul>
 					{% for f in theme.css_filenames %}
