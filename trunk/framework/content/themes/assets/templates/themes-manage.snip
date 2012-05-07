@@ -1,58 +1,41 @@
 {% load filters %}
 
-{{ content.section|yuijs:"yui/yui.js" }}
-{{ content.section|js:"themes-manage.js" }}
-
-{% captureas unique %}{{ content.unique_identifier }}-themes-manage-{{ forloop.counter0 }}{% endcaptureas %}
-
-<div id="{{ unique }}" class="themes-manage yui3-menu yui3-menu-horizontal yui3-splitbuttonnav">
-    <div class="yui3-menu-content">
-        <ul>
-            <li>
-                <span class="yui3-menu-label">
-                    <a href="#content-options-{{ unique }}">Themes</a>
-                    <a href="#content-options-{{ unique }}" class="yui3-menu-toggle">Themes Options</a>
-                </span>
-                <div id="content-options-{{ unique }}" class="yui3-menu">
-                    <div class="yui3-menu-content">
-                        <ul>
-        					<li class="yui3-menuitem"><a class="yui3-menuitem-content" href="/{{ content.section.path }}/{{ content.namespace }}/add">Add</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </li>
-        </ul>
-    </div>
-</div>
-
 {% if content.theme_namespaces %}
 
 	{{ content.section|css:"themes-manage.css" }}
 
-	<ul class="themes manage">{% for namespace in content.theme_namespaces %}
+	<ul class="themes manage">{% for theme in themes %}
 		<li>
-			<h3>{{ namespace }}</h3>
-			<a href="/{{ content.section.path }}/{{ content.namespace }}/edit/{{ namespace }}" class="edit" title="Edit template">[Edit</a>
-			<a href="/{{ content.section.path }}/{{ content.namespace }}/delete/{{ namespace }}" class="delete" title="Delete">, Delete]</a>
+			<h3>{{ theme.namespace }}</h3>
+			<a href="/{{ content.section.path }}/{{ content.namespace }}/edit/{{ theme.namespace }}" class="edit" title="Edit template">[Edit</a>
+			<a href="/{{ content.section.path }}/{{ content.namespace }}/delete/{{ theme.namespace }}" class="delete" title="Delete">, Delete]</a>
 			<ul><li><h4>CSS</h4>
 				<ul>
-					<li>
-						<a href="/{{ content.section.path }}/{{ content.namespace }}/edit_css/{{ namespace }}">Add</a>
-					</li>
+					{% for f in theme.css_filenames %}
+						<li>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/get/{{ theme.namespace }}/css/{{ f }}">{{ f }}</a>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/edit_css/{{ theme.namespace }}/{{ f }}" class="edit" title="Edit CSS">[Edit</a>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/delete_css/{{ theme.namespace }}/{{ f }}" class="delete" title="Delete CSS">, Delete]</a>
+						</li>
+					{% endfor %}
+					<li><a href="/{{ content.section.path }}/{{ content.namespace }}/edit_css/{{ theme.namespace }}">Add</a></li>
 				</ul>
 			</li></ul>
 			<ul><li><h4>Javascript</h4>
 				<ul>
-					<li>
-						<a href="/{{ content.section.path }}/{{ content.namespace }}/edit_js/{{ namespace }}">Add</a>
-					</li>
+					{% for f in theme.js_filenames %}
+						<li>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/get/{{ theme.namespace }}/js/{{ f }}">{{ f }}</a>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/edit_js/{{ theme.namespace }}/{{ f }}" class="edit" title="Edit JS">[Edit</a>
+							<a href="/{{ content.section.path }}/{{ content.namespace }}/delete_js/{{ theme.namespace }}/{{ f }}" class="delete" title="Delete JS">, Delete]</a>
+						</li>
+					{% endfor %}
+					<li><a href="/{{ content.section.path }}/{{ content.namespace }}/edit_js/{{ theme.namespace }}">Add</a></li>
 				</ul>
 			</li></ul>
 			<ul><li><h4>Images</h4>
 				<ul>
-					<li>
-						<a href="/{{ content.section.path }}/{{ content.namespace }}/add_image/{{ namespace }}">Add</a>
-					</li>
+					<li><a href="/{{ content.section.path }}/{{ content.namespace }}/add_image/{{ theme.namespace }}">Add</a></li>
 				</ul>
 			</li></ul>
 		</li>
