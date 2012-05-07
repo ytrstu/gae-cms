@@ -30,7 +30,7 @@ from framework.subsystems import cache
 from framework.subsystems import utils
 
 CACHE_KEY = 'CUSTOM_THEMES'
-DEFAULT_LOCAL_THEME = 'Google Code'
+DEFAULT_LOCAL_THEME_TEMPLATE = 'Google Code/Default'
 
 class Theme(db.Model):
 
@@ -41,6 +41,8 @@ class Theme(db.Model):
     css_contents = db.ListProperty(item_type=db.Text)
     js_filenames = db.StringListProperty()
     js_contents = db.ListProperty(item_type=db.Text)
+    image_filenames = db.StringListProperty()
+    image_keys = db.StringListProperty()
 
 def get_local_themes():
     templates = []
@@ -48,16 +50,19 @@ def get_local_themes():
         template = []
         for filename in os.listdir('./themes/' + namespace + '/templates'):
             if filename.endswith('.body'):
-                template.append([filename[:-5], filename[:-5]])
+                template.append([namespace + '/' + filename[:-5], filename[:-5]])
         templates.append([namespace, template])
     return templates
 
-def is_local_theme(t):
+def is_local_theme_template(t):
     for namespace in os.listdir('./themes'):
         for filename in os.listdir('./themes/' + namespace + '/templates'):
-            if filename.endswith('.body') and filename[:-5] == t:
+            if namespace + '/' + filename == t + '.body':
                 return True
     return False
+
+def is_local_theme_namespace(n):
+    return n in os.listdir('./themes')
 
 def get_custom_themes():
     custom_themes = cache.get(CACHE_KEY)
@@ -66,11 +71,12 @@ def get_custom_themes():
         cache.set(CACHE_KEY, custom_themes)
     return custom_themes
 
-def get_custom_template(template_name):
-    for t in Theme.gql(""):
-        try:
-            index = t.body_template_names.index(template_name)
-            return t.body_template_contents[index]
-        except:
-            pass
+def get_custom_template(theme_template):
+    namespace, template_name = theme_template.split('/')
+    try:
+        t = Theme.gql("WHERE namespace=:1", namespace)[0]
+        index = t.body_template_names.index(template_name)
+        return t.body_template_contents[index]
+    except:
+        pass
     raise TemplateDoesNotExist

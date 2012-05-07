@@ -24,7 +24,7 @@ from framework import content
 from framework.subsystems import section
 from framework.subsystems import permission
 from framework.subsystems import template
-from framework.subsystems.theme import DEFAULT_LOCAL_THEME, get_local_themes, get_custom_themes
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_themes, get_custom_themes
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
 class Navigation(content.Content):
@@ -170,15 +170,12 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
     combined_themes = get_local_themes()
-    for t in get_custom_themes():
+    for custom_theme in get_custom_themes():
         templates = []
-        for te in t.body_template_names:
-            templates.append([te, te])
-        combined_themes.append([t.namespace, templates])
-    #print local_themes
-    #custom_themes = [[x.namespace, x.namespace] for x in get_custom_themes()]
-    #combined_themes = [['Local', local_themes], ['Custom', custom_themes]] if custom_themes else local_themes
-    f.add_control(selectcontrol(s, 'theme', combined_themes, theme if theme else DEFAULT_LOCAL_THEME, 'Theme'))
+        for template_name in custom_theme.body_template_names:
+            templates.append([custom_theme.namespace + '/' + template_name, template_name])
+        combined_themes.append([custom_theme.namespace, templates])
+    f.add_control(selectcontrol(s, 'theme', combined_themes, theme if theme else DEFAULT_LOCAL_THEME_TEMPLATE, 'Theme'))
     f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))
     f.add_control(control(s, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))

@@ -25,7 +25,7 @@ import os
 from google.appengine.api import users
 
 from framework.subsystems import permission
-from framework.subsystems.theme import DEFAULT_LOCAL_THEME, is_local_theme, get_custom_template
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, is_local_theme_template, get_custom_template
 from framework.subsystems import utils
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -43,12 +43,17 @@ def html(section, main=''):
     }
 
     try:
-        if not section.theme or is_local_theme(section.theme):
-            body = render_to_string((section.theme if section.theme else DEFAULT_LOCAL_THEME) + '.body', params).strip()
+        if not section.theme:
+            # TODO: Allow user to specify default theme
+            template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
+        elif is_local_theme_template(section.theme):
+            template_content = open('./themes/' + section.theme.replace('/', '/templates/', 1) + '.body', 'r').read()
         else:
-            body = Template(get_custom_template(section.theme)).render(Context(params)).strip()
+            template_content = get_custom_template(section.theme)
     except TemplateDoesNotExist:
-        body = render_to_string(DEFAULT_LOCAL_THEME + '.body', params).strip()
+        template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
+
+    body = Template(template_content).render(Context(params)).strip()
 
     menubar = snippet('user-menubar', {'section': section, 'user': users.get_current_user()})
 

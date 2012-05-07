@@ -223,7 +223,7 @@ def create_section(path, parent_path=None, name='', title='', keywords='', descr
     for item, _ in get_children(parent_path):
         if item['rank'] <= max_rank: max_rank = item['rank'] + 1
 
-    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, theme=(theme if theme != template.DEFAULT_LOCAL_THEME else ''), is_private=is_private, redirect_to=redirect_to, new_window=new_window, is_default=is_default)
+    section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, theme=(theme if theme != template.DEFAULT_LOCAL_THEME_TEMPLATE else ''), is_private=is_private, redirect_to=redirect_to, new_window=new_window, is_default=is_default)
     section.put()
     cache.delete(CACHE_KEY)
     return section
@@ -250,7 +250,7 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
 
         content.rename_section_paths(old.path, path)
 
-        new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, theme=(theme if theme != template.DEFAULT_LOCAL_THEME else ''), is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
+        new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, theme=(theme if theme != template.DEFAULT_LOCAL_THEME_TEMPLATE else ''), is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()
         new.put()
         cache.delete(CACHE_KEY)
@@ -271,7 +271,7 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
     old.title = title
     old.keywords = keywords
     old.description = description
-    old.theme = theme if theme != template.DEFAULT_LOCAL_THEME else ''
+    old.theme = theme if theme != template.DEFAULT_LOCAL_THEME_TEMPLATE else ''
     old.is_private = is_private
     old.is_default = is_default
     old.redirect_to = redirect_to

@@ -23,7 +23,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from google.appengine.ext import db
 
 from framework import content
-from framework.subsystems.theme import Theme, get_local_themes
+from framework.subsystems.theme import Theme, get_local_themes, is_local_theme_namespace
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 from framework.subsystems import cache
@@ -62,6 +62,10 @@ class Themes(content.Content):
             # This can be done more efficiently via GQL
             theme = self.get_theme(self.theme_namespaces[i])
             cache.delete(CACHE_KEY_PREPEND + self.theme_namespaces[i])
+            for key in theme.image_keys:
+                data = File.get(key)
+                cache.delete(CACHE_KEY_PREPEND + key)
+                data.delete()
             theme.delete()
             del self.theme_keys[i]
             del self.theme_namespaces[i]
@@ -80,7 +84,17 @@ class Themes(content.Content):
             filenames, contents = theme.js_filenames, theme.js_contents
             content_type = 'text/javascript'
         elif resource == 'image':
-            pass
+            data = None
+            try:
+                key = theme.image_keys[theme.image_filenames.index(filename)]
+                data = cache.get(CACHE_KEY_PREPEND + key)
+                if not data:
+                    data = File.get(key)
+                    cache.set(CACHE_KEY_PREPEND + key, data)
+            finally:
+                if not data:
+                    raise Exception('NotFound')
+                raise Exception('SendFileBlob', data)
         else:
             raise Exception('NotFound')
         try:
@@ -98,14 +112,13 @@ class Themes(content.Content):
     def action_add(self):
         message = ''
         if self.section.handler.request.get('submit'):
-            namespace = self.section.handler.request.get('namespace')
+            namespace = self.section.handler.request.get('namespace').replace('/', '')
             if not namespace:
                 message = '<div class="status error">Namespace is required</div>'
             elif namespace in self.theme_namespaces:
                 message = '<div class="status error">Namespace "%s" already exists</div>' % namespace
-            elif namespace in get_local_themes():
-                # TODO get_local_theme_namespaces
-                message = '<div class="status error">Namespace "%s" is already a local theme</div>' % namespace
+            elif is_local_theme_namespace(namespace):
+                message = '<div class="status error">Namespace "%s" is already a local theme namespace</div>' % namespace
             else:
                 key = Theme(namespace=namespace).put()
                 self.theme_keys.append(str(key))
@@ -181,7 +194,7 @@ class Themes(content.Content):
             content = ''
         message = ''
         if self.section.handler.request.get('submit'):
-            new_filename = self.section.handler.request.get('filename')
+            new_filename = self.section.handler.request.get('filename').replace('/', '')
             content = self.section.handler.request.get('content')
             if not new_filename:
                 message = '<div class="status error">Filename is required</div>'
@@ -238,6 +251,46 @@ class Themes(content.Content):
             index = filenames.index(filename)
             del filenames[index]
             del contents[index]
+            theme.put()
+            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+            raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
+        return '<div class="status warning">Are you sure you wish to delete "%s"?</div>%s' % (filename, unicode(f))
+
+    def action_add_image(self):
+        if not self.section.path_params or len(self.section.path_params) != 1:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        if self.section.handler.request.get('submit'):
+            filename = self.section.handler.request.POST['data'].filename.replace(' ', '_')
+            content_type = self.section.handler.request.POST['data'].type
+            data = db.Blob(self.section.handler.request.get('data'))
+            key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
+            theme.image_filenames.append(filename)
+            theme.image_keys.append(str(key))
+            theme.put()
+            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+            raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'file', 'data', label='Image'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
+        return '<h2>Add image</h2>%s' % unicode(f)
+
+    def action_delete_image(self):
+        if not self.section.path_params or len(self.section.path_params) != 2:
+            raise Exception('NotFound')
+        theme = self.get_theme(self.section.path_params[0])
+        filename = self.section.path_params[1]
+        if filename not in theme.image_filenames:
+            raise Exception('NotFound')
+        if self.section.handler.request.get('submit'):
+            index = theme.image_filenames.index(filename)
+            data = File.get(theme.image_keys[index])
+            cache.delete(CACHE_KEY_PREPEND + theme.image_keys[index])
+            data.delete()
+            del theme.image_keys[index]
+            del theme.image_filenames[index]
             theme.put()
             cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
             raise Exception('Redirect', self.section.action_redirect_path)
