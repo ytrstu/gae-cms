@@ -110,7 +110,7 @@ class Content(db.Model):
     def view(self, view, params=None, container_namespace=None, rank=None, total_ranks=None):
         if not permission.view_content(self, self.section, view):
             raise Exception('You do not have permission to view this content')
-        view_str = getattr(self, 'view_' + view)(params)
+        view_str = getattr(self, 'view_' + view)(params).strip()
         return self.get_manage_links(view, container_namespace, rank, total_ranks) + view_str
 
 def get_else_create(section_path, content_type, namespace, container_namespace=None):

@@ -1,13 +1,11 @@
-{% load filters %}
-
 {{ section|yuicss:"cssfonts/cssfonts.css,cssreset/cssreset.css,cssbase/cssbase.css" }}
-{{ section|localthemecss:"google-code.css" }}
+{{ section|themecss:"base.css" }}
 
 {% if section.mobile_ua %}
-	{{ section|localthemecss:"google-code-mobile.css" }}
+	{{ section|themecss:"mobile.css" }}
 	{{ section|viewport_content:"width=240, initial-scale=1.0" }}
 {% else %}
-	{{ section|localthemecss:"google-code-layout" }}
+	{{ section|themecss:"layout.css" }}
 	{{ section|yuicss:"cssgrids/cssgrids.css" }}
 {% endif %}
 

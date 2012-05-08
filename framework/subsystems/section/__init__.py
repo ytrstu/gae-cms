@@ -26,7 +26,7 @@ from google.appengine.ext import db
 from google.appengine.api import users
 
 from framework import content
-from framework.content.configuration import Configuration
+from framework.subsystems import configuration
 from framework.subsystems import cache
 from framework.subsystems import template
 from framework.subsystems import permission
@@ -105,8 +105,10 @@ def get_section(handler, full_path):
     if path_namespace: section.classes.append('content-' + path_namespace)
     if path_action: section.classes.append('action-' + path_action)
 
+    section.theme_namespace, section.theme_template = (section.theme if section.theme else template.DEFAULT_LOCAL_THEME_TEMPLATE).split('/')
+
     section.yuicss = []
-    section.localthemecss = []
+    section.themecss = []
     section.css = ['core.css']
     section.yuijs = []
     section.localthemejs = []
@@ -120,15 +122,7 @@ def get_section(handler, full_path):
     section.has_siblings = len(get_siblings(section.path)) > 1
     section.has_children = len(get_children(section.path)) > 0
 
-    section.configuration = content.get('Configuration', None, 'configuration')
-    if not section.configuration:
-        section.configuration = Configuration(parent=content.content_key('Configuration', None, 'configuration'),
-                                              namespace = 'configuration',
-                                              SITE_HEADER = 'gae-cms',
-                                              SITE_SUB_HEADER = 'Python-based Content Management System for Google App Engine',
-                                              )
-        section.configuration.put()
-    section.configuration = vars(section.configuration)['_entity']
+    section.configuration = vars(configuration.get_configuration())['_entity']
 
     return section
 

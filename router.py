@@ -25,8 +25,7 @@ import webapp2
 
 from framework.subsystems import section
 from framework.subsystems import template
-from framework.content import configuration
-import settings
+from framework.subsystems import configuration
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
@@ -58,7 +57,7 @@ class Router(webapp2.RequestHandler):
             elif inst[0] == 'AccessDenied':
                 err = 403
                 main = 'Access Denied'
-            elif settings.DEBUG:
+            elif configuration.debug_mode():
                 err = 400
                 main = 'RouterError: ' + unicode(inst) + '<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>'
             else:
@@ -72,4 +71,4 @@ class Router(webapp2.RequestHandler):
     def post(self, path):
         return self.get(path)
 
-app = webapp2.WSGIApplication([('(/.*)', Router)], debug=settings.DEBUG)
+app = webapp2.WSGIApplication([('(/.*)', Router)], debug=configuration.debug_mode())

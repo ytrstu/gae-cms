@@ -26,8 +26,8 @@ from django.template import Library
 from django import template
 
 from framework import content
+from framework.subsystems import configuration
 from framework.subsystems.section import MAIN_CONTAINER_NAMESPACE
-import settings
 
 register = Library()
 
@@ -55,7 +55,7 @@ def view(section, param_string):
             item = content.get_else_create(section.path if scope == content.SCOPE_LOCAL else None, content_type, namespace)
         return item.init(section).view(view, params)
     except Exception as inst:
-        error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if settings.DEBUG else ''
+        error = unicode(inst) + ('<div class="traceback">' + traceback.format_exc().replace('\n', '<br><br>') + '</div>') if configuration.debug_mode() else ''
         return '<div class="status error">Error: View "%s" does not exist: %s</div>' % (view, error)
 
 @register.filter
@@ -78,8 +78,8 @@ def css(section, args):
     return ''
 
 @register.filter
-def localthemecss(section, args):
-    [section.localthemecss.append(x.strip('/ ')) for x in args.split(',')]
+def themecss(section, args):
+    [section.themecss.append(x.strip('/ ')) for x in args.split(',')]
     return ''
 
 @register.filter
