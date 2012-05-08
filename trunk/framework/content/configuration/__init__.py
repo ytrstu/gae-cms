@@ -26,10 +26,9 @@ from framework import content
 from framework.subsystems import cache
 from framework.subsystems.file import File
 from framework.subsystems import template
-from framework.subsystems.forms import form, control, textareacontrol
+from framework.subsystems.forms import form, control, checkboxcontrol, textareacontrol
 
-ROBOTS_TXT_CACHE_KEY = 'ROBOTS_TXT_FILE'
-FAVICON_ICO_CACHE_KEY = 'FAVICON_ICO_FILE'
+CACHE_KEY = 'CONFIGURATION'
 
 class Configuration(content.Content):
 
@@ -38,6 +37,7 @@ class Configuration(content.Content):
     GOOGLE_ANALYTICS_UA = db.StringProperty()
     ROBOTS_TXT = db.TextProperty()
     FAVICON_ICO = db.ReferenceProperty(reference_class=File)
+    DEBUG_MODE = db.BooleanProperty(default=False)
 
     name = 'Configuration'
     author = 'Imran Somji'
@@ -55,7 +55,6 @@ class Configuration(content.Content):
             self.SITE_SUB_HEADER = self.section.handler.request.get('SITE_SUB_HEADER')
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
-            cache.delete(ROBOTS_TXT_CACHE_KEY)
             if self.section.handler.request.get('FAVICON_ICO'):
                 data = db.Blob(self.section.handler.request.get('FAVICON_ICO'))
                 if self.FAVICON_ICO:
@@ -63,7 +62,8 @@ class Configuration(content.Content):
                 else:
                     self.FAVICON_ICO = File(filename='favicon.ico', content_type='image/x-icon', data=data)
                 self.FAVICON_ICO.put()
-                cache.delete(FAVICON_ICO_CACHE_KEY)
+            self.DEBUG_MODE = self.section.handler.request.get('DEBUG_MODE') != ''
+            cache.delete(CACHE_KEY)
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
@@ -72,33 +72,9 @@ class Configuration(content.Content):
         f.add_control(control(self.section, 'text', 'GOOGLE_ANALYTICS_UA', self.GOOGLE_ANALYTICS_UA, 'Google analytics UA'))
         f.add_control(control(self.section, 'file', 'FAVICON_ICO', label='favicon.ico'))
         f.add_control(textareacontrol(self.section, 'ROBOTS_TXT', self.ROBOTS_TXT, 'robots.txt', 90, 5))
+        f.add_control(checkboxcontrol(self.section, 'DEBUG_MODE', self.DEBUG_MODE, 'Debug mode'))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '<h2>Edit configuration</h2>%s' % unicode(f)
 
     def view_menu(self, params=None):
         return template.snippet('configuration-menu', { 'content': self })
-
-def get_robots_txt():
-    try:
-        item = cache.get(ROBOTS_TXT_CACHE_KEY)
-        if not item:
-            item = Configuration.gql("")[0].ROBOTS_TXT
-            if not item: raise Exception('robots.txt not set')
-            cache.set(ROBOTS_TXT_CACHE_KEY, item)
-        return item
-    except:
-        return ''
-
-def get_favicon_ico():
-    favicon = cache.get(FAVICON_ICO_CACHE_KEY)
-    if not favicon:
-        item = Configuration.gql("")[0]
-        favicon = item.FAVICON_ICO
-        if not favicon:
-            data = file('framework/content/configuration/assets/images/favicon.ico', 'r').read()
-            favicon = File(filename='favicon.ico', content_type='image/x-icon', data=data)
-            favicon.put()
-            item.FAVICON_ICO = favicon
-            item.update()
-    cache.set(FAVICON_ICO_CACHE_KEY, favicon)
-    raise Exception('SendFileBlob', favicon)

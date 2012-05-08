@@ -44,7 +44,7 @@ def html(section, main=''):
 
     try:
         if not section.theme:
-            # TODO: Allow user to specify default theme
+            # TODO: Allow user to specify default theme which could possibly be a custom theme
             template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
         elif is_local_theme_template(section.theme):
             template_content = open('./themes/' + section.theme.replace('/', '/templates/', 1) + '.body', 'r').read()
@@ -53,7 +53,7 @@ def html(section, main=''):
     except TemplateDoesNotExist:
         template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
 
-    body = Template(template_content).render(Context(params)).strip()
+    body = Template('{% load filters %}' + template_content).render(Context(params)).strip()
 
     menubar = snippet('user-menubar', {'section': section, 'user': users.get_current_user()})
 
@@ -61,25 +61,26 @@ def html(section, main=''):
                                                           '<body class="%s">%s%s</body>' % (' '.join(section.classes), body, menubar),
                                                           1)
 
-    section.css = section.css + section.localthemecss
-    section.js = section.js + section.localthemejs
-
-    section.yuicss, section.css, section.yuijs, section.js = (utils.unique_list(x) for x in [section.yuicss, section.css, section.yuijs, section.js])
+    section.yuicss, section.css, section.themecss, section.yuijs, section.js, section.localthemejs = (utils.unique_list(x) for x in [section.yuicss, section.css, section.themecss, section.yuijs, section.js, section.localthemejs])
 
     section.yuicss = '__'.join([x[:-4] if x.endswith('.css') else x for x in section.yuicss]).replace('/', '_')
     section.css = '_'.join([x[:-4] if x.endswith('.css') else x for x in section.css]).replace('/', '_')
+    section.themecss = '_'.join([x[:-4] if x.endswith('.css') else x for x in section.themecss]).replace('/', '_')
     section.yuijs = '__'.join([x[:-3] if x.endswith('.js') else x for x in section.yuijs]).replace('/', '_')
     section.js = '_'.join([x[:-3] if x.endswith('.js') else x for x in section.js]).replace('/', '_')
+    section.localthemejs = '_'.join([x[:-3] if x.endswith('.js') else x for x in section.localthemejs]).replace('/', '_')
 
     if section.yuicss: section.yuicss = '___yui___' + section.yuicss
     if section.css: section.css = '___local___' + section.css
+    if section.themecss: section.themecss = '___theme___' + section.theme_namespace + '___' + section.themecss
 
     if section.yuijs: section.yuijs = '___yui___' + section.yuijs
     if section.js: section.js = '___local___' + section.js
+    if section.localthemejs: section.localthemejs = '___theme___' + section.theme_namespace + '___' + section.localthemejs
 
     viewport = '<meta name="viewport" content="' + section.viewport_content + '">' if section.viewport_content else ''
-    linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + '.css">' if section.yuicss or section.css else ''
-    script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + '.js'}) if section.yuijs or section.js else ''
+    linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + section.themecss + '.css">' if section.yuicss or section.css or section.themecss else ''
+    script = snippet('defer-js-load', {'js_file': '/' + section.yuijs + section.js + section.localthemejs + '.js'}) if section.yuijs or section.js or section.localthemejs else ''
     analytics = snippet('analytics', {'GOOGLE_ANALYTICS_UA': section.configuration['GOOGLE_ANALYTICS_UA']}) if section.configuration['GOOGLE_ANALYTICS_UA'] else ''
 
     header_includes = viewport + linkrel + script.replace('\t', '').replace('\n', '') + analytics.replace('\t', '').replace('\n', '')

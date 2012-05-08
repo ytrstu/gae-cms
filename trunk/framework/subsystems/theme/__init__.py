@@ -71,6 +71,12 @@ def get_custom_themes():
         cache.set(CACHE_KEY, custom_themes)
     return custom_themes
 
+def get_custom_theme(namespace):
+    for t in get_custom_themes():
+        if t.namespace == namespace:
+            return t
+    return None
+
 def get_custom_template(theme_template):
     namespace, template_name = theme_template.split('/')
     try:

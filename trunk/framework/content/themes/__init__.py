@@ -168,7 +168,7 @@ class Themes(content.Content):
         except Exception as inst:
             if inst[0] == 'Redirect' and filename != self.section.handler.request.get('filename'):
                 pass # TODO: Modify all sections that have the same theme name
-                raise Exception(inst[0], inst[1])
+            raise Exception(inst[0], inst[1])
         return ret
 
     def action_edit_css(self):
