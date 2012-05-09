@@ -24,11 +24,15 @@ import webapp2, os, traceback
 
 from google.appengine.api import urlfetch
 
-from framework.subsystems import configuration
 from framework.subsystems import cache
+from framework.subsystems import configuration
+from framework.subsystems import section
+from framework.subsystems import template
 from framework.subsystems.theme import is_local_theme_namespace, get_custom_theme
 from framework.subsystems import utils
 from framework.subsystems.utils.cssmin import cssmin
+
+NAMESPACE_REPLACER = '/*___namespace___*/'
 
 class Compressor(webapp2.RequestHandler):
     def get(self, path):     
@@ -37,6 +41,7 @@ class Compressor(webapp2.RequestHandler):
             path, extension = os.path.splitext(path)
 
             contents = cache.get(path + extension)
+            contents = None
 
             if not contents:
                 contents = ''
@@ -58,53 +63,65 @@ class Compressor(webapp2.RequestHandler):
                     if result.status_code == 200:
                         contents += result.content
                     else:
-                        webapp2.abort(404)
+                        raise Exception('NotFound')
 
                 ''' Local '''
                 filenames = [(x + extension) for x in local_parts.split('_')]
                 if len(filenames) != len(utils.unique_list(filenames)):
-                    webapp2.abort(404)
+                    raise Exception('NotFound')
                 files = utils.file_search(filenames)
                 if extension == '.css':
-                    contents += (''.join([cssmin(open(f, 'r').read()) for f in files])).strip()
+                    contents += (''.join([parse_content(open(f, 'r').read(), True) for f in files]))
                 else:
-                    contents += (''.join([open(f, 'r').read() for f in files])).strip()
+                    contents += (''.join([parse_content(open(f, 'r').read()) for f in files]))
 
                 ''' Theme '''
                 if theme_parts:
                     theme_namespace, theme_parts = theme_parts.split('___')
                     filenames = [(x + extension) for x in theme_parts.split('_')]
                     if len(filenames) != len(utils.unique_list(filenames)):
-                        webapp2.abort(404)
-
-                    if is_local_theme_namespace(theme_namespace):
+                        raise Exception('NotFound')
+                    elif is_local_theme_namespace(theme_namespace):
                         if extension == '.css':
-                            contents += (''.join([cssmin(open('./themes/' + theme_namespace + '/' + extension.strip('.') + '/' + f, 'r').read()) for f in filenames])).strip()
+                            contents += (''.join([parse_content(open('./themes/' + theme_namespace + '/' + extension.strip('.') + '/' + f, 'r').read(), True, theme_namespace) for f in filenames]))
                         else:
-                            contents += (''.join([open('./themes/' + theme_namespace + '/' + extension.strip('.') + '/' + f, 'r').read() for f in filenames])).strip()
+                            contents += (''.join([parse_content(open('./themes/' + theme_namespace + '/' + extension.strip('.') + '/' + f, 'r').read(), False, theme_namespace) for f in filenames]))
                     else:
                         t = get_custom_theme(theme_namespace)
                         for f in filenames:
                             if extension == '.css':
                                 index = t.css_filenames.index(f)
-                                contents += cssmin(t.css_contents[index])
+                                contents += parse_content(t.css_contents[index], True, theme_namespace)
                             elif extension == '.js':
                                 index = t.js_filenames.index(f)
-                                contents += t.js_contents[index]
+                                contents += parse_content(t.js_contents[index], False, theme_namespace)
 
                 cache.set(path + extension, contents)
 
+            if not contents.strip(): raise Exception('NotFound')
+
             content_type = 'application/javascript' if extension == '.js' else 'text/css'
-            response = webapp2.Response(contents, content_type=content_type)
+            response = webapp2.Response(template.get(contents.strip()), content_type=content_type)
             response.headers['Connection'] = 'Keep-Alive'
-            response.set_status(200)
+            response.cache_control.no_cache = None 
+            response.cache_control.public = True 
+            response.cache_control.max_age = 604800000 # One week
             return response
         except Exception as inst:
+            message = ''
             if configuration.debug_mode():
-                return webapp2.Response('RouterError: ' + unicode(inst) + '\n\n' + traceback.format_exc())
-            webapp2.abort(404)
+                message = '<div class="status error">' + unicode(inst) + '<br><br>' + traceback.format_exc().replace('\n', '<br><br>') + '</div>'
+            response = webapp2.Response(template.get('<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1>Document or file requested by the client was not found.%s</body></html>' % message))
+            response.set_status(404)
+            return response
 
     def post(self, path):
         return self.get(path)
+
+def parse_content(content, css_minify=False, namespace=None):
+    default_section = section.get_section(None, '')
+    if namespace: content = content.replace(NAMESPACE_REPLACER, '/%s/themes/get/%s/' % (default_section.path, namespace.replace(' ', '%20')))
+    content = (content if not css_minify else cssmin(content)).strip()
+    return content
 
 app = webapp2.WSGIApplication([('(/.*)', Compressor)])

@@ -82,7 +82,7 @@ class Themes(content.Content):
         if self.section.handler.request.get('submit'):
             try:
                 data = urllib2.urlopen(self.section.handler.request.get('url')).read()
-                self.handle_compressed_theme_data(data)
+                self.import_compressed_theme_data(data)
             except Exception as inst:
                 error = '<div class="status error">%s</div>'
                 message = inst[0] if not isinstance(inst[0], types.ListType) else '<br>'.join(inst[0])
@@ -303,7 +303,7 @@ class Themes(content.Content):
                         filenames.append(new_filename)
                         contents.append(db.Text(content))
                     theme.put()
-                    cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+                    cache.flush_all() # Resources for this theme that are cached should be flushed if it is active in even one section
                     raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'filename', filename, 'Filename'))
