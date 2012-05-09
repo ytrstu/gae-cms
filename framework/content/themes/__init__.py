@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import types, mimetypes
+import urllib2, types, mimetypes
 from StringIO import StringIO
 import zipfile
 
@@ -44,6 +44,7 @@ class Themes(content.Content):
     author = 'Imran Somji'
 
     actions = [
+        ['browse', 'Browse', False, False],
         ['add', 'Add', False, False],
         ['upload', 'Upload', False, False],
         ['manage', 'Manage', False, False],
@@ -76,6 +77,23 @@ class Themes(content.Content):
             del self.theme_namespaces[i]
         self.update()
 
+    def action_browse(self):
+        message = ''
+        if self.section.handler.request.get('submit'):
+            try:
+                data = urllib2.urlopen(self.section.handler.request.get('url')).read()
+                self.handle_compressed_theme_data(data)
+            except Exception as inst:
+                error = '<div class="status error">%s</div>'
+                message = inst[0] if not isinstance(inst[0], types.ListType) else '<br>'.join(inst[0])
+                message = error % message
+            else:
+                raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'text', 'url', '', 'URL', 80))
+        f.add_control(control(self.section, 'submit', 'submit', 'Install'))
+        return message + template.snippet('themes-browse', { 'content': self, 'form': unicode(f) })
+
     def action_add(self):
         message = ''
         if self.section.handler.request.get('submit'):
@@ -101,7 +119,7 @@ class Themes(content.Content):
         message = ''
         if self.section.handler.request.get('submit'):
             try:
-                self.handle_compressed_theme_data(db.Blob(self.section.handler.request.get('data')))
+                self.import_compressed_theme_data(db.Blob(self.section.handler.request.get('data')))
             except Exception as inst:
                 error = '<div class="status error">%s</div>'
                 message = inst[0] if not isinstance(inst[0], types.ListType) else '<br>'.join(inst[0])
@@ -113,7 +131,7 @@ class Themes(content.Content):
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '%s<h2>Upload themes</h2>%s' % (message, unicode(f))
 
-    def handle_compressed_theme_data(self, data):
+    def import_compressed_theme_data(self, data):
         compressed = zipfile.ZipFile(StringIO(data), 'r')
         paths = compressed.namelist()
         namespaces = []
@@ -127,36 +145,40 @@ class Themes(content.Content):
         else:
             messages = []
             for namespace in namespaces:
-                if namespace in self.theme_namespaces:
-                    messages.append('Namespace "%s" already exists' % namespace)
-                elif is_local_theme_namespace(namespace):
-                    messages.append('Local theme namespace "%s" already exists' % namespace)
-                else:
-                    theme = Theme(namespace=namespace)
-                    for p in paths:
-                        if p.startswith(main_dir + '/' + namespace + '/templates/') and p.endswith('.body'):
-                            filename = p.split(main_dir + '/' + namespace + '/templates/')[1][:-5]
-                            theme.body_template_names.append(filename)
-                            theme.body_template_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
-                        elif p.startswith(main_dir + '/' + namespace + '/css/') and p.endswith('.css'):
-                            filename = p.split(main_dir + '/' + namespace + '/css/')[1]
-                            theme.css_filenames.append(filename)
-                            theme.css_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
-                        elif p.startswith(main_dir + '/' + namespace + '/js/') and p.endswith('.js'):
-                            filename = p.split(main_dir + '/' + namespace + '/js/')[1]
-                            theme.js_filenames.append(filename)
-                            theme.js_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
-                        elif p.startswith(main_dir + '/' + namespace + '/images/') and p != main_dir + '/' + namespace + '/images/':
-                            filename = p.split(main_dir + '/' + namespace + '/images/')[1]
-                            content_type, _ = mimetypes.guess_type(filename)
-                            data = db.Blob(zipfile.ZipFile.read(compressed, p))
-                            key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
-                            theme.image_filenames.append(filename)
-                            theme.image_keys.append(str(key))
-                    key = theme.put()
-                    self.theme_keys.append(str(key))
-                    self.theme_namespaces.append(namespace)
-                    self.update()
+                i = 2
+                suffix = ''
+                while is_local_theme_namespace(namespace + suffix):
+                    suffix = ' ' + str(i)
+                    i += 1
+                while namespace + suffix in self.theme_namespaces:
+                    suffix = ' ' + str(i)
+                    i += 1
+                calculated_namespace = namespace + suffix
+                theme = Theme(namespace=calculated_namespace)
+                for p in paths:
+                    if p.startswith(main_dir + '/' + namespace + '/templates/') and p.endswith('.body'):
+                        filename = p.split(main_dir + '/' + namespace + '/templates/')[1][:-5]
+                        theme.body_template_names.append(filename)
+                        theme.body_template_contents.append(validated_body_template(db.Text(zipfile.ZipFile.read(compressed, p))))
+                    elif p.startswith(main_dir + '/' + namespace + '/css/') and p.endswith('.css'):
+                        filename = p.split(main_dir + '/' + namespace + '/css/')[1]
+                        theme.css_filenames.append(filename)
+                        theme.css_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                    elif p.startswith(main_dir + '/' + namespace + '/js/') and p.endswith('.js'):
+                        filename = p.split(main_dir + '/' + namespace + '/js/')[1]
+                        theme.js_filenames.append(filename)
+                        theme.js_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                    elif p.startswith(main_dir + '/' + namespace + '/images/') and p != main_dir + '/' + namespace + '/images/':
+                        filename = p.split(main_dir + '/' + namespace + '/images/')[1]
+                        content_type, _ = mimetypes.guess_type(filename)
+                        data = db.Blob(zipfile.ZipFile.read(compressed, p))
+                        key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
+                        theme.image_filenames.append(filename)
+                        theme.image_keys.append(str(key))
+                key = theme.put()
+                self.theme_keys.append(str(key))
+                self.theme_namespaces.append(calculated_namespace)
+                self.update()
                 if messages: raise Exception(messages)
 
     def action_manage(self):
