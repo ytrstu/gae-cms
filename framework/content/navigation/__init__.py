@@ -24,7 +24,7 @@ from framework import content
 from framework.subsystems import section
 from framework.subsystems import permission
 from framework.subsystems import template
-from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_themes, get_custom_themes
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_theme_namespaces, get_custom_theme_namespace
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
 class Navigation(content.Content):
@@ -169,12 +169,7 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(control(s, 'text', 'title', title if title else '', 'Title', 60))
     f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
-    combined_themes = get_local_themes()
-    for custom_theme in get_custom_themes():
-        templates = []
-        for template_name in custom_theme.body_template_names:
-            templates.append([custom_theme.namespace + '/' + template_name, template_name])
-        combined_themes.append([custom_theme.namespace, templates])
+    combined_themes = get_local_theme_namespaces() + get_custom_theme_namespace()
     f.add_control(selectcontrol(s, 'theme', combined_themes, theme if theme else DEFAULT_LOCAL_THEME_TEMPLATE, 'Theme'))
     f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))

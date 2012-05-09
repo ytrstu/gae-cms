@@ -44,7 +44,7 @@ class Theme(db.Model):
     image_filenames = db.StringListProperty()
     image_keys = db.StringListProperty()
 
-def get_local_themes():
+def get_local_theme_namespaces():
     templates = []
     for namespace in os.listdir('./themes'):
         template = []
@@ -53,6 +53,15 @@ def get_local_themes():
                 template.append([namespace + '/' + filename[:-5], filename[:-5]])
         templates.append([namespace, template])
     return templates
+
+def get_custom_theme_namespace():
+    custom_themes = []
+    for custom_theme in get_custom_themes():
+        templates = []
+        for template_name in custom_theme.body_template_names:
+            templates.append([custom_theme.namespace + '/' + template_name, template_name])
+        custom_themes.append([custom_theme.namespace, templates])
+    return custom_themes
 
 def is_local_theme_template(t):
     for namespace in os.listdir('./themes'):

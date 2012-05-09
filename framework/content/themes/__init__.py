@@ -20,10 +20,14 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import types, mimetypes
+from StringIO import StringIO
+import zipfile
+
 from google.appengine.ext import db
 
 from framework import content
-from framework.subsystems.theme import Theme, get_local_themes, is_local_theme_namespace
+from framework.subsystems.theme import Theme, get_local_theme_namespaces, is_local_theme_namespace
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 from framework.subsystems import cache
@@ -40,9 +44,10 @@ class Themes(content.Content):
     author = 'Imran Somji'
 
     actions = [
-        ['get', 'Get', False, True],
-        ['manage', 'Manage', False, False],
         ['add', 'Add', False, False],
+        ['upload', 'Upload', False, False],
+        ['manage', 'Manage', False, False],
+        ['get', 'Get', False, True],
         ['delete', 'Delete', False, False],
         ['edit_body_template', 'Edit body template', False, False],
         ['delete_body_template', 'Delete body template', False, False],
@@ -70,6 +75,93 @@ class Themes(content.Content):
             del self.theme_keys[i]
             del self.theme_namespaces[i]
         self.update()
+
+    def action_add(self):
+        message = ''
+        if self.section.handler.request.get('submit'):
+            namespace = self.section.handler.request.get('namespace').replace('/', '')
+            if not namespace:
+                message = '<div class="status error">Namespace is required</div>'
+            elif namespace in self.theme_namespaces:
+                message = '<div class="status error">Namespace "%s" already exists</div>' % namespace
+            elif is_local_theme_namespace(namespace):
+                message = '<div class="status error">Namespace "%s" is already a local theme namespace</div>' % namespace
+            else:
+                key = Theme(namespace=namespace).put()
+                self.theme_keys.append(str(key))
+                self.theme_namespaces.append(namespace)
+                self.update()
+                raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'text', 'namespace', '', 'Namespace (permanent)'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
+        return '%s<h2>Add theme</h2>%s' % (message, unicode(f))
+
+    def action_upload(self):
+        message = ''
+        if self.section.handler.request.get('submit'):
+            try:
+                self.handle_compressed_theme_data(db.Blob(self.section.handler.request.get('data')))
+            except Exception as inst:
+                error = '<div class="status error">%s</div>'
+                message = inst[0] if not isinstance(inst[0], types.ListType) else '<br>'.join(inst[0])
+                message = error % message
+            else:
+                raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'file', 'data', label='Zip file'))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
+        return '%s<h2>Upload themes</h2>%s' % (message, unicode(f))
+
+    def handle_compressed_theme_data(self, data):
+        compressed = zipfile.ZipFile(StringIO(data), 'r')
+        paths = compressed.namelist()
+        namespaces = []
+        main_dir = None
+        for nl in paths:
+            if nl.count('/') == 2:
+                main_dir, nl, _ = nl.split('/')
+                namespaces.append(nl)
+        if not namespaces:
+            raise Exception('No namespaces indentified')
+        else:
+            messages = []
+            for namespace in namespaces:
+                if namespace in self.theme_namespaces:
+                    messages.append('Namespace "%s" already exists' % namespace)
+                elif is_local_theme_namespace(namespace):
+                    messages.append('Local theme namespace "%s" already exists' % namespace)
+                else:
+                    theme = Theme(namespace=namespace)
+                    for p in paths:
+                        if p.startswith(main_dir + '/' + namespace + '/templates/') and p.endswith('.body'):
+                            filename = p.split(main_dir + '/' + namespace + '/templates/')[1][:-5]
+                            theme.body_template_names.append(filename)
+                            theme.body_template_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                        elif p.startswith(main_dir + '/' + namespace + '/css/') and p.endswith('.css'):
+                            filename = p.split(main_dir + '/' + namespace + '/css/')[1]
+                            theme.css_filenames.append(filename)
+                            theme.css_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                        elif p.startswith(main_dir + '/' + namespace + '/js/') and p.endswith('.js'):
+                            filename = p.split(main_dir + '/' + namespace + '/js/')[1]
+                            theme.js_filenames.append(filename)
+                            theme.js_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                        elif p.startswith(main_dir + '/' + namespace + '/images/') and p != main_dir + '/' + namespace + '/images/':
+                            filename = p.split(main_dir + '/' + namespace + '/images/')[1]
+                            content_type, _ = mimetypes.guess_type(filename)
+                            data = db.Blob(zipfile.ZipFile.read(compressed, p))
+                            key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
+                            theme.image_filenames.append(filename)
+                            theme.image_keys.append(str(key))
+                    key = theme.put()
+                    self.theme_keys.append(str(key))
+                    self.theme_namespaces.append(namespace)
+                    self.update()
+                if messages: raise Exception(messages)
+
+    def action_manage(self):
+        themes = [self.get_theme(namespace) for namespace in self.theme_namespaces]
+        return template.snippet('themes-manage', { 'content': self, 'themes': themes })
 
     def action_get(self):
         if not self.section.path_params or len(self.section.path_params) != 3:
@@ -104,31 +196,6 @@ class Themes(content.Content):
             raise Exception('NotFound')
         else:
             raise Exception('SendFileBlob', File(filename=filename, content_type=content_type, data=data))
-
-    def action_manage(self):
-        themes = [self.get_theme(namespace) for namespace in self.theme_namespaces]
-        return template.snippet('themes-manage', { 'content': self, 'themes': themes })
-
-    def action_add(self):
-        message = ''
-        if self.section.handler.request.get('submit'):
-            namespace = self.section.handler.request.get('namespace').replace('/', '')
-            if not namespace:
-                message = '<div class="status error">Namespace is required</div>'
-            elif namespace in self.theme_namespaces:
-                message = '<div class="status error">Namespace "%s" already exists</div>' % namespace
-            elif is_local_theme_namespace(namespace):
-                message = '<div class="status error">Namespace "%s" is already a local theme namespace</div>' % namespace
-            else:
-                key = Theme(namespace=namespace).put()
-                self.theme_keys.append(str(key))
-                self.theme_namespaces.append(namespace)
-                self.update()
-                raise Exception('Redirect', self.section.action_redirect_path)
-        f = form(self.section, self.section.full_path)
-        f.add_control(control(self.section, 'text', 'namespace', '', 'Namespace (permanent)'))
-        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
-        return '%s<h2>Add theme</h2>%s' % (message, unicode(f))
 
     def action_delete(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
@@ -263,7 +330,7 @@ class Themes(content.Content):
             raise Exception('NotFound')
         theme = self.get_theme(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
-            filename = self.section.handler.request.POST['data'].filename.replace(' ', '_')
+            filename = self.section.handler.request.POST['data']
             content_type = self.section.handler.request.POST['data'].type
             data = db.Blob(self.section.handler.request.get('data'))
             key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
