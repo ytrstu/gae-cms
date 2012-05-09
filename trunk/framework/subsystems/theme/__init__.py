@@ -50,7 +50,7 @@ def get_local_theme_namespaces():
         template = []
         for filename in os.listdir('./themes/' + namespace + '/templates'):
             if filename.endswith('.body'):
-                template.append([namespace + '/' + filename[:-5], filename[:-5]])
+                template.append([namespace + '/' + filename[:-5], namespace + ' -- ' + filename[:-5]])
         templates.append([namespace, template])
     return templates
 
@@ -59,7 +59,7 @@ def get_custom_theme_namespace():
     for custom_theme in get_custom_themes():
         templates = []
         for template_name in custom_theme.body_template_names:
-            templates.append([custom_theme.namespace + '/' + template_name, template_name])
+            templates.append([custom_theme.namespace + '/' + template_name, custom_theme.namespace + ' -- ' + template_name])
         custom_themes.append([custom_theme.namespace, templates])
     return custom_themes
 
