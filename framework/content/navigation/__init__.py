@@ -21,10 +21,11 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from framework import content
+from framework.subsystems import configuration
 from framework.subsystems import section
 from framework.subsystems import permission
 from framework.subsystems import template
-from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_theme_namespaces, get_custom_theme_namespace
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_theme_namespaces, get_custom_theme_namespaces
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol, checkboxcontrol
 
 class Navigation(content.Content):
@@ -148,18 +149,18 @@ class Navigation(content.Content):
         return template.snippet('navigation-menu', { 'content': self, 'is_admin': permission.is_admin(self.section.path) })
 
 def get_values(request):
-        path = request.get('path').replace('/', '-').replace(' ', '-')
-        parent_path = request.get('parent_path').replace('/', '-').replace(' ', '-')
-        name = request.get('name')
-        title = request.get('title')
-        keywords = request.get('keywords')
-        description = request.get('description')
-        theme = request.get('theme')
-        is_private = request.get('is_private') != ''
-        is_default = request.get('is_default') != ''
-        redirect_to = request.get('redirect_to')
-        new_window = request.get('new_window') != ''
-        return path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window
+    path = request.get('path').replace('/', '-').replace(' ', '-')
+    parent_path = request.get('parent_path').replace('/', '-').replace(' ', '-')
+    name = request.get('name')
+    title = request.get('title')
+    keywords = request.get('keywords')
+    description = request.get('description')
+    theme = request.get('theme')
+    is_private = request.get('is_private') != ''
+    is_default = request.get('is_default') != ''
+    redirect_to = request.get('redirect_to')
+    new_window = request.get('new_window') != ''
+    return path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window
 
 def get_form(s, path, parent_path, name=None, title=None, keywords=None, description=None, theme=None, is_private=False, is_default=False, redirect_to=None, new_window=False):
     f = form(s, s.full_path)
@@ -169,8 +170,10 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(control(s, 'text', 'title', title if title else '', 'Title', 60))
     f.add_control(textareacontrol(s, 'keywords', keywords if keywords else '', 'Keywords', 60, 5))
     f.add_control(textareacontrol(s, 'description', description if description else '', 'Description', 60, 5))
-    combined_themes = get_local_theme_namespaces() + get_custom_theme_namespace()
-    f.add_control(selectcontrol(s, 'theme', combined_themes, theme if theme else DEFAULT_LOCAL_THEME_TEMPLATE, 'Theme'))
+    combined_themes = get_local_theme_namespaces() + get_custom_theme_namespaces()
+    default_theme = configuration.default_theme()
+    if not default_theme: default_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
+    f.add_control(selectcontrol(s, 'theme', combined_themes, theme if theme else default_theme, 'Theme'))
     f.add_control(checkboxcontrol(s, 'is_private', is_private, 'Is private'))
     if not is_default: f.add_control(checkboxcontrol(s, 'is_default', is_default, 'Is default'))
     f.add_control(control(s, 'text', 'redirect_to', redirect_to if redirect_to else '', 'Redirect to', 60))

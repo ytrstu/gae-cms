@@ -26,7 +26,8 @@ from framework import content
 from framework.subsystems import cache
 from framework.subsystems.file import File
 from framework.subsystems import template
-from framework.subsystems.forms import form, control, checkboxcontrol, textareacontrol
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_theme_namespaces, get_custom_theme_namespaces
+from framework.subsystems.forms import form, control, checkboxcontrol, selectcontrol, textareacontrol
 
 CACHE_KEY = 'CONFIGURATION'
 
@@ -34,6 +35,7 @@ class Configuration(content.Content):
 
     SITE_HEADER = db.StringProperty()
     SITE_SUB_HEADER = db.StringProperty()
+    DEFAULT_THEME = db.StringProperty()
     GOOGLE_ANALYTICS_UA = db.StringProperty()
     ROBOTS_TXT = db.TextProperty()
     FAVICON_ICO = db.ReferenceProperty(reference_class=File)
@@ -53,6 +55,7 @@ class Configuration(content.Content):
         if self.section.handler.request.get('submit'):
             self.SITE_HEADER = self.section.handler.request.get('SITE_HEADER')
             self.SITE_SUB_HEADER = self.section.handler.request.get('SITE_SUB_HEADER')
+            self.DEFAULT_THEME = self.section.handler.request.get('DEFAULT_THEME')
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
             if self.section.handler.request.get('FAVICON_ICO'):
@@ -69,6 +72,8 @@ class Configuration(content.Content):
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'SITE_HEADER', self.SITE_HEADER, 'Site header', 50))
         f.add_control(control(self.section, 'text', 'SITE_SUB_HEADER', self.SITE_SUB_HEADER, 'Site sub-header', 50))
+        combined_themes = get_local_theme_namespaces() + get_custom_theme_namespaces()
+        f.add_control(selectcontrol(self.section, 'DEFAULT_THEME', combined_themes, self.DEFAULT_THEME if self.DEFAULT_THEME else DEFAULT_LOCAL_THEME_TEMPLATE, 'Default theme'))
         f.add_control(control(self.section, 'text', 'GOOGLE_ANALYTICS_UA', self.GOOGLE_ANALYTICS_UA, 'Google analytics UA'))
         f.add_control(control(self.section, 'file', 'FAVICON_ICO', label='favicon.ico'))
         f.add_control(textareacontrol(self.section, 'ROBOTS_TXT', self.ROBOTS_TXT, 'robots.txt', 90, 5))

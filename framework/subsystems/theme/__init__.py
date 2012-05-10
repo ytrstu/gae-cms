@@ -54,7 +54,7 @@ def get_local_theme_namespaces():
         templates.append([namespace, template])
     return templates
 
-def get_custom_theme_namespace():
+def get_custom_theme_namespaces():
     custom_themes = []
     for custom_theme in get_custom_themes():
         templates = []

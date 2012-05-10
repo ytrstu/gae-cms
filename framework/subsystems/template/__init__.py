@@ -34,7 +34,7 @@ from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string
 from django.template import Template, Context, TemplateDoesNotExist
 
-def html(section, main=''):
+def html(section, main='', default_theme=None):
     params = {
         'VERSION': os.environ['CURRENT_VERSION_ID'],
         'user': users.get_current_user(),
@@ -44,8 +44,8 @@ def html(section, main=''):
 
     try:
         if not section.theme:
-            # TODO: Allow user to specify default theme which could possibly be a custom theme
-            template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
+            if not default_theme: default_theme = DEFAULT_LOCAL_THEME_TEMPLATE
+            template_content = open('./themes/' + default_theme.replace('/', '/templates/', 1) + '.body', 'r').read()
         elif is_local_theme_template(section.theme):
             template_content = open('./themes/' + section.theme.replace('/', '/templates/', 1) + '.body', 'r').read()
         else:
