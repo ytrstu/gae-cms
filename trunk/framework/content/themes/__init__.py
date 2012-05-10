@@ -434,7 +434,7 @@ class Themes(content.Content):
             selected_theme = configuration.default_theme()
             if not selected_theme: selected_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
 
-        f = form(self.section, self.section.full_path)
+        f = form(self.section, self.section.action_redirect_path)
         f.add_control(selectcontrol(self.section, 'TEMPLATE_OVERRIDE_THEME', combined_themes, selected_theme))
         f.add_control(control(self.section, 'submit', 'submit', 'Preview theme'))
 
