@@ -426,7 +426,7 @@ class Themes(content.Content):
         if not configuration.theme_preview_enabled(): return ''
 
         combined_themes = get_local_theme_namespaces() + get_custom_theme_namespaces()
-        if self.section.handler and self.section.handler.request.get('TEMPLATE_OVERRIDE_THEME'):
+        if self.section.handler.request.get('submit_themes_previewer'):
             selected_theme = self.section.handler.request.get('TEMPLATE_OVERRIDE_THEME')
         elif self.section.theme:
             selected_theme = self.section.theme
@@ -434,9 +434,9 @@ class Themes(content.Content):
             selected_theme = configuration.default_theme()
             if not selected_theme: selected_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
 
-        f = form(self.section, self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
         f.add_control(selectcontrol(self.section, 'TEMPLATE_OVERRIDE_THEME', combined_themes, selected_theme))
-        f.add_control(control(self.section, 'submit', 'submit', 'Preview theme'))
+        f.add_control(control(self.section, 'submit', 'submit_themes_previewer', 'Preview theme'))
 
         self.section.css.append('themes-previewer.css')
         return '<div class="content themes-previewer">%s</div>' % unicode(f)
