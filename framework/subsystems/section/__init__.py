@@ -29,6 +29,7 @@ from framework import content
 from framework.subsystems import configuration
 from framework.subsystems import cache
 from framework.subsystems import template
+from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE
 from framework.subsystems import permission
 from framework.subsystems import utils
 
@@ -60,7 +61,8 @@ class Section(db.Model):
             raise Exception('AccessDenied', self.path)
         elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.path_action:
             raise Exception('Redirect', self.redirect_to)
-        return template.html(self, self.get_action() if self.path_action else self.get_main_container_view(), configuration.default_theme())
+
+        return template.html(self, self.get_action() if self.path_action else self.get_main_container_view())
 
     def get_action(self):
         item = content.get_local_else_global(self.path, self.path_namespace)
@@ -73,6 +75,20 @@ class Section(db.Model):
     def get_main_container_view(self):
         item = content.get_else_create(self.path, 'Container', MAIN_CONTAINER_NAMESPACE)
         return item.init(self).view('default')
+
+    def get_theme_namespace_template(self):
+        TEMPLATE_OVERRIDE_THEME = self.handler.request.get('TEMPLATE_OVERRIDE_THEME') if self.handler.request.get('TEMPLATE_OVERRIDE_THEME') else None 
+        DEFAULT_THEME = configuration.default_theme()
+
+        if TEMPLATE_OVERRIDE_THEME and configuration.theme_preview_enabled():
+            theme_namespace_template = TEMPLATE_OVERRIDE_THEME
+        elif not self.theme and not DEFAULT_THEME:
+            theme_namespace_template = DEFAULT_LOCAL_THEME_TEMPLATE
+        elif not self.theme:
+            theme_namespace_template = DEFAULT_THEME
+        else:
+            theme_namespace_template = self.theme
+        return theme_namespace_template
 
 def get_section(handler, full_path):
     path_parts = full_path.strip('/').split('/')
