@@ -42,16 +42,26 @@ def html(section, main='', default_theme=None):
         'main': main,
     }
 
+    calculated_theme_namespace_template = section.theme_namespace + '/' + section.theme_template
     try:
-        if not section.theme:
-            if not default_theme: default_theme = DEFAULT_LOCAL_THEME_TEMPLATE
+        if not section.theme and not default_theme:
+            calculated_theme_namespace_template = DEFAULT_LOCAL_THEME_TEMPLATE
+            template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
+        elif not section.theme and is_local_theme_template(default_theme):
+            calculated_theme_namespace_template = default_theme
             template_content = open('./themes/' + default_theme.replace('/', '/templates/', 1) + '.body', 'r').read()
+        elif not section.theme:
+            calculated_theme_namespace_template = default_theme
+            template_content = get_custom_template(default_theme)
         elif is_local_theme_template(section.theme):
             template_content = open('./themes/' + section.theme.replace('/', '/templates/', 1) + '.body', 'r').read()
         else:
             template_content = get_custom_template(section.theme)
     except TemplateDoesNotExist:
+        calculated_theme_namespace_template = DEFAULT_LOCAL_THEME_TEMPLATE
         template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
+
+    theme_namespace, _ = calculated_theme_namespace_template.split('/')
 
     body = Template('{% load filters %}' + template_content).render(Context(params)).strip()
 
@@ -72,11 +82,11 @@ def html(section, main='', default_theme=None):
 
     if section.yuicss: section.yuicss = '___yui___' + section.yuicss
     if section.css: section.css = '___local___' + section.css
-    if section.themecss: section.themecss = '___theme___' + section.theme_namespace + '___' + section.themecss
+    if section.themecss: section.themecss = '___theme___' + theme_namespace + '___' + section.themecss
 
     if section.yuijs: section.yuijs = '___yui___' + section.yuijs
     if section.js: section.js = '___local___' + section.js
-    if section.localthemejs: section.localthemejs = '___theme___' + section.theme_namespace + '___' + section.localthemejs
+    if section.localthemejs: section.localthemejs = '___theme___' + theme_namespace + '___' + section.localthemejs
 
     viewport = '<meta name="viewport" content="' + section.viewport_content + '">' if section.viewport_content else ''
     linkrel = '<link rel="stylesheet" type="text/css" href="/' + section.yuicss + section.css + section.themecss + '.css">' if section.yuicss or section.css or section.themecss else ''
