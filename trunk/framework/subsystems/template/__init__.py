@@ -42,21 +42,23 @@ def html(section, main='', default_theme=None):
         'main': main,
     }
 
-    calculated_theme_namespace_template = section.theme_namespace + '/' + section.theme_template
+    TEMPLATE_OVERRIDE_THEME = section.handler.request.get('TEMPLATE_OVERRIDE_THEME') if section.handler.request.get('TEMPLATE_OVERRIDE_THEME') else None 
+
+    if TEMPLATE_OVERRIDE_THEME:
+        # TODO: Check if configuration.theme_preview_enabled() without setting off LoadModuleRestricted
+        calculated_theme_namespace_template = TEMPLATE_OVERRIDE_THEME
+    elif not section.theme and not default_theme:
+        calculated_theme_namespace_template = DEFAULT_LOCAL_THEME_TEMPLATE
+    elif not section.theme:
+        calculated_theme_namespace_template = default_theme
+    else:
+        calculated_theme_namespace_template = section.theme
+
     try:
-        if not section.theme and not default_theme:
-            calculated_theme_namespace_template = DEFAULT_LOCAL_THEME_TEMPLATE
-            template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
-        elif not section.theme and is_local_theme_template(default_theme):
-            calculated_theme_namespace_template = default_theme
-            template_content = open('./themes/' + default_theme.replace('/', '/templates/', 1) + '.body', 'r').read()
-        elif not section.theme:
-            calculated_theme_namespace_template = default_theme
-            template_content = get_custom_template(default_theme)
-        elif is_local_theme_template(section.theme):
-            template_content = open('./themes/' + section.theme.replace('/', '/templates/', 1) + '.body', 'r').read()
+        if is_local_theme_template(calculated_theme_namespace_template):
+            template_content = open('./themes/' + calculated_theme_namespace_template.replace('/', '/templates/', 1) + '.body', 'r').read()
         else:
-            template_content = get_custom_template(section.theme)
+            template_content = get_custom_template(calculated_theme_namespace_template)
     except TemplateDoesNotExist:
         calculated_theme_namespace_template = DEFAULT_LOCAL_THEME_TEMPLATE
         template_content = open('./themes/' + DEFAULT_LOCAL_THEME_TEMPLATE.replace('/', '/templates/', 1) + '.body', 'r').read()
