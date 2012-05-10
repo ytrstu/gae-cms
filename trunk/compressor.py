@@ -21,6 +21,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import webapp2, os, traceback
+from datetime import datetime
 
 from google.appengine.api import urlfetch
 
@@ -33,6 +34,7 @@ from framework.subsystems import utils
 from framework.subsystems.utils.cssmin import cssmin
 
 NAMESPACE_REPLACER = '/*___namespace___*/'
+CACHE_LAST_MODIFIED_PREPEND = 'LAST_MODIFIED_'
 
 class Compressor(webapp2.RequestHandler):
     def get(self, path):     
@@ -41,7 +43,6 @@ class Compressor(webapp2.RequestHandler):
             path, extension = os.path.splitext(path)
 
             contents = cache.get(path + extension)
-            contents = None
 
             if not contents:
                 contents = ''
@@ -97,12 +98,21 @@ class Compressor(webapp2.RequestHandler):
                                 contents += parse_content(t.js_contents[index], False, theme_namespace)
 
                 cache.set(path + extension, contents)
+                last_modified = datetime.utcnow()
+                cache.set(CACHE_LAST_MODIFIED_PREPEND + path + extension, last_modified)
+            else:
+                last_modified = cache.get(CACHE_LAST_MODIFIED_PREPEND + path + extension)
 
             if not contents.strip(): raise Exception('NotFound')
+
+            if not last_modified:
+                last_modified = datetime.utcnow()
+                cache.set(CACHE_LAST_MODIFIED_PREPEND + path + extension, last_modified)
 
             content_type = 'application/javascript' if extension == '.js' else 'text/css'
             response = webapp2.Response(template.get(contents.strip()), content_type=content_type)
             response.headers['Connection'] = 'Keep-Alive'
+            response.headers['Last-Modified'] = last_modified.strftime("%a, %d %b %Y %H:%M:%S GMT")
             response.cache_control.no_cache = None 
             response.cache_control.public = True 
             response.cache_control.max_age = 604800000 # One week
