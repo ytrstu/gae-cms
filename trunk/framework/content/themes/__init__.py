@@ -226,9 +226,9 @@ class Themes(content.Content):
         if self.section.handler.request.get('submit'):
             self.theme_keys.remove(str(theme.key()))
             self.theme_namespaces.remove(theme.namespace)
-            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
             theme.delete()
             self.update()
+            cache.flush_all() # Flush all cached resources for this theme which is important for sections where it is active
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
@@ -303,7 +303,7 @@ class Themes(content.Content):
                         filenames.append(new_filename)
                         contents.append(db.Text(content))
                     theme.put()
-                    cache.flush_all() # Resources for this theme that are cached should be flushed if it is active in even one section
+                    cache.flush_all() # Flush all cached resources for this theme which is important for sections where it is active
                     raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'text', 'filename', filename, 'Filename'))
@@ -341,7 +341,7 @@ class Themes(content.Content):
             del filenames[index]
             del contents[index]
             theme.put()
-            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+            cache.flush_all() # Flush all cached resources for this theme which is important for sections where it is active
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))

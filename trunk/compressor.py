@@ -21,7 +21,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import webapp2, os, traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from google.appengine.api import urlfetch
 
@@ -43,6 +43,7 @@ class Compressor(webapp2.RequestHandler):
             path, extension = os.path.splitext(path)
 
             contents = cache.get(path + extension)
+            last_modified = cache.get(CACHE_LAST_MODIFIED_PREPEND + path + extension)
 
             if not contents:
                 contents = ''
@@ -100,8 +101,6 @@ class Compressor(webapp2.RequestHandler):
                 cache.set(path + extension, contents)
                 last_modified = datetime.utcnow()
                 cache.set(CACHE_LAST_MODIFIED_PREPEND + path + extension, last_modified)
-            else:
-                last_modified = cache.get(CACHE_LAST_MODIFIED_PREPEND + path + extension)
 
             if not contents.strip(): raise Exception('NotFound')
 
@@ -112,9 +111,11 @@ class Compressor(webapp2.RequestHandler):
             content_type = 'application/javascript' if extension == '.js' else 'text/css'
             response = webapp2.Response(template.get(contents.strip()), content_type=content_type)
             response.headers['Connection'] = 'Keep-Alive'
+            response.headers['Date'] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
             response.headers['Last-Modified'] = last_modified.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            response.headers['Expires'] = (last_modified + timedelta(365)).strftime("%a, %d %b %Y %H:%M:%S GMT")
             response.cache_control.no_cache = None 
-            response.cache_control.public = True 
+            response.cache_control.public = True
             response.cache_control.max_age = 604800000 # One week
             return response
         except Exception as inst:
