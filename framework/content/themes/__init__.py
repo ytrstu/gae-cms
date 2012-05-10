@@ -27,10 +27,11 @@ import zipfile
 from google.appengine.ext import db
 
 from framework import content
-from framework.subsystems.theme import Theme, get_local_theme_namespaces, is_local_theme_namespace
+from framework.subsystems import configuration
+from framework.subsystems.theme import Theme, get_local_theme_namespaces, get_custom_theme_namespaces, is_local_theme_namespace
 from framework.subsystems import section
 from framework.subsystems import template
-from framework.subsystems.forms import form, control, textareacontrol
+from framework.subsystems.forms import form, control, selectcontrol, textareacontrol
 from framework.subsystems import cache
 from framework.subsystems.file import File
 
@@ -63,6 +64,7 @@ class Themes(content.Content):
     ]
     views = [
         ['menu', 'Theme menu', False],
+        ['themes_previewer', 'Themes previewer', False],
     ]
 
     def on_delete(self):
@@ -419,6 +421,25 @@ class Themes(content.Content):
 
     def view_menu(self, params=None):
         return template.snippet('themes-menu', { 'content': self })
+
+    def view_themes_previewer(self, params=None):
+        if not configuration.theme_preview_enabled(): return ''
+
+        combined_themes = get_local_theme_namespaces() + get_custom_theme_namespaces()
+        if self.section.handler and self.section.handler.request.get('TEMPLATE_OVERRIDE_THEME'):
+            selected_theme = self.section.handler.request.get('TEMPLATE_OVERRIDE_THEME')
+        elif self.section.theme:
+            selected_theme = self.section.theme
+        else:
+            selected_theme = configuration.default_theme()
+            if not selected_theme: selected_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
+
+        f = form(self.section, self.section.full_path)
+        f.add_control(selectcontrol(self.section, 'TEMPLATE_OVERRIDE_THEME', combined_themes, selected_theme))
+        f.add_control(control(self.section, 'submit', 'submit', 'Preview theme'))
+
+        self.section.css.append('themes-previewer.css')
+        return '<div class="content themes-previewer">%s</div>' % unicode(f)
 
 def validated_body_template(body_template):
     if '{{ main|safe }}' not in body_template:

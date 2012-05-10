@@ -58,10 +58,14 @@ def get_favicon_ico():
         cache.delete(CACHE_KEY)
     raise Exception('SendFileBlob', item.FAVICON_ICO)
 
-def debug_mode():
-    item = get_configuration()
-    return item.DEBUG_MODE
-
 def default_theme():
     item = get_configuration()
     return item.DEFAULT_THEME
+
+def theme_preview_enabled():
+    item = get_configuration()
+    return item.ENABLE_THEME_PREVIEW
+
+def debug_mode():
+    item = get_configuration()
+    return item.DEBUG_MODE

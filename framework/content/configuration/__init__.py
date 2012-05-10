@@ -39,6 +39,7 @@ class Configuration(content.Content):
     GOOGLE_ANALYTICS_UA = db.StringProperty()
     ROBOTS_TXT = db.TextProperty()
     FAVICON_ICO = db.ReferenceProperty(reference_class=File)
+    ENABLE_THEME_PREVIEW = db.BooleanProperty(default=False)
     DEBUG_MODE = db.BooleanProperty(default=False)
 
     name = 'Configuration'
@@ -65,6 +66,7 @@ class Configuration(content.Content):
                 else:
                     self.FAVICON_ICO = File(filename='favicon.ico', content_type='image/x-icon', data=data)
                 self.FAVICON_ICO.put()
+            self.ENABLE_THEME_PREVIEW = self.section.handler.request.get('ENABLE_THEME_PREVIEW') != ''
             self.DEBUG_MODE = self.section.handler.request.get('DEBUG_MODE') != ''
             cache.delete(CACHE_KEY)
             self.update()
@@ -77,6 +79,7 @@ class Configuration(content.Content):
         f.add_control(control(self.section, 'text', 'GOOGLE_ANALYTICS_UA', self.GOOGLE_ANALYTICS_UA, 'Google analytics UA'))
         f.add_control(control(self.section, 'file', 'FAVICON_ICO', label='favicon.ico'))
         f.add_control(textareacontrol(self.section, 'ROBOTS_TXT', self.ROBOTS_TXT, 'robots.txt', 90, 5))
+        f.add_control(checkboxcontrol(self.section, 'ENABLE_THEME_PREVIEW', self.ENABLE_THEME_PREVIEW, 'Enable theme preview'))
         f.add_control(checkboxcontrol(self.section, 'DEBUG_MODE', self.DEBUG_MODE, 'Debug mode'))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '<h2>Edit configuration</h2>%s' % unicode(f)
