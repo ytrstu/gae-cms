@@ -28,6 +28,7 @@ from google.appengine.ext import db
 
 from framework import content
 from framework.subsystems.theme import Theme, get_local_theme_namespaces, is_local_theme_namespace
+from framework.subsystems import section
 from framework.subsystems import template
 from framework.subsystems.forms import form, control, textareacontrol
 from framework.subsystems import cache
@@ -49,6 +50,7 @@ class Themes(content.Content):
         ['upload', 'Upload', False, False],
         ['manage', 'Manage', False, False],
         ['get', 'Get', False, True],
+        ['edit', 'Edit', False, False],
         ['delete', 'Delete', False, False],
         ['edit_body_template', 'Edit body template', False, False],
         ['delete_body_template', 'Delete body template', False, False],
@@ -219,6 +221,33 @@ class Themes(content.Content):
         else:
             raise Exception('SendFileBlob', File(filename=filename, content_type=content_type, data=data))
 
+    def action_edit(self):
+        if not self.section.path_params or len(self.section.path_params) != 1:
+            raise Exception('NotFound')
+        message = ''
+        theme = self.get_theme(self.section.path_params[0])
+        if self.section.handler.request.get('submit'):
+            new_namespace = self.section.handler.request.get('namespace')
+            if new_namespace != theme.namespace and new_namespace in self.theme_namespaces:
+                message = '<div class="status error">%s is already a custom theme namespace</div>' % new_namespace
+            if new_namespace != theme.namespace and is_local_theme_namespace(new_namespace):
+                message = '<div class="status error">"%s" is a local theme namespace</div>' % new_namespace
+            elif new_namespace != theme.namespace:
+                for t in theme.body_template_names:
+                    section.rename_theme_namespace_template(theme.namespace + '/' + t, new_namespace + '/' + t)
+                self.theme_namespaces[self.theme_namespaces.index(theme.namespace)] = new_namespace
+                self.update()
+                theme.namespace = new_namespace
+                theme.put()
+                cache.flush_all() # Flush all cached resources for this theme which is important for sections where it is active
+                raise Exception('Redirect', self.section.action_redirect_path)
+            else:
+                raise Exception('Redirect', self.section.action_redirect_path)
+        f = form(self.section, self.section.full_path)
+        f.add_control(control(self.section, 'text', 'namespace', theme.namespace))
+        f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
+        return '%s<h2>Edit namespace</h2>%s' % (message, unicode(f))
+
     def action_delete(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
             raise Exception('NotFound')
@@ -255,8 +284,9 @@ class Themes(content.Content):
         try:
             ret = self.edit_text_resource(theme, filename, theme.body_template_names, theme.body_template_contents, True)
         except Exception as inst:
-            if inst[0] == 'Redirect' and filename != self.section.handler.request.get('filename'):
-                pass # TODO: Modify all sections that have the same theme name
+            new_filename = self.section.handler.request.get('filename')
+            if inst[0] == 'Redirect' and filename != new_filename:
+                section.rename_theme_namespace_template(theme.namespace + '/' + filename, theme.namespace + '/' + new_filename)
             raise Exception(inst[0], inst[1])
         return ret
 

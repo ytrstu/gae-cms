@@ -305,5 +305,11 @@ def delete_section(section):
     cache.delete(CACHE_KEY_HIERARCHY)
     section.delete()
 
+def rename_theme_namespace_template(old, new):
+    for s in Section.gql("WHERE theme=:1", old):
+        s.theme = new
+        s.put()
+    cache.delete(CACHE_KEY_HIERARCHY)
+
 def section_key(path):
     return db.Key.from_path('Section', path)
