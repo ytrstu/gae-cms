@@ -38,7 +38,7 @@ FIRST_RUN_HOME_PATH = 'home'
 FORBIDDEN_EXTENSIONS = ['css', 'js']
 FORBIDDEN_PATHS = ['favicon.ico', 'robots.txt', '_ah']
 MAIN_CONTAINER_NAMESPACE = 'main'
-CACHE_KEY = 'SECTION_HIERARCHY'
+CACHE_KEY_HIERARCHY = 'SECTION_HIERARCHY'
 
 class Section(db.Model):
 
@@ -60,7 +60,7 @@ class Section(db.Model):
             raise Exception('AccessDenied', self.path)
         elif self.redirect_to and self.redirect_to.strip('/') != self.path and not self.path_action:
             raise Exception('Redirect', self.redirect_to)
-        return template.html(self, self.get_action() if self.path_action else self.get_main_container_view())
+        return template.html(self, self.get_action() if self.path_action else self.get_main_container_view(), configuration.default_theme())
 
     def get_action(self):
         item = content.get_local_else_global(self.path, self.path_namespace)
@@ -105,7 +105,9 @@ def get_section(handler, full_path):
     if path_namespace: section.classes.append('content-' + path_namespace)
     if path_action: section.classes.append('action-' + path_action)
 
-    section.theme_namespace, section.theme_template = (section.theme if section.theme else template.DEFAULT_LOCAL_THEME_TEMPLATE).split('/')
+    default_theme = configuration.default_theme()
+    if not default_theme: default_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
+    section.theme_namespace, section.theme_template = (section.theme if section.theme else default_theme).split('/')
 
     section.yuicss = []
     section.themecss = []
@@ -164,10 +166,10 @@ def get_siblings(path):
     return get_children(section['parent_path']) if section else []
 
 def get_top_level():
-    hierarchy = cache.get(CACHE_KEY)
+    hierarchy = cache.get(CACHE_KEY_HIERARCHY)
     if hierarchy: return hierarchy
     hierarchy = db_get_hierarchy()
-    cache.set(CACHE_KEY, hierarchy)
+    cache.set(CACHE_KEY_HIERARCHY, hierarchy)
     return hierarchy
 
 def db_get_hierarchy(path=None):
@@ -217,14 +219,22 @@ def create_section(path, parent_path=None, name='', title='', keywords='', descr
     for item, _ in get_children(parent_path):
         if item['rank'] <= max_rank: max_rank = item['rank'] + 1
 
+    default_theme = configuration.default_theme()
+    if not default_theme: default_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
+    if theme == default_theme: theme = ''
+
     section = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=max_rank, name=name, title=title, keywords=keywords, description=description, theme=(theme if theme != template.DEFAULT_LOCAL_THEME_TEMPLATE else ''), is_private=is_private, redirect_to=redirect_to, new_window=new_window, is_default=is_default)
     section.put()
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_HIERARCHY)
     return section
 
 def update_section(old, path, parent_path, name, title, keywords, description, theme, is_private, is_default, redirect_to, new_window):
     path = path.replace('/', '-').replace(' ', '-').strip() if path else None
     parent_path = parent_path.replace('/', '-').replace(' ', '-').strip() if parent_path else None
+
+    default_theme = configuration.default_theme()
+    if not default_theme: default_theme = template.DEFAULT_LOCAL_THEME_TEMPLATE
+    if theme == default_theme: theme = ''
 
     if old.is_default:
         # Cannot change the default page except if another page is promoted
@@ -244,10 +254,10 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
 
         content.rename_section_paths(old.path, path)
 
-        new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, theme=(theme if theme != template.DEFAULT_LOCAL_THEME_TEMPLATE else ''), is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
+        new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, theme=theme, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
         old.delete()
         new.put()
-        cache.delete(CACHE_KEY)
+        cache.delete(CACHE_KEY_HIERARCHY)
         return new
     elif old.parent_path != parent_path:
 
@@ -265,13 +275,13 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
     old.title = title
     old.keywords = keywords
     old.description = description
-    old.theme = theme if theme != template.DEFAULT_LOCAL_THEME_TEMPLATE else ''
+    old.theme = theme
     old.is_private = is_private
     old.is_default = is_default
     old.redirect_to = redirect_to
     old.new_window = new_window
     old.put()
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_HIERARCHY)
     return old
 
 def update_section_rank(section, new_rank):
@@ -284,7 +294,7 @@ def update_section_rank(section, new_rank):
         else:
             sibling.rank = new_rank
         sibling.put()
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_HIERARCHY)
 
 def delete_section(section):
     if section.is_default:
@@ -292,7 +302,7 @@ def delete_section(section):
     elif get_children(section.path):
         raise Exception('Cannot delete a page with children without reparenting them first')
     content.delete_section_path_content(section.path)
-    cache.delete(CACHE_KEY)
+    cache.delete(CACHE_KEY_HIERARCHY)
     section.delete()
 
 def section_key(path):

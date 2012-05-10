@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from framework import content
+from framework.content import content_key
 from framework.content.configuration import Configuration, CACHE_KEY
 
 from framework.subsystems import cache
@@ -34,7 +34,7 @@ def get_configuration():
             cache.set(CACHE_KEY, item)
         return item
     except:
-        item = Configuration(parent=content.content_key('Configuration', None, 'configuration'),
+        item = Configuration(parent=content_key('Configuration', None, 'configuration'),
                              namespace = 'configuration',
                              SITE_HEADER = 'gae-cms',
                              SITE_SUB_HEADER = 'Python-based Content Management System for Google App Engine',
@@ -61,3 +61,7 @@ def get_favicon_ico():
 def debug_mode():
     item = get_configuration()
     return item.DEBUG_MODE
+
+def default_theme():
+    item = get_configuration()
+    return item.DEFAULT_THEME
