@@ -1,6 +1,6 @@
 .themes-previewer {
 	float: right;
-	margin-top: -2em;
+	margin: 0.5em;
 }
 .themes-previewer select, .themes-previewer input {
 	float: left;
