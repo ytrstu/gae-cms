@@ -115,7 +115,7 @@ class Themes(content.Content):
                 self.update()
                 raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
-        f.add_control(control(self.section, 'text', 'namespace', '', 'Namespace (permanent)'))
+        f.add_control(control(self.section, 'text', 'namespace', '', 'Namespace'))
         f.add_control(control(self.section, 'submit', 'submit', 'Submit'))
         return '%s<h2>Add theme</h2>%s' % (message, unicode(f))
 
@@ -230,9 +230,11 @@ class Themes(content.Content):
         theme = self.get_theme(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
             new_namespace = self.section.handler.request.get('namespace')
-            if new_namespace != theme.namespace and new_namespace in self.theme_namespaces:
+            if not new_namespace:
+                message = '<div class="status error">Namespace is required</div>'
+            elif new_namespace != theme.namespace and new_namespace in self.theme_namespaces:
                 message = '<div class="status error">%s is already a custom theme namespace</div>' % new_namespace
-            if new_namespace != theme.namespace and is_local_theme_namespace(new_namespace):
+            elif new_namespace != theme.namespace and is_local_theme_namespace(new_namespace):
                 message = '<div class="status error">"%s" is a local theme namespace</div>' % new_namespace
             elif new_namespace != theme.namespace:
                 for t in theme.body_template_names:
