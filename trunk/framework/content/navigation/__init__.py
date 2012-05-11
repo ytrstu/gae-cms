@@ -150,10 +150,12 @@ class Navigation(content.Content):
         n = int(params[0]) if params else 0
         classes = 'dropdown ' + ('vertical' if not params or len(params) < 2 else params[1])
         hierarchy = section.get_top_level()
-        for item in hierarchy:
-            if(section.is_ancestor(self.section.path, item[0]['path'])):
-                item[0]['is_ancestor'] = True
-                item[1] = set_ancestry(self.section.path, item[1])
+        while n:
+            for h in hierarchy:
+                if section.is_ancestor(self.section.path, h[0]['path']):
+                    hierarchy = h[1]
+            n -= 1
+        self.section.css.append('nav-dropdown.css')
         self.section.yuijs.append('yui/yui.js')
         self.section.js.append('nav-dropdown.js')
         return list_ul(self.section.path, hierarchy, classes, dropdown_id=self.unique_identifier())
@@ -207,12 +209,10 @@ def set_ancestry(path, items):
 def list_ul(path, items, style, manage=False, dropdown_id=None):
     if not items: return ''
     if dropdown_id: style, orientation = style.split()
-    ul = '<ul class="content navigation view ' + style + '">'
-    ul += list_li(path, items, manage, dropdown_id)
-    ul += '</ul>' 
-    return ul if not dropdown_id else '<div id="%s" class="nav-dropdown yui3-menu yui3-menu-%s yui3-menubuttonnav"><div class="yui3-menu-content">%s</div></div>' % (dropdown_id, orientation, ul)
+    ul = '<ul class="content navigation view %s">%s</ul>' % (style, list_li(path, items, True, manage, dropdown_id)) 
+    return ul if not dropdown_id else '<div id="%s" class="nav-dropdown yui3-menu yui3-menu-%s yui3-splitbuttonnav"><div class="yui3-menu-content">%s</div></div>' % (dropdown_id, orientation, ul)
 
-def list_li(path, items, manage=False, dropdown_id=None):
+def list_li(path, items, first, manage=False, dropdown_id=None):
     li = ''
     i = 0
     for item, children in items:
@@ -222,21 +222,23 @@ def list_li(path, items, manage=False, dropdown_id=None):
             link = '/' + (item['path'] if not item['is_default'] else '')
         target = ' target="_blank"' if item['new_window'] else ''
         name = item['name'] if item['name'] else '-'
-        classes = 'current' if item['path'] == path else ''
 
+        classes = 'current' if item['path'] == path else ''
         if 'is_ancestor' in item and item['is_ancestor']: classes += ' ancestor'
-        if not i: classes += ' first '
+        if not i: classes += ' first'
         if dropdown_id and not children:
-            classes += ' yui3-menuitem '
+            classes += ' yui3-menuitem'
             anchor = '<a class="yui3-menuitem-content" href="%s"%s>%s</a>' % (link, target, name)
-        elif dropdown_id and children:
+        elif dropdown_id and children and not first:
+            anchor = '<a class="yui3-menu-label" href="%s"%s>%s</a>' % (link, target, name)
+        elif dropdown_id and children and first:
             anchor = '<span class="yui3-menu-label"><a href="%s"%s>%s</a> <a href="#%s-submenu-%s" class="yui3-menu-toggle">Submenu</a></span>' % (link, target, name, item['path'], dropdown_id)
         else:
             anchor = '<a href="%s"%s>%s</a>' % (link, target, name)
 
         li += '<li%s>%s' % ((' class="' + classes.strip() + '"') if classes.strip() else '', anchor)
         if manage: li += get_manage_links(item)
-        if children: li += '%s<ul>%s</ul>%s' % ('<div id="%s-submenu-%s" class="yui3-menu"><div class="yui3-menu-content">' % (item['path'], dropdown_id) if dropdown_id else '', list_li(path, children, manage, dropdown_id), '</div></div>' if dropdown_id else '')
+        if children: li += '%s<ul>%s</ul>%s' % ('<div id="%s-submenu-%s" class="yui3-menu"><div class="yui3-menu-content">' % (item['path'], dropdown_id) if dropdown_id else '', list_li(path, children, False, manage, dropdown_id), '</div></div>' if dropdown_id else '')
         li += '</li>'
         i += 1
     return li

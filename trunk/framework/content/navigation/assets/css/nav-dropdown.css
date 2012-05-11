@@ -1,0 +1,9 @@
+.nav-dropdown {
+	clear: both;
+	margin: 0.5em 0;
+	height: 2em;
+	visibility: hidden; /* Prevent flicker on load, javascript will make visible when ready */
+}
+.nav-dropdown .yui3-menu {
+	visibility: hidden; /* Prevent flicker on load, javascript will make visible when ready */
+}

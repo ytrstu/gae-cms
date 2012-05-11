@@ -6,8 +6,10 @@ YUI().use("node-menunav", function(Y) {
 
 	        this.plug(Y.Plugin.NodeMenuNav, { autoSubmenuDisplay: false, mouseOutHideDelay: 0 });
 
+	    	this.all('.yui3-menu').setStyle('visibility','visible');
+
 	    }, "#" + i.get('id'));
 
-	});
+	}).setStyle('visibility','visible');
 
 });
