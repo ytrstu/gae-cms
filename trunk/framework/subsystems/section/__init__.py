@@ -77,7 +77,7 @@ class Section(db.Model):
         return item.init(self).view('default')
 
     def get_theme_namespace_template(self):
-        TEMPLATE_OVERRIDE_THEME = self.handler.request.get('TEMPLATE_OVERRIDE_THEME') if self.handler.request.get('TEMPLATE_OVERRIDE_THEME') else None 
+        TEMPLATE_OVERRIDE_THEME = self.handler.request.get('TEMPLATE_OVERRIDE_THEME') if self.handler and self.handler.request.get('TEMPLATE_OVERRIDE_THEME') else None 
         DEFAULT_THEME = configuration.default_theme()
 
         if TEMPLATE_OVERRIDE_THEME and configuration.theme_preview_enabled():

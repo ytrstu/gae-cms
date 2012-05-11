@@ -426,7 +426,7 @@ class Themes(content.Content):
         if not configuration.theme_preview_enabled(): return ''
 
         combined_themes = get_local_theme_namespaces() + get_custom_theme_namespaces()
-        if self.section.handler.request.get('submit_themes_previewer'):
+        if self.section.handler and self.section.handler.request.get('submit_themes_previewer'):
             selected_theme = self.section.handler.request.get('TEMPLATE_OVERRIDE_THEME')
         elif self.section.theme:
             selected_theme = self.section.theme
