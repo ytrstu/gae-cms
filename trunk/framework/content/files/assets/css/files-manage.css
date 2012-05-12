@@ -11,7 +11,7 @@
 	padding-bottom: 5px;
 }
 .files.manage a.delete {
-	background: url(/framework/assets/images/sprite.png) 0 -138px no-repeat;
+	background: url(/framework/assets/images/sprite.png) 0 -62px no-repeat;
 	width: 16px;
 	display: block;
 	text-indent: -9999px;
