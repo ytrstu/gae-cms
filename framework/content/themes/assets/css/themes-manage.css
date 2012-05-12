@@ -17,7 +17,7 @@
 	margin-bottom: 0.4em;
 }
 .themes.manage a.edit, .themes.manage a.delete {
-	background: url(/framework/assets/images/sprite.png) 0 -587px no-repeat;
+	background: url(/framework/assets/images/sprite.png) 0 -511px no-repeat;
 	width: 14px;
 	display: block;
 	text-indent: -9999px;
@@ -26,6 +26,6 @@
 	margin-right: 0.5em;
 }
 .themes.manage a.delete {
-	background-position: 0 -138px;
+	background-position: 0 -62px;
 	width: 16px;
 }
