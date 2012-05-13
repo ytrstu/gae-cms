@@ -7,3 +7,6 @@
 .nav-dropdown .yui3-menu {
 	visibility: hidden; /* Prevent flicker on load, javascript will make visible when ready */
 }
+.yui3-skin-sam .nav-dropdown.yui3-splitbuttonnav .yui3-menuitem-content {
+	cursor: pointer;
+}
