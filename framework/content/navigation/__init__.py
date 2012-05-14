@@ -148,17 +148,21 @@ class Navigation(content.Content):
 
     def view_dropdown(self, params=None):
         n = int(params[0]) if params else 0
-        classes = 'dropdown ' + ('vertical' if not params or len(params) < 2 else params[1])
+        dropdown_type = 'vertical' if not params or len(params) < 2 else params[1]
+        classes = 'dropdown-' + dropdown_type
         hierarchy = section.get_top_level()
         while n:
             for h in hierarchy:
                 if section.is_ancestor(self.section.path, h[0]['path']):
                     hierarchy = h[1]
             n -= 1
-        self.section.css.append('nav-dropdown.css')
         self.section.yuijs.append('yui/yui.js')
-        self.section.js.append('nav-dropdown.js')
-        return list_ul(self.section.path, hierarchy, classes, dropdown_id=self.unique_identifier())
+        if dropdown_type == 'horizontal':
+            self.section.css.append('nav-dropdown-h.css')
+            self.section.js.append('nav-dropdown-h.js')
+        else:
+            self.section.js.append('nav-dropdown-v.js')
+        return list_ul(self.section.path, hierarchy, classes, dropdown_id=self.unique_identifier(), dropdown_type=dropdown_type)
 
     def view_menu(self, params=None):
         return template.snippet('navigation-menu', { 'content': self, 'is_admin': permission.is_admin(self.section.path) })
@@ -206,13 +210,12 @@ def set_ancestry(path, items):
             item[1] = None
     return items
 
-def list_ul(path, items, style, manage=False, dropdown_id=None):
+def list_ul(path, items, style, manage=False, dropdown_id=None, dropdown_type=None):
     if not items: return ''
-    if dropdown_id: style, orientation = style.split()
-    ul = '<ul class="content navigation view %s">%s</ul>' % (style, list_li(path, items, True, manage, dropdown_id)) 
-    return ul if not dropdown_id else '<div id="%s" class="nav-dropdown yui3-menu yui3-menu-%s yui3-splitbuttonnav"><div class="yui3-menu-content">%s</div></div>' % (dropdown_id, orientation, ul)
+    ul = '<ul class="content navigation view %s">%s</ul>' % (style, list_li(path, items, True, manage, dropdown_id, dropdown_type)) 
+    return ul if not dropdown_id else '<div id="%s" class="nav-dropdown-%s yui3-menu %s"><div class="yui3-menu-content">%s</div></div>' % (dropdown_id, 'v' if dropdown_type == 'vertical' else 'h', 'TODO_VERTICAL_MENU' if dropdown_type == 'vertical' else 'yui3-menu-horizontal yui3-splitbuttonnav', ul)
 
-def list_li(path, items, first, manage=False, dropdown_id=None):
+def list_li(path, items, first, manage=False, dropdown_id=None, dropdown_type=None):
     li = ''
     i = 0
     for item, children in items:
@@ -238,7 +241,7 @@ def list_li(path, items, first, manage=False, dropdown_id=None):
 
         li += '<li%s>%s' % ((' class="' + classes.strip() + '"') if classes.strip() else '', anchor)
         if manage: li += get_manage_links(item)
-        if children: li += '%s<ul>%s</ul>%s' % ('<div id="%s-submenu-%s" class="yui3-menu"><div class="yui3-menu-content">' % (item['path'], dropdown_id) if dropdown_id else '', list_li(path, children, False, manage, dropdown_id), '</div></div>' if dropdown_id else '')
+        if children: li += '%s<ul>%s</ul>%s' % ('<div id="%s-submenu-%s" class="yui3-menu"><div class="yui3-menu-content">' % (item['path'], dropdown_id) if dropdown_id else '', list_li(path, children, False, manage, dropdown_id, dropdown_type), '</div></div>' if dropdown_id else '')
         li += '</li>'
         i += 1
     return li
