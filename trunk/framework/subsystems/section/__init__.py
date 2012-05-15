@@ -203,6 +203,13 @@ def is_ancestor(path, another_path):
             return False
     return True
 
+def get_depth(path):
+    section = get(path)
+    if not section['parent_path']:
+        return 0
+    else:
+        return get_depth(section['parent_path']) + 1
+
 def can_path_exist(path, parent_path, old_path=None):
     if not path:
         raise Exception('Path is required')
