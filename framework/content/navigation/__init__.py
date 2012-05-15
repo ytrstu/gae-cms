@@ -45,6 +45,7 @@ class Navigation(content.Content):
         ['nth_level_only', 'nth level without any children', True],
         ['expanding_hierarchy', 'Entire hierarchy with only the trail to the current section and its children expanded', True],
         ['dropdown', 'Dropdown', True],
+        ['breadcrumb', 'Breadcrumb', True],
     ]
 
     def action_create(self):
@@ -137,7 +138,7 @@ class Navigation(content.Content):
                     hierarchy = h[1]
             n -= 1
         for item in hierarchy:
-            if(section.is_ancestor(self.section.path, item[0]['path'])):
+            if section.is_ancestor(self.section.path, item[0]['path']):
                 item[0]['is_ancestor'] = True
                 item[1] = set_ancestry(self.section.path, item[1])
             else:
@@ -164,8 +165,18 @@ class Navigation(content.Content):
             self.section.js.append('nav-dropdown-v.js')
         return list_ul(self.section.path, hierarchy, classes, dropdown_id=self.unique_identifier(), dropdown_type=dropdown_type)
 
+    def view_breadcrumb(self, params=None):
+        n = int(params[0]) if params else 0
+        hierarchy = get_breadcrumb(section.get(self.section.path), n)
+        self.section.css.append('nav-breadcrumb.css')
+        return list_ul(self.section.path, hierarchy, 'breadcrumb')
+
     def view_menu(self, params=None):
         return template.snippet('navigation-menu', { 'content': self, 'is_admin': permission.is_admin(self.section.path) })
+
+def get_breadcrumb(s, n=0):
+    depth = section.get_depth(s['path'])
+    return [[s, get_breadcrumb(section.get(s['parent_path'])) if depth > n else []]]
 
 def get_values(request):
     path = request.get('path').replace('/', '-').replace(' ', '-')
