@@ -386,7 +386,7 @@ class Themes(content.Content):
             raise Exception('NotFound')
         theme = self.get_theme(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
-            filename = self.section.handler.request.POST['data']
+            filename = self.section.handler.request.POST['data'].filename
             content_type = self.section.handler.request.POST['data'].type
             data = db.Blob(self.section.handler.request.get('data'))
             key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
