@@ -113,8 +113,8 @@ class Compressor(webapp2.RequestHandler):
             response.headers['Connection'] = 'Keep-Alive'
             response.headers['Date'] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
             response.headers['Last-Modified'] = last_modified.strftime("%a, %d %b %Y %H:%M:%S GMT")
-            response.headers['Expires'] = (last_modified + timedelta(365)).strftime("%a, %d %b %Y %H:%M:%S GMT")
-            response.cache_control.no_cache = None 
+            response.headers['Expires'] = (last_modified + timedelta(8)).strftime("%a, %d %b %Y %H:%M:%S GMT")
+            response.cache_control.no_cache = None
             response.cache_control.public = True
             response.cache_control.max_age = 604800000 # One week
             return response
