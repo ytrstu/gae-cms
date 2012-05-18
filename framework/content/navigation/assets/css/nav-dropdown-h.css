@@ -13,3 +13,7 @@
 .yui3-skin-sam .nav-dropdown-h.yui3-splitbuttonnav .yui3-menuitem-content, .yui3-skin-sam .nav-dropdown-h.yui3-splitbuttonnav .yui3-menu-label a {
 	cursor: pointer;
 }
+.yui3-skin-sam .nav-dropdown-h.yui3-splitbuttonnav li.current,
+.yui3-skin-sam .nav-dropdown-h.yui3-splitbuttonnav li.ancestor {
+	background-color: #D8D8D8;
+}

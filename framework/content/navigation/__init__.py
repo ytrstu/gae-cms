@@ -140,7 +140,7 @@ class Navigation(content.Content):
         for item in hierarchy:
             if section.is_ancestor(self.section.path, item[0]['path']):
                 item[0]['is_ancestor'] = True
-                item[1] = set_ancestry(self.section.path, item[1])
+                item[1] = set_ancestry_hide_others(self.section.path, item[1])
             else:
                 item[0]['is_ancestor'] = False
                 item[1] = None
@@ -157,6 +157,7 @@ class Navigation(content.Content):
                 if section.is_ancestor(self.section.path, h[0]['path']):
                     hierarchy = h[1]
             n -= 1
+        hierarchy = set_ancestry(self.section.path, hierarchy)
         self.section.yuijs.append('yui/yui.js')
         if dropdown_type == 'horizontal':
             self.section.css.append('nav-dropdown-h.css')
@@ -211,6 +212,16 @@ def get_form(s, path, parent_path, name=None, title=None, keywords=None, descrip
     f.add_control(control(s, 'submit', 'submit'))
     return unicode(f)
 
+def set_ancestry_hide_others(path, items):
+    for item in items:
+        if section.is_ancestor(path, item[0]['path']):
+            item[0]['is_ancestor'] = True 
+            item[1] = set_ancestry_hide_others(path, item[1])
+        else:
+            item[0]['is_ancestor'] = False
+            item[1] = None
+    return items
+
 def set_ancestry(path, items):
     for item in items:
         if section.is_ancestor(path, item[0]['path']):
@@ -218,7 +229,6 @@ def set_ancestry(path, items):
             item[1] = set_ancestry(path, item[1])
         else:
             item[0]['is_ancestor'] = False
-            item[1] = None
     return items
 
 def list_ul(path, items, style, manage=False, dropdown_id=None, dropdown_type=None):
