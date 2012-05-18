@@ -20,9 +20,9 @@
 	<div class="mn yui3-u-5-6">
 		{{ main|safe }}
 	</div>
-	<div class="sd yui3-u-1-6">
+	<div class="sd1 yui3-u-1-6">
 		{{ section|view:"GLOBAL, navigation, Navigation, expanding_hierarchy, 1, vertical"|safe }}
-		{{ section|view:"LOCAL, side, Container, default"|safe }}
+		{{ section|view:"LOCAL, side1, Container, default"|safe }}
 	</div>
 </div>
 <div class="ft">

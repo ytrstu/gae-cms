@@ -22,6 +22,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import traceback
 import webapp2
+from datetime import datetime, timedelta
 
 from framework.subsystems import section
 from framework.subsystems import template
@@ -44,6 +45,14 @@ class Router(webapp2.RequestHandler):
             elif inst[0] == 'SendFileBlob':
                 response = webapp2.Response(inst[1].data)
                 if inst[1].content_type: response.content_type = str(inst[1].content_type)
+                response.headers['Connection'] = 'Keep-Alive'
+                response.headers['Date'] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+                last_modified = datetime.utcnow() # TODO: Store when this actually happened
+                response.headers['Last-Modified'] = last_modified.strftime("%a, %d %b %Y %H:%M:%S GMT")
+                response.headers['Expires'] = (last_modified + timedelta(8)).strftime("%a, %d %b %Y %H:%M:%S GMT")
+                response.cache_control.no_cache = None
+                response.cache_control.public = True
+                response.cache_control.max_age = 604800000 # One week
                 return response
             elif inst[0] == 'NotFound':
                 err = 404

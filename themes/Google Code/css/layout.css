@@ -3,7 +3,7 @@
 .bd {
     padding-left: 250px; /* "left col" width */ 
 }
-.sd {
+.sd1 {
     margin-left: -250px; /* "left col" width */
     width: 240px;
     margin-right: 10px;
