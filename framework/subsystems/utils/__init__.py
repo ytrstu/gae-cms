@@ -81,6 +81,7 @@ def file_search(search, root='.'):
 def dir_search(search, root='.'):
     directories = []
     for dirpath, dirnames, _ in os.walk(root):
+        dirnames[:] = [d for d in dirnames if not d.startswith('.')] # Remove hidden directories
         for dirname in dirnames:
             if dirname in search:
                 directories.append(os.path.join(dirpath, dirname))
