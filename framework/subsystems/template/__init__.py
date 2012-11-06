@@ -21,14 +21,13 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from google.appengine.api import users
 
 from framework.subsystems import permission
 from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, is_local_theme_template, get_custom_template
 from framework.subsystems import utils
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from django.template.loaders.filesystem import Loader
 from django.template.loader import render_to_string

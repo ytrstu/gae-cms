@@ -20,8 +20,10 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import traceback
-import webapp2
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+import traceback, webapp2
 from datetime import datetime, timedelta
 
 from framework.subsystems import section
