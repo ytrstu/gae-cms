@@ -30,7 +30,7 @@ def get_configuration():
     try:
         item = cache.get(CACHE_KEY)
         if not item:
-            item = Configuration.gql("")[0]
+            item = Configuration.gql("").fetch()[0]
             cache.set(CACHE_KEY, item)
         return item
     except:

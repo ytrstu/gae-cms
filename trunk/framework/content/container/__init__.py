@@ -22,7 +22,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os, importlib
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 from framework import content
 from framework.subsystems import cache
@@ -31,10 +31,10 @@ from framework.subsystems.forms import form, control, selectcontrol
 
 class Container(content.Content):
 
-    content_types = db.StringListProperty()
-    content_paths = db.StringListProperty()
-    content_namespaces = db.StringListProperty()
-    content_views = db.StringListProperty()
+    content_types = ndb.StringProperty(repeated=True)
+    content_paths = ndb.StringProperty(repeated=True)
+    content_namespaces = ndb.StringProperty(repeated=True)
+    content_views = ndb.StringProperty(repeated=True)
 
     name = 'Container'
     author = 'Imran Somji'

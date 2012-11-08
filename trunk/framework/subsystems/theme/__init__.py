@@ -22,7 +22,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 from django.template import TemplateDoesNotExist
 
@@ -32,17 +32,17 @@ from framework.subsystems import utils
 CACHE_KEY = 'CUSTOM_THEMES'
 DEFAULT_LOCAL_THEME_TEMPLATE = 'Google Code/Default'
 
-class Theme(db.Model):
+class Theme(ndb.Model):
 
-    namespace = db.StringProperty()
-    body_template_names = db.StringListProperty()
-    body_template_contents = db.ListProperty(item_type=db.Text)
-    css_filenames = db.StringListProperty()
-    css_contents = db.ListProperty(item_type=db.Text)
-    js_filenames = db.StringListProperty()
-    js_contents = db.ListProperty(item_type=db.Text)
-    image_filenames = db.StringListProperty()
-    image_keys = db.StringListProperty()
+    namespace = ndb.StringProperty()
+    body_template_names = ndb.StringProperty(repeated=True)
+    body_template_contents = ndb.TextProperty(repeated=True)
+    css_filenames = ndb.StringProperty(repeated=True)
+    css_contents = ndb.TextProperty(repeated=True)
+    js_filenames = ndb.StringProperty(repeated=True)
+    js_contents = ndb.TextProperty(repeated=True)
+    image_filenames = ndb.StringProperty(repeated=True)
+    image_keys = ndb.BlobKeyProperty(repeated=True)
 
 def get_local_theme_namespaces():
     templates = []
@@ -76,7 +76,7 @@ def is_local_theme_namespace(n):
 def get_custom_themes():
     custom_themes = cache.get(CACHE_KEY)
     if not custom_themes:
-        custom_themes = Theme.gql("")
+        custom_themes = Theme.gql("").fetch()
         cache.set(CACHE_KEY, custom_themes)
     return custom_themes
 
@@ -89,7 +89,7 @@ def get_custom_theme(namespace):
 def get_custom_template(theme_template):
     namespace, template_name = theme_template.split('/')
     try:
-        t = Theme.gql("WHERE namespace=:1", namespace)[0]
+        t = Theme.query(namespace=namespace).fetch(1)[0]
         index = t.body_template_names.index(template_name)
         return t.body_template_contents[index]
     except:

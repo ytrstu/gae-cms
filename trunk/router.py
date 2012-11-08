@@ -43,8 +43,8 @@ class Router(webapp2.RequestHandler):
             if inst[0] == 'Redirect':
                 return self.redirect(str(inst[1]))
             elif inst[0] == 'SendFileBlob':
-                response = webapp2.Response(inst[1].data)
-                if inst[1].content_type: response.content_type = str(inst[1].content_type)
+                response = webapp2.Response(inst[1])
+                if inst[2]: response.content_type = str(inst[2])
                 response.headers['Connection'] = 'Keep-Alive'
                 response.headers['Date'] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
                 last_modified = datetime.utcnow() # TODO: Store when this actually happened
@@ -80,5 +80,4 @@ class Router(webapp2.RequestHandler):
     def post(self, path):
         return self.get(path)
 
-#app = webapp2.WSGIApplication([('(/.*)', Router)], debug=configuration.debug_mode())
-app = webapp2.WSGIApplication([('(/.*)', Router)], debug=True)
+app = webapp2.WSGIApplication([('(/.*)', Router)], debug=configuration.debug_mode())

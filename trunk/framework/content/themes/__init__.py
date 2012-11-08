@@ -20,27 +20,26 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import urllib2, types, mimetypes
+import urllib2, types, mimetypes, binascii
 from StringIO import StringIO
 import zipfile
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
+from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.api import files
 
 from framework import content
-from framework.subsystems import configuration
+from framework.subsystems import configuration, section, template, cache
 from framework.subsystems.theme import Theme, get_local_theme_namespaces, get_custom_theme_namespaces, is_local_theme_namespace
-from framework.subsystems import section
-from framework.subsystems import template
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol
-from framework.subsystems import cache
 from framework.subsystems.file import File
 
 CACHE_KEY_PREPEND = 'THEME_'
 
 class Themes(content.Content):
 
-    theme_keys = db.StringListProperty()
-    theme_namespaces = db.StringListProperty()
+    theme_keys = ndb.KeyProperty(repeated=True)
+    theme_namespaces = ndb.StringProperty(repeated=True)
 
     name = 'Themes'
     author = 'Imran Somji'
@@ -73,9 +72,9 @@ class Themes(content.Content):
             theme = self.get_theme(self.theme_namespaces[i])
             cache.delete(CACHE_KEY_PREPEND + self.theme_namespaces[i])
             for key in theme.image_keys:
-                data = File.get(key)
-                cache.delete(CACHE_KEY_PREPEND + key)
-                data.delete()
+                data = key.get(key)
+                cache.delete(CACHE_KEY_PREPEND + str(key))
+                data.Key.delete()
             theme.delete()
             del self.theme_keys[i]
             del self.theme_namespaces[i]
@@ -110,7 +109,7 @@ class Themes(content.Content):
                 message = '<div class="status error">Namespace "%s" is already a local theme namespace</div>' % namespace
             else:
                 key = Theme(namespace=namespace).put()
-                self.theme_keys.append(str(key))
+                self.theme_keys.append(key)
                 self.theme_namespaces.append(namespace)
                 self.update()
                 raise Exception('Redirect', self.section.action_redirect_path)
@@ -123,7 +122,7 @@ class Themes(content.Content):
         message = ''
         if self.section.handler.request.get('submit'):
             try:
-                self.import_compressed_theme_data(db.Blob(self.section.handler.request.get('data')))
+                self.import_compressed_theme_data(ndb.BlobProperty(self.section.handler.request.get('data')))
             except Exception as inst:
                 error = '<div class="status error">%s</div>'
                 message = inst[0] if not isinstance(inst[0], types.ListType) else '<br>'.join(inst[0])
@@ -163,24 +162,24 @@ class Themes(content.Content):
                     if p.startswith(main_dir + '/' + namespace + '/templates/') and p.endswith('.body'):
                         filename = p.split(main_dir + '/' + namespace + '/templates/')[1][:-5]
                         theme.body_template_names.append(filename)
-                        theme.body_template_contents.append(validated_body_template(db.Text(zipfile.ZipFile.read(compressed, p))))
+                        theme.body_template_contents.append(validated_body_template(zipfile.ZipFile.read(compressed, p)))
                     elif p.startswith(main_dir + '/' + namespace + '/css/') and p.endswith('.css'):
                         filename = p.split(main_dir + '/' + namespace + '/css/')[1]
                         theme.css_filenames.append(filename)
-                        theme.css_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                        theme.css_contents.append(zipfile.ZipFile.read(compressed, p))
                     elif p.startswith(main_dir + '/' + namespace + '/js/') and p.endswith('.js'):
                         filename = p.split(main_dir + '/' + namespace + '/js/')[1]
                         theme.js_filenames.append(filename)
-                        theme.js_contents.append(db.Text(zipfile.ZipFile.read(compressed, p)))
+                        theme.js_contents.append(zipfile.ZipFile.read(compressed, p))
                     elif p.startswith(main_dir + '/' + namespace + '/images/') and p != main_dir + '/' + namespace + '/images/':
                         filename = p.split(main_dir + '/' + namespace + '/images/')[1]
                         content_type, _ = mimetypes.guess_type(filename)
-                        data = db.Blob(zipfile.ZipFile.read(compressed, p))
+                        data = ndb.BlobProperty(zipfile.ZipFile.read(compressed, p))
                         key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
                         theme.image_filenames.append(filename)
                         theme.image_keys.append(str(key))
                 key = theme.put()
-                self.theme_keys.append(str(key))
+                self.theme_keys.append(key)
                 self.theme_namespaces.append(calculated_namespace)
                 self.update()
                 if messages: raise Exception(messages)
@@ -205,23 +204,22 @@ class Themes(content.Content):
             data = None
             try:
                 key = theme.image_keys[theme.image_filenames.index(filename)]
-                data = cache.get(CACHE_KEY_PREPEND + key)
+                data = cache.get(CACHE_KEY_PREPEND + str(key))
                 if not data:
-                    data = File.get(key)
-                    cache.set(CACHE_KEY_PREPEND + key, data)
+                    data = BlobInfo.get(key)
+                    cache.set(CACHE_KEY_PREPEND + str(key), data)
             finally:
                 if not data:
                     raise Exception('NotFound')
-                raise Exception('SendFileBlob', data)
+                raise Exception('SendFileBlob', data.open().read(), data.content_type)
         else:
             raise Exception('NotFound')
         try:
             index = filenames.index(filename)
-            data = db.Blob(str(contents[index]))
         except:
             raise Exception('NotFound')
         else:
-            raise Exception('SendFileBlob', File(filename=filename, content_type=content_type, data=data))
+            raise Exception('SendFileBlob', str(contents[index]), content_type)
 
     def action_edit(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
@@ -257,7 +255,7 @@ class Themes(content.Content):
             raise Exception('NotFound')
         theme = self.get_theme(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
-            self.theme_keys.remove(str(theme.key()))
+            self.theme_keys.remove(theme.key)
             self.theme_namespaces.remove(theme.namespace)
             theme.delete()
             self.update()
@@ -271,10 +269,10 @@ class Themes(content.Content):
         item = None
         try:
             key = self.theme_keys[self.theme_namespaces.index(namespace)]
-            item = cache.get(CACHE_KEY_PREPEND + key)
+            item = cache.get(CACHE_KEY_PREPEND + str(key))
             if not item:
-                item = Theme.get(key)
-                cache.set(CACHE_KEY_PREPEND + key, item)
+                item = key.get()
+                cache.set(CACHE_KEY_PREPEND + str(key), item)
         finally:
             if not item:
                 raise Exception('NotFound')
@@ -332,10 +330,10 @@ class Themes(content.Content):
                 else:
                     if filename:
                         filenames[index] = new_filename
-                        contents[index] = db.Text(content)
+                        contents[index] = content
                     else:
                         filenames.append(new_filename)
-                        contents.append(db.Text(content))
+                        contents.append(content)
                     theme.put()
                     cache.flush_all() # Flush all cached resources for this theme which is important for sections where it is active
                     raise Exception('Redirect', self.section.action_redirect_path)
@@ -388,12 +386,16 @@ class Themes(content.Content):
         if self.section.handler.request.get('submit'):
             filename = self.section.handler.request.POST['data'].filename
             content_type = self.section.handler.request.POST['data'].type
-            data = db.Blob(self.section.handler.request.get('data'))
-            key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
+            data = self.section.handler.request.get('data')
+            handle = files.blobstore.create(mime_type=content_type)
+            with files.open(handle, 'a') as f:
+                f.write(data)
+            files.finalize(handle)
+            key = files.blobstore.get_blob_key(handle)
             theme.image_filenames.append(filename)
-            theme.image_keys.append(str(key))
+            theme.image_keys.append(key)
             theme.put()
-            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+            cache.delete(CACHE_KEY_PREPEND + str(theme.key))
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'file', 'data', label='Image'))
@@ -409,13 +411,13 @@ class Themes(content.Content):
             raise Exception('NotFound')
         if self.section.handler.request.get('submit'):
             index = theme.image_filenames.index(filename)
-            data = File.get(theme.image_keys[index])
-            cache.delete(CACHE_KEY_PREPEND + theme.image_keys[index])
+            data = BlobInfo.get(theme.image_keys[index])
+            cache.delete(CACHE_KEY_PREPEND + str(theme.image_keys[index]))
             data.delete()
             del theme.image_keys[index]
             del theme.image_filenames[index]
             theme.put()
-            cache.delete(CACHE_KEY_PREPEND + str(theme.key()))
+            cache.delete(CACHE_KEY_PREPEND + str(theme.key))
             raise Exception('Redirect', self.section.action_redirect_path)
         f = form(self.section, self.section.full_path)
         f.add_control(control(self.section, 'submit', 'submit', 'Confirm'))
