@@ -22,16 +22,12 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import importlib, traceback, os
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 from google.appengine.api import users
 
 from framework import content
-from framework.subsystems import configuration
-from framework.subsystems import cache
-from framework.subsystems import template
+from framework.subsystems import cache, configuration, permission, template, utils
 from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE
-from framework.subsystems import permission
-from framework.subsystems import utils
 
 import settings
 
@@ -41,20 +37,20 @@ FORBIDDEN_PATHS = ['favicon.ico', 'robots.txt', '_ah']
 MAIN_CONTAINER_NAMESPACE = 'main'
 CACHE_KEY_HIERARCHY = 'SECTION_HIERARCHY'
 
-class Section(db.Model):
+class Section(ndb.Model):
 
-    path = db.StringProperty(required=True)
-    parent_path = db.StringProperty()
-    title = db.StringProperty()
-    name = db.StringProperty()
-    keywords = db.TextProperty()
-    description = db.TextProperty()
-    theme = db.StringProperty()
-    rank = db.IntegerProperty(default = 0)
-    is_private = db.BooleanProperty(default=False)
-    is_default = db.BooleanProperty(default=False)
-    redirect_to = db.StringProperty()
-    new_window = db.BooleanProperty(default=False)
+    path = ndb.StringProperty(required=True)
+    parent_path = ndb.StringProperty()
+    title = ndb.StringProperty()
+    name = ndb.StringProperty()
+    keywords = ndb.TextProperty()
+    description = ndb.TextProperty()
+    theme = ndb.StringProperty()
+    rank = ndb.IntegerProperty(default = 0)
+    is_private = ndb.BooleanProperty(default=False)
+    is_default = ndb.BooleanProperty(default=False)
+    redirect_to = ndb.StringProperty()
+    new_window = ndb.BooleanProperty(default=False)
 
     def __unicode__(self):
         if not permission.view_section(self):
@@ -98,9 +94,9 @@ def get_section(handler, full_path):
     path_params = path_parts[3:] if len(path_parts) > 3 else None
     try:
         if not path:
-            section = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
+            section = Section.query(Section.is_default == True).fetch(1)[0]
         else:
-            section = Section.gql("WHERE ANCESTOR IS :1 LIMIT 1", section_key(path))[0]
+            section = Section.query(ancestor=section_key(path)).fetch(1)[0]
         if section.is_default and path and not path_action:
             raise Exception('NotFound') # The default page with no action should only be accessible from root
     except:
@@ -190,7 +186,7 @@ def get_top_level():
 
 def db_get_hierarchy(path=None):
     ret = []
-    for s in Section.gql("WHERE parent_path=:1 ORDER BY rank", path):
+    for s in Section.query(Section.parent_path == path).order(Section.rank).fetch():
         ret.append([{'path': s.path, 'parent_path': s.parent_path, 'rank': s.rank, 'is_private': s.is_private, 'name': s.name, 'title': s.title, 'keywords': s.keywords, 'description': s.description, 'is_private': s.is_private, 'is_default': s.is_default, 'redirect_to': s.redirect_to, 'new_window': s.new_window}, db_get_hierarchy(s.path)])
     return ret
 
@@ -232,7 +228,7 @@ def create_section(path, parent_path=None, name='', title='', keywords='', descr
 
     if is_default:
         try:
-            old_default = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
+            old_default = Section.gql(Section.is_default == True).fetch(1)[0]
             old_default.is_default=False
             old_default.put()
         except:
@@ -263,7 +259,7 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
         # Cannot change the default page except if another page is promoted
         is_default = True
     elif not old.is_default and is_default:
-        old_default = Section.gql("WHERE is_default=:1 LIMIT 1", True)[0]
+        old_default = Section.query(Section.is_default == True).fetch(1)[0]
         if old_default.path != old.path:
             old_default.is_default = False
             old_default.put()
@@ -271,14 +267,14 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
     can_path_exist(path, parent_path, old.path)
 
     if old.path != path:
-        for child in Section.gql("WHERE parent_path=:1", old.path):
+        for child in Section.query(Section.parent_path == old.path).fetch():
             child.parent_path = path
             child.put()
 
         content.rename_section_paths(old.path, path)
 
         new = Section(parent=section_key(path), path=path, parent_path=parent_path, rank=old.rank, name=name, title=title, keywords=keywords, description=description, theme=theme, is_private=is_private, is_default=is_default, redirect_to=redirect_to, new_window=new_window)
-        old.delete()
+        old.key.delete()
         new.put()
         cache.delete(CACHE_KEY_HIERARCHY)
         return new
@@ -309,14 +305,14 @@ def update_section(old, path, parent_path, name, title, keywords, description, t
 
 def update_section_rank(section, new_rank):
     larger, smaller = max(section.rank, new_rank), min(section.rank, new_rank)
-    for sibling in Section.gql("WHERE parent_path=:1 AND rank>=:2 AND rank<=:3 ORDER BY rank", section.parent_path, smaller, larger):
+    for sibling in Section.query(Section.parent_path == section.parent_path, Section.rank >= smaller, Section.rank <= larger).fetch():
         if sibling.rank < section.rank:
             sibling.rank += 1
         elif sibling.rank > section.rank:
             sibling.rank -= 1
-        else:
-            sibling.rank = new_rank
         sibling.put()
+    section.rank = new_rank
+    section.put()
     cache.delete(CACHE_KEY_HIERARCHY)
 
 def delete_section(section):
@@ -326,13 +322,13 @@ def delete_section(section):
         raise Exception('Cannot delete a page with children without reparenting them first')
     content.delete_section_path_content(section.path)
     cache.delete(CACHE_KEY_HIERARCHY)
-    section.delete()
+    section.key.delete()
 
 def rename_theme_namespace_template(old, new):
-    for s in Section.gql("WHERE theme=:1", old):
+    for s in Section.query(Section.theme == old):
         s.theme = new
         s.put()
     cache.delete(CACHE_KEY_HIERARCHY)
 
 def section_key(path):
-    return db.Key.from_path('Section', path)
+    return ndb.Key('Section', path)
