@@ -20,13 +20,13 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
-class File(db.Model):
+class File(ndb.Model):
     '''
     Any content that stores files should either use this object or subclass it
     Raising SendFileBlob exception with it as parameter will trigger download
     '''
-    filename = db.StringProperty()
-    content_type = db.StringProperty()
-    data = db.BlobProperty()
+    filename = ndb.StringProperty()
+    content_type = ndb.StringProperty()
+    data = ndb.BlobProperty()

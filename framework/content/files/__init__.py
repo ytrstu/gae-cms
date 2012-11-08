@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 from framework import content
 from framework.subsystems.file import File
@@ -32,8 +32,8 @@ CACHE_KEY_PREPEND = 'FILE_'
 
 class Files(content.Content):
 
-    file_keys = db.StringListProperty()
-    filenames = db.StringListProperty()
+    file_keys = ndb.KeyProperty(repeated=True)
+    filenames = ndb.StringProperty(repeated=True)
 
     name = 'Files'
     author = 'Imran Somji'
@@ -52,8 +52,8 @@ class Files(content.Content):
         for i in range(len(self.filenames)):
             # This can be done more efficiently via GQL
             data = self.get_file(self.filenames[i])
-            cache.delete(CACHE_KEY_PREPEND + self.file_keys[i])
-            data.delete()
+            cache.delete(CACHE_KEY_PREPEND + str(self.file_keys[i]))
+            data.Key.delete()
             del self.file_keys[i]
             del self.filenames[i]
         self.update()
@@ -64,9 +64,9 @@ class Files(content.Content):
             filename = self.section.handler.request.POST['data'].filename.replace(' ', '_')
             if not self.get_file(filename):
                 content_type = self.section.handler.request.POST['data'].type
-                data = db.Blob(self.section.handler.request.get('data'))
+                data = ndb.BlobProperty(self.section.handler.request.get('data'))
                 key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
-                self.file_keys.append(str(key))
+                self.file_keys.append(key)
                 self.filenames.append(filename)
                 self.update()
                 raise Exception('Redirect', self.section.action_redirect_path)
@@ -94,7 +94,7 @@ class Files(content.Content):
             if not data:
                 raise Exception('NotFound')
             index = self.filenames.index(filename)
-            cache.delete(CACHE_KEY_PREPEND + self.file_keys[index])
+            cache.delete(CACHE_KEY_PREPEND + str(self.file_keys[index]))
             data.delete()
             del self.file_keys[index]
             del self.filenames[index]
@@ -114,9 +114,9 @@ class Files(content.Content):
         item = None
         try:
             key = self.file_keys[self.filenames.index(filename)]
-            item = cache.get(CACHE_KEY_PREPEND + key)
+            item = cache.get(CACHE_KEY_PREPEND + str(key))
             if not item:
-                item = File.get(key)
-                cache.set(CACHE_KEY_PREPEND + key, item)
+                item = key.get()
+                cache.set(CACHE_KEY_PREPEND + str(key), item)
         finally:
             return item

@@ -136,7 +136,7 @@ def get_section(handler, full_path):
     section.has_siblings = len(get_siblings(section.path)) > 1
     section.has_children = len(get_children(section.path)) > 0
 
-    section.configuration = vars(configuration.get_configuration())['_entity']
+    section.configuration = configuration.get_configuration()._to_dict()
 
     return section
 

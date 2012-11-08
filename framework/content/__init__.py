@@ -23,22 +23,20 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import os
 import datetime
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
-from framework.subsystems import permission
-from framework.subsystems import template
-from framework.subsystems import cache
+from framework.subsystems import cache, permission, template
 
 CACHE_KEY_PREPEND = 'CONTENT_'
 
 SCOPE_GLOBAL = 'GLOBAL'
 SCOPE_LOCAL = 'LOCAL'
 
-class Content(db.Model):
+class Content(ndb.Model):
 
-    section_path = db.StringProperty(default=None) # None means GLOBAL
-    namespace = db.StringProperty()
-    container_namespace = db.StringProperty(default=None)
+    section_path = ndb.StringProperty(default=None) # None means GLOBAL
+    namespace = ndb.StringProperty()
+    container_namespace = ndb.StringProperty(default=None)
 
     name = 'Base Content'
     author = 'Imran Somji'
@@ -93,7 +91,7 @@ class Content(db.Model):
         '''
         cache.delete(CACHE_KEY_PREPEND + str(content_key(self.__class__.__name__, self.section_path, self.namespace)))
         self.on_remove()
-        self.delete()
+        self.key.delete()
 
     def clone(self, **extra_args):
         '''
@@ -132,7 +130,7 @@ def get(content_type, section_path, namespace):
     m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
     concrete = getattr(m, content_type)
     try:
-        item = concrete.gql("WHERE ANCESTOR IS :1 LIMIT 1", content_key(content_type, section_path, namespace))[0]
+        item = concrete.query(ancestor=content_key(content_type, section_path, namespace)).fetch(1)[0]
         cache.set(CACHE_KEY_PREPEND + str(content_key(content_type, section_path, namespace)), item)
         return item
     except:
@@ -148,7 +146,7 @@ def get_local_else_global(section_path, namespace):
         m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
         concrete = getattr(m, content_type)
         try:
-            item = concrete.gql("WHERE section_path IN :1 AND namespace=:2 LIMIT 1", [section_path, None], namespace)[0]
+            item = concrete.gql("WHERE section_path IN :1 AND namespace=:2 LIMIT 1", [section_path, None], namespace).fetch(1)[0]
             cache.set(CACHE_KEY_PREPEND + str(content_key(content_type, item.section_path, namespace)), item)
             return item
         except:
@@ -160,7 +158,7 @@ def get_by_namespace(namespace):
         m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
         concrete = getattr(m, content_type)
         try:
-            return concrete.gql("WHERE namespace=:1 LIMIT 1", namespace)[0]
+            return concrete.gql("WHERE namespace=:1 LIMIT 1", namespace).fetch(1)[0]
         except:
             pass
     return None
@@ -178,7 +176,7 @@ def rename_section_paths(old, new):
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
         concrete = getattr(m, content_type)
-        items = concrete.gql("WHERE section_path=:1", old)
+        items = concrete.gql("WHERE section_path=:1", old).fetch()
         for i in items:
             # Have to remove and reenter content since the key will change
             n = i.clone(parent=content_key(content_type, new, i.namespace), section_path=new)
@@ -187,7 +185,7 @@ def rename_section_paths(old, new):
 
         if content_type == 'Container':
             # The following line is pretty inefficient but then so is doing "WHERE old path IN content_paths" and I believe we avoid subquery limitations
-            items = concrete.gql("")
+            items = concrete.gql("").fetch()
             for i in items:
                 if old in i.content_paths:
                     i.content_paths = [new if x == old else x for x in i.content_paths]
@@ -197,8 +195,8 @@ def delete_section_path_content(path):
     for content_type in get_all_content_types():
         m = __import__('framework.content.' + content_type.lower(), globals(), locals(), [str(content_type.lower())])
         concrete = getattr(m, content_type)
-        items = concrete.gql("WHERE section_path=:1", path)
+        items = concrete.gql("WHERE section_path=:1", path).fetch()
         for i in items: i.remove()
 
 def content_key(content_type, section_path, namespace):
-    return db.Key.from_path(content_type, ((section_path + '.') if section_path else '') + namespace)
+    return ndb.Key(content_type, ((section_path + '.') if section_path else '') + namespace)

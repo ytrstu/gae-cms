@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 from framework import content
 from framework.subsystems import cache
@@ -33,14 +33,14 @@ CACHE_KEY = 'CONFIGURATION'
 
 class Configuration(content.Content):
 
-    SITE_HEADER = db.StringProperty()
-    SITE_SUB_HEADER = db.StringProperty()
-    DEFAULT_THEME = db.StringProperty()
-    GOOGLE_ANALYTICS_UA = db.StringProperty()
-    ROBOTS_TXT = db.TextProperty()
-    FAVICON_ICO = db.ReferenceProperty(reference_class=File)
-    ENABLE_THEME_PREVIEW = db.BooleanProperty(default=False)
-    DEBUG_MODE = db.BooleanProperty(default=False)
+    SITE_HEADER = ndb.StringProperty()
+    SITE_SUB_HEADER = ndb.StringProperty()
+    DEFAULT_THEME = ndb.StringProperty()
+    GOOGLE_ANALYTICS_UA = ndb.StringProperty()
+    ROBOTS_TXT = ndb.TextProperty()
+    FAVICON_ICO = ndb.KeyProperty(kind=File)
+    ENABLE_THEME_PREVIEW = ndb.BooleanProperty(default=False)
+    DEBUG_MODE = ndb.BooleanProperty(default=False)
 
     name = 'Configuration'
     author = 'Imran Somji'
@@ -60,7 +60,7 @@ class Configuration(content.Content):
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
             if self.section.handler.request.get('FAVICON_ICO'):
-                data = db.Blob(self.section.handler.request.get('FAVICON_ICO'))
+                data = ndb.BlobProperty(self.section.handler.request.get('FAVICON_ICO'))
                 if self.FAVICON_ICO:
                     self.FAVICON_ICO.data = data
                 else:

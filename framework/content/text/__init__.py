@@ -22,7 +22,7 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import random
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 from django.utils.html import strip_tags
 
@@ -32,8 +32,8 @@ from framework.subsystems.forms import form, control, selectcontrol, textareacon
 
 class Text(content.Content):
 
-    titles = db.StringListProperty()
-    bodies = db.ListProperty(item_type=db.Text)
+    titles = ndb.StringProperty(repeated=True)
+    bodies = ndb.TextProperty(repeated=True)
 
     name = 'Text'
     author = 'Imran Somji'
@@ -55,7 +55,7 @@ class Text(content.Content):
             raise Exception('BadRequest', 'Text item out of range')
         elif self.section.handler.request.get('submit'):
             self.titles.insert(rank, self.section.handler.request.get('title'))
-            self.bodies.insert(rank, db.Text(self.section.handler.request.get('body')))
+            self.bodies.insert(rank, self.section.handler.request.get('body'))
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
         return '<h2>Add text</h2>' + get_form(self.section, '', '')
@@ -67,7 +67,7 @@ class Text(content.Content):
             raise Exception('BadRequest', 'Text item out of range')
         elif self.section.handler.request.get('submit'):
             self.titles[rank] = self.section.handler.request.get('title')
-            self.bodies[rank] = db.Text(self.section.handler.request.get('body'))
+            self.bodies[rank] = self.section.handler.request.get('body')
             self.update()
             raise Exception('Redirect', self.section.action_redirect_path)
         elif not self.section.path_params and self.titles:
