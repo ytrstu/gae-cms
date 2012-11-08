@@ -228,7 +228,7 @@ def create_section(path, parent_path=None, name='', title='', keywords='', descr
 
     if is_default:
         try:
-            old_default = Section.gql(Section.is_default == True).fetch(1)[0]
+            old_default = Section.query(Section.is_default == True).fetch(1)[0]
             old_default.is_default=False
             old_default.put()
         except:
