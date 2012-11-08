@@ -26,9 +26,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 import traceback, webapp2
 from datetime import datetime, timedelta
 
-from framework.subsystems import section
-from framework.subsystems import template
-from framework.subsystems import configuration
+from framework.subsystems import configuration, section, template
 
 class Router(webapp2.RequestHandler):
     def get(self, path):
@@ -82,4 +80,5 @@ class Router(webapp2.RequestHandler):
     def post(self, path):
         return self.get(path)
 
-app = webapp2.WSGIApplication([('(/.*)', Router)], debug=configuration.debug_mode())
+#app = webapp2.WSGIApplication([('(/.*)', Router)], debug=configuration.debug_mode())
+app = webapp2.WSGIApplication([('(/.*)', Router)], debug=True)
