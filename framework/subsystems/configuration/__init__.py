@@ -20,11 +20,13 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from google.appengine.api import files
+from google.appengine.ext.blobstore import BlobInfo
+
 from framework.content import content_key
 from framework.content.configuration import Configuration, CACHE_KEY
 
 from framework.subsystems import cache
-from framework.subsystems.file import File
 
 def get_configuration():
     try:
@@ -51,12 +53,13 @@ def get_favicon_ico():
     item = get_configuration()
     if not item.FAVICON_ICO:
         data = file('framework/content/configuration/assets/images/favicon.ico', 'r').read()
-        favicon = File(filename='favicon.ico', content_type='image/x-icon', data=data)
-        favicon.put()
-        item.FAVICON_ICO = favicon
+        handle = files.blobstore.create(mime_type='image/x-icon', _blobinfo_uploaded_filename='favicon.ico')
+        with files.open(handle, 'a') as f: f.write(data)
+        files.finalize(handle)
+        item.FAVICON_ICO = files.blobstore.get_blob_key(handle)
         item.update()
         cache.delete(CACHE_KEY)
-    raise Exception('SendFileBlob', item.FAVICON_ICO)
+    raise Exception('SendFileBlob', BlobInfo.get(item.FAVICON_ICO).open().read(), 'image/x-icon')
 
 def default_theme():
     item = get_configuration()
