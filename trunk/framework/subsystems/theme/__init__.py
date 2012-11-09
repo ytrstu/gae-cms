@@ -89,7 +89,7 @@ def get_custom_theme(namespace):
 def get_custom_template(theme_template):
     namespace, template_name = theme_template.split('/')
     try:
-        t = Theme.query(namespace=namespace).fetch(1)[0]
+        t = Theme.query(Theme.namespace == namespace).fetch(1)[0]
         index = t.body_template_names.index(template_name)
         return t.body_template_contents[index]
     except:
