@@ -21,11 +21,11 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from google.appengine.ext import ndb
+from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.api import files
 
 from framework import content
-from framework.subsystems import cache
-from framework.subsystems.file import File
-from framework.subsystems import template
+from framework.subsystems import cache, template
 from framework.subsystems.theme import DEFAULT_LOCAL_THEME_TEMPLATE, get_local_theme_namespaces, get_custom_theme_namespaces
 from framework.subsystems.forms import form, control, checkboxcontrol, selectcontrol, textareacontrol
 
@@ -38,7 +38,7 @@ class Configuration(content.Content):
     DEFAULT_THEME = ndb.StringProperty()
     GOOGLE_ANALYTICS_UA = ndb.StringProperty()
     ROBOTS_TXT = ndb.TextProperty()
-    FAVICON_ICO = ndb.KeyProperty(kind=File)
+    FAVICON_ICO = ndb.BlobKeyProperty()
     ENABLE_THEME_PREVIEW = ndb.BooleanProperty(default=False)
     DEBUG_MODE = ndb.BooleanProperty(default=False)
 
@@ -60,12 +60,13 @@ class Configuration(content.Content):
             self.GOOGLE_ANALYTICS_UA = self.section.handler.request.get('GOOGLE_ANALYTICS_UA')
             self.ROBOTS_TXT = self.section.handler.request.get('ROBOTS_TXT')
             if self.section.handler.request.get('FAVICON_ICO'):
-                data = ndb.BlobProperty(self.section.handler.request.get('FAVICON_ICO'))
                 if self.FAVICON_ICO:
-                    self.FAVICON_ICO.data = data
-                else:
-                    self.FAVICON_ICO = File(filename='favicon.ico', content_type='image/x-icon', data=data)
-                self.FAVICON_ICO.put()
+                    BlobInfo.get(self.FAVICON_ICO).delete()
+                data = self.section.handler.request.get('FAVICON_ICO')
+                handle = files.blobstore.create(mime_type='image/x-icon', _blobinfo_uploaded_filename='favicon.ico')
+                with files.open(handle, 'a') as f: f.write(data)
+                files.finalize(handle)
+                self.FAVICON_ICO = files.blobstore.get_blob_key(handle)
             self.ENABLE_THEME_PREVIEW = self.section.handler.request.get('ENABLE_THEME_PREVIEW') != ''
             self.DEBUG_MODE = self.section.handler.request.get('DEBUG_MODE') != ''
             cache.delete(CACHE_KEY)

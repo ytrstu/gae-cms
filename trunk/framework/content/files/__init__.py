@@ -21,9 +21,10 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from google.appengine.ext import ndb
+from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.api import files
 
 from framework import content
-from framework.subsystems.file import File
 from framework.subsystems import template
 from framework.subsystems.forms import form, control
 from framework.subsystems import cache
@@ -32,7 +33,7 @@ CACHE_KEY_PREPEND = 'FILE_'
 
 class Files(content.Content):
 
-    file_keys = ndb.KeyProperty(repeated=True)
+    file_keys = ndb.BlobKeyProperty(repeated=True)
     filenames = ndb.StringProperty(repeated=True)
 
     name = 'Files'
@@ -48,14 +49,10 @@ class Files(content.Content):
         ['menu', 'File menu', False],
     ]
 
-    def on_delete(self):
-        for i in range(len(self.filenames)):
-            # This can be done more efficiently via GQL
-            data = self.get_file(self.filenames[i])
-            cache.delete(CACHE_KEY_PREPEND + str(self.file_keys[i]))
-            data.Key.delete()
-            del self.file_keys[i]
-            del self.filenames[i]
+    def on_remove(self):
+        for key in self.file_keys:
+            cache.delete(CACHE_KEY_PREPEND + str(key))
+            BlobInfo.get(key).delete()
         self.update()
 
     def action_add(self):
@@ -64,8 +61,11 @@ class Files(content.Content):
             filename = self.section.handler.request.POST['data'].filename.replace(' ', '_')
             if not self.get_file(filename):
                 content_type = self.section.handler.request.POST['data'].type
-                data = ndb.BlobProperty(self.section.handler.request.get('data'))
-                key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
+                data = self.section.handler.request.get('data')
+                handle = files.blobstore.create(mime_type=content_type, _blobinfo_uploaded_filename=filename)
+                with files.open(handle, 'a') as f: f.write(data)
+                files.finalize(handle)
+                key = files.blobstore.get_blob_key(handle)
                 self.file_keys.append(key)
                 self.filenames.append(filename)
                 self.update()
@@ -83,7 +83,7 @@ class Files(content.Content):
         data = self.get_file(filename)
         if not data:
             raise Exception('NotFound')
-        raise Exception('SendFileBlob', data)
+        raise Exception('SendFileBlob', data.open().read(), data.content_type)
 
     def action_delete(self):
         if not self.section.path_params or len(self.section.path_params) != 1:
@@ -116,7 +116,7 @@ class Files(content.Content):
             key = self.file_keys[self.filenames.index(filename)]
             item = cache.get(CACHE_KEY_PREPEND + str(key))
             if not item:
-                item = key.get()
+                item = BlobInfo.get(key)
                 cache.set(CACHE_KEY_PREPEND + str(key), item)
         finally:
             return item

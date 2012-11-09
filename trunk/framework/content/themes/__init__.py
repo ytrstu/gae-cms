@@ -32,7 +32,6 @@ from framework import content
 from framework.subsystems import configuration, section, template, cache
 from framework.subsystems.theme import Theme, get_local_theme_namespaces, get_custom_theme_namespaces, is_local_theme_namespace
 from framework.subsystems.forms import form, control, selectcontrol, textareacontrol
-from framework.subsystems.file import File
 
 CACHE_KEY_PREPEND = 'THEME_'
 
@@ -66,16 +65,15 @@ class Themes(content.Content):
         ['themes_previewer', 'Themes previewer', False],
     ]
 
-    def on_delete(self):
+    def on_remove(self):
         for i in range(len(self.theme_namespaces)):
             # This can be done more efficiently via GQL
             theme = self.get_theme(self.theme_namespaces[i])
             cache.delete(CACHE_KEY_PREPEND + self.theme_namespaces[i])
             for key in theme.image_keys:
-                data = key.get(key)
                 cache.delete(CACHE_KEY_PREPEND + str(key))
-                data.Key.delete()
-            theme.delete()
+                BlobInfo.get(key).delete()
+            theme.key.delete()
             del self.theme_keys[i]
             del self.theme_namespaces[i]
         self.update()
@@ -122,7 +120,7 @@ class Themes(content.Content):
         message = ''
         if self.section.handler.request.get('submit'):
             try:
-                self.import_compressed_theme_data(ndb.BlobProperty(self.section.handler.request.get('data')))
+                self.import_compressed_theme_data(self.section.handler.request.get('data'))
             except Exception as inst:
                 error = '<div class="status error">%s</div>'
                 message = inst[0] if not isinstance(inst[0], types.ListType) else '<br>'.join(inst[0])
@@ -174,10 +172,13 @@ class Themes(content.Content):
                     elif p.startswith(main_dir + '/' + namespace + '/images/') and p != main_dir + '/' + namespace + '/images/':
                         filename = p.split(main_dir + '/' + namespace + '/images/')[1]
                         content_type, _ = mimetypes.guess_type(filename)
-                        data = ndb.BlobProperty(zipfile.ZipFile.read(compressed, p))
-                        key = File(filename=filename, data=data, content_type=content_type, section_path=self.section.path).put()
+                        data = zipfile.ZipFile.read(compressed, p)
+                        handle = files.blobstore.create(mime_type=content_type, _blobinfo_uploaded_filename=filename)
+                        with files.open(handle, 'a') as f: f.write(data)
+                        files.finalize(handle)
+                        key = files.blobstore.get_blob_key(handle)
                         theme.image_filenames.append(filename)
-                        theme.image_keys.append(str(key))
+                        theme.image_keys.append(key)
                 key = theme.put()
                 self.theme_keys.append(key)
                 self.theme_namespaces.append(calculated_namespace)
@@ -255,9 +256,12 @@ class Themes(content.Content):
             raise Exception('NotFound')
         theme = self.get_theme(self.section.path_params[0])
         if self.section.handler.request.get('submit'):
+            for key in theme.image_keys:
+                cache.delete(CACHE_KEY_PREPEND + str(key))
+                BlobInfo.get(key).delete()
             self.theme_keys.remove(theme.key)
             self.theme_namespaces.remove(theme.namespace)
-            theme.delete()
+            theme.key.delete()
             self.update()
             cache.flush_all() # Flush all cached resources for this theme which is important for sections where it is active
             raise Exception('Redirect', self.section.action_redirect_path)
@@ -387,9 +391,8 @@ class Themes(content.Content):
             filename = self.section.handler.request.POST['data'].filename
             content_type = self.section.handler.request.POST['data'].type
             data = self.section.handler.request.get('data')
-            handle = files.blobstore.create(mime_type=content_type)
-            with files.open(handle, 'a') as f:
-                f.write(data)
+            handle = files.blobstore.create(mime_type=content_type, _blobinfo_uploaded_filename=filename)
+            with files.open(handle, 'a') as f: f.write(data)
             files.finalize(handle)
             key = files.blobstore.get_blob_key(handle)
             theme.image_filenames.append(filename)
