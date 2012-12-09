@@ -31,6 +31,9 @@ libraries:
 - name: django
   version: 1.4
 
+builtins:
+- appstats: off
+
 handlers:
 - url: /framework/assets/images/sprite.png
   static_files: framework/assets/images/sprite.png

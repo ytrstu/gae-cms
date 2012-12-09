@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import importlib, traceback, os
+import copy, importlib, traceback, os
 
 from google.appengine.ext import ndb
 from google.appengine.api import users
@@ -178,10 +178,10 @@ def get_siblings(path):
     return get_children(section['parent_path']) if section else []
 
 def get_top_level():
-    hierarchy = cache.get(CACHE_KEY_HIERARCHY)
-    if hierarchy: return hierarchy
-    hierarchy = db_get_hierarchy()
-    cache.set(CACHE_KEY_HIERARCHY, hierarchy)
+    hierarchy = copy.deepcopy(cache.get(CACHE_KEY_HIERARCHY))
+    if not hierarchy:
+        hierarchy = db_get_hierarchy()
+        cache.set(CACHE_KEY_HIERARCHY, hierarchy)
     return hierarchy
 
 def db_get_hierarchy(path=None):
