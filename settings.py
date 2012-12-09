@@ -24,6 +24,8 @@ from framework.subsystems import utils
 
 DEBUG = True
 
+#MIDDLEWARE_CLASSES = ('google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',)
+
 INSTALLED_APPS = ('framework',)
 
 TEMPLATE_DIRS = []
