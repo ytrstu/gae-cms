@@ -24,15 +24,17 @@ import copy, os
 
 from google.appengine.api import memcache
 
+import settings
+
 """
-We wrap memcache to ensure new keys on each deployment
+We wrap memcache to ensure new keys on each deployment and to handle instance caching
 """
 
 CACHE = {}
 
 def get(key):
     key = os.environ['CURRENT_VERSION_ID'] + '_' + key
-    if key not in CACHE:
+    if not settings.INSTANCE_CACHING_ENABLED or key not in CACHE:
         val = memcache.Client().get(key)
         CACHE[key] = val
     return CACHE[key]

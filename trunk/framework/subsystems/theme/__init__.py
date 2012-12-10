@@ -76,7 +76,7 @@ def is_local_theme_namespace(n):
 def get_custom_themes():
     custom_themes = cache.get(CACHE_KEY)
     if not custom_themes:
-        custom_themes = Theme.gql("").fetch()
+        custom_themes = Theme.query().fetch()
         cache.set(CACHE_KEY, custom_themes)
     return custom_themes
 

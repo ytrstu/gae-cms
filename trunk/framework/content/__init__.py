@@ -185,7 +185,7 @@ def rename_section_paths(old, new):
 
         if content_type == 'Container':
             # The following line is pretty inefficient but then so is doing "WHERE old path IN content_paths" and I believe we avoid subquery limitations
-            items = concrete.gql("").fetch()
+            items = concrete.query().fetch()
             for i in items:
                 if old in i.content_paths:
                     i.content_paths = [new if x == old else x for x in i.content_paths]
