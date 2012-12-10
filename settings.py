@@ -22,9 +22,10 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from framework.subsystems import utils
 
-DEBUG = True
-
-#MIDDLEWARE_CLASSES = ('google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',)
+"""
+The following improves speed and frontend instance cost significantly but the tradeoff is inconsistent instances upon write when more than one instance is used
+"""
+INSTANCE_CACHING_ENABLED = True
 
 INSTALLED_APPS = ('framework',)
 
