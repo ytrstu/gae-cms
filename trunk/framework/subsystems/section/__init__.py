@@ -37,6 +37,8 @@ FORBIDDEN_PATHS = ['favicon.ico', 'robots.txt', '_ah']
 MAIN_CONTAINER_NAMESPACE = 'main'
 CACHE_KEY_HIERARCHY = 'SECTION_HIERARCHY'
 
+# TODO: The concept of a Section and a Page (i.e. possibly an action within a section) is really jumbled here, needs fixing
+
 class Section(ndb.Model):
 
     path = ndb.StringProperty(required=True)
@@ -87,7 +89,8 @@ class Section(ndb.Model):
         return theme_namespace_template
 
 def get_section(handler, full_path):
-    path_parts = full_path.strip('/').split('/')
+    full_path = full_path.strip('/')
+    path_parts = full_path.split('/')
     path = path_parts[0]
     path_namespace = path_parts[1] if len(path_parts) > 1 else None
     path_action = path_parts[2] if len(path_parts) > 2 else None
